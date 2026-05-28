@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 
+@layer utilities {
+  .input-container{
+    @apply mt-1 block text-sm h-[40px] w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 
+  }
+}
+
+@layer components{
+  .input-container{
+    @apply mt-1 block text-sm h-[40px] w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 
+  }
+}
+
+@layer base{
+  .input-container{
+    @apply mt-1 block text-sm h-[40px] w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 
+  }
+} */
+  
+  .scrollable-container {
+    overflow-y: auto; /* Allows scrolling inside specific containers */
+    scrollbar-width: none; /* Hides scrollbar in Firefox */
+    -ms-overflow-style: none; /* Hides scrollbar in IE */
+  }
+  
+  .scrollable-container::-webkit-scrollbar {
+    display: none; /* Hides scrollbar in Chrome, Edge, and Safari */
+  }
+  
+  /* For modern browsers */
+::-webkit-scrollbar {
+    display: none;
+  }
+  /*html {
+    scrollbar-width: none; /* For Firefox 
+    overflow: hidden;
+  }*\
+  
+  /* Ensure content remains scrollable while hiding the scrollbar */
+  body {
+    overflow-y: auto; /* Enable scrolling, but hide scrollbar */
+  }
+  
