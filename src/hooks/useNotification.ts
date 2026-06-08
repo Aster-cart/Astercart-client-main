@@ -1,56 +1,59 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import api from "../utils/api";
 
 export interface Notification {
-  id: number;
+  id: string;
   message: string;
   read: boolean;
   timestamp: string;
 }
 
 export const useNotification = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 1,
-      message: "Order received: User ordered Air Force One",
-      read: false,
-      timestamp: "2024-11-16 14:35",
-    },
-    {
-      id: 2,
-      message: "Your subscription expires soon.",
-      read: false,
-      timestamp: "2024-11-15 10:12",
-    },
-    {
-      id: 3,
-      message: "System maintenance scheduled for tonight.",
-      read: false,
-      timestamp: "2024-11-14 08:45",
-    },
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
 
-  const [showNotificationModal, setShowNotificationModal] =
-    useState<boolean>(false);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        // Fetch latest orders and build notifications from them
+        const [ordersRes] = await Promise.all([
+          api.get<{ orders: { orderNo: string; name: string; transactionStatus: string; createdAt: string }[] }>(
+            "/store/orders"
+          ),
+        ]);
 
-  // Toggle modal visibility
-  const toggleNotificationModal = () => {
-    setShowNotificationModal(!showNotificationModal);
-  };
+        const orders = ordersRes.data?.orders || [];
 
-  // Mark notification as read
-  const markAsRead = (id: number) => {
-    setNotifications((prevNotifications) =>
-      prevNotifications.map((notif) =>
-        notif.id === id ? { ...notif, read: true } : notif
-      )
+        // Build a notification for each recent order
+        const orderNotifs: Notification[] = orders.slice(0, 10).map((o, i) => ({
+          id: o.orderNo || String(i),
+          message: `Order received: ${o.name || "A customer"} placed order #${(o.orderNo || "").slice(0, 8).toUpperCase()}`,
+          read: false,
+          timestamp: o.createdAt || new Date().toISOString(),
+        }));
+
+        setNotifications(orderNotifs);
+      } catch {
+        // silently fail — notifications are non-critical
+        setNotifications([]);
+      }
+    };
+
+    const token = localStorage.getItem("token");
+    if (token) load();
+  }, []);
+
+  const toggleNotificationModal = () =>
+    setShowNotificationModal((prev) => !prev);
+
+  const markAsRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
   };
 
-  // Mark all notifications as read
   const markAllAsRead = () => {
-    setNotifications((prevNotifications) =>
-      prevNotifications.map((notif) => ({ ...notif, read: true }))
-    );
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
   const formatToTodayTime = (timestamp: string) => {
@@ -61,10 +64,8 @@ export const useNotification = () => {
     return `Today at ${hours}:${minutes} ${ampm}`;
   };
 
-  const unreadCount = notifications.filter((notif) => !notif.read).length;
-
-  // Check if all notifications are read
-  const allRead = notifications.every((notif) => notif.read);
+  const unreadCount = notifications.filter((n) => !n.read).length;
+  const allRead = notifications.every((n) => n.read);
 
   return {
     notifications,

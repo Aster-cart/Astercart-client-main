@@ -1,132 +1,177 @@
-import { useState, useRef } from 'react';
+/**
+ * useInventoryModal.ts
+ * Handles file parsing and bulk product import.
+ * Supports CSV and Excel (.xlsx/.xls) files.
+ * Parses products and sends them to the server directly.
+ */
+import { useState, useRef } from "react";
+import * as XLSX from "xlsx";
+import api from "../utils/api";
 
-export const useInventoryModal = (onModalClose: () => void, onImport: (data: any[]) => void) => {
-  const [uploading, setUploading] = useState<boolean>(false);
-  const [progress, setProgress] = useState<number>(0);
-  const [remainingKB, setRemainingKB] = useState<number>(0);
-  const [secondsRemaining, setSecondsRemaining] = useState<number>(0);
-  const [fileName, setFileName] = useState<string>("");
-  const [fileInputKey, setFileInputKey] = useState<number>(0);
- const [imageUrl, setImageUrl] = useState<string | null>(null);
+const REQUIRED_COLUMNS = ["name", "price", "quantity", "category"];
+
+function normaliseHeader(h: string): string {
+  return h.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function mapRow(headers: string[], row: unknown[]): Record<string, unknown> {
+  const obj: Record<string, unknown> = {};
+  headers.forEach((h, i) => {
+    obj[h] = row[i] ?? "";
+  });
+  return obj;
+}
+
+function headerAlias(raw: string): string {
+  const n = normaliseHeader(raw);
+  const aliases: Record<string, string> = {
+    productname: "name",
+    product: "name",
+    itemname: "name",
+    item: "name",
+    cost: "price",
+    unitprice: "price",
+    sellingprice: "price",
+    stock: "quantity",
+    qty: "quantity",
+    stockqty: "quantity",
+    cat: "category",
+    type: "category",
+    desc: "description",
+    details: "description",
+    discount: "discount",
+    tax: "taxRate",
+    taxrate: "taxRate",
+  };
+  return aliases[n] || n;
+}
+
+export const useInventoryModal = (
+  onModalClose: () => void,
+  onImport: (data: unknown[]) => void
+) => {
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [remainingKB, setRemainingKB] = useState(0);
+  const [secondsRemaining, setSecondsRemaining] = useState(0);
+  const [fileName, setFileName] = useState("");
+  const [fileInputKey, setFileInputKey] = useState(0);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [preview, setPreview] = useState<Record<string, unknown>[]>([]);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const fileSizeKB = Math.round(file.size / 1024);
-      setFileName(file.name);
-      setRemainingKB(fileSizeKB);
-      setSecondsRemaining(5);
-      setUploading(true);
+  const parseFile = (file: File): Promise<Record<string, unknown>[]> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: "array" });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as unknown[][];
 
-      let uploadedKB = 0;
-      const interval = setInterval(() => {
-        const increment = Math.ceil(fileSizeKB / 5);
-        uploadedKB += increment;
+          if (rows.length < 2) {
+            reject(new Error("File is empty or has no data rows."));
+            return;
+          }
 
-        const newProgress = Math.min((uploadedKB / fileSizeKB) * 100, 100);
-        const remaining = Math.max(fileSizeKB - uploadedKB, 0);
-        const timeLeft = Math.ceil((remaining / fileSizeKB) * 5);
+          const rawHeaders = rows[0] as string[];
+          const headers = rawHeaders.map(headerAlias);
 
-        setProgress(newProgress);
-        setRemainingKB(remaining);
-        setSecondsRemaining(timeLeft);
+          const missing = REQUIRED_COLUMNS.filter((c) => !headers.includes(c));
+          if (missing.length > 0) {
+            reject(
+              new Error(
+                `Missing required columns: ${missing.join(", ")}. Your file must have columns for name, price, quantity and category.`
+              )
+            );
+            return;
+          }
 
-        if (newProgress === 100) {
-          clearInterval(interval);
-          setUploading(false);
-          setFileInputKey((prevKey) => prevKey + 1);
+          const products = rows.slice(1)
+            .map((row) => mapRow(headers, row))
+            .filter((p) => p.name && p.price);
+
+          resolve(products);
+        } catch {
+          reject(new Error("Could not read file. Please use CSV or Excel format."));
         }
-      }, 1000);
+      };
+      reader.onerror = () => reject(new Error("Failed to read file."));
+      reader.readAsArrayBuffer(file);
+    });
+  };
+
+  const simulateProgress = (fileSizeKB: number) => {
+    setRemainingKB(fileSizeKB);
+    setSecondsRemaining(3);
+    let pct = 0;
+    const interval = setInterval(() => {
+      pct = Math.min(pct + 33, 100);
+      setProgress(pct);
+      setRemainingKB(Math.round(fileSizeKB * (1 - pct / 100)));
+      setSecondsRemaining(Math.ceil((100 - pct) / 33));
+      if (pct >= 100) clearInterval(interval);
+    }, 500);
+  };
+
+  const processFile = async (file: File) => {
+    setError(null);
+    setFileName(file.name);
+    const fileSizeKB = Math.round(file.size / 1024);
+    setUploading(true);
+    simulateProgress(fileSizeKB);
+
+    try {
+      const products = await parseFile(file);
+      setPreview(products.slice(0, 3)); // Show preview of first 3 rows
+      setUploading(false);
+
+      // Send to server
+      setImporting(true);
+      const response = await api.post("/store/create-product", products);
+      const imported = response.data?.products || products;
+      onImport(imported);
+      onModalClose();
+    } catch (err: unknown) {
+      setUploading(false);
+      setImporting(false);
+      setError((err as Error).message || "Import failed.");
+    } finally {
+      setFileInputKey((k) => k + 1);
     }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) processFile(e.target.files[0]);
   };
 
   const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const files = e.dataTransfer.files;
-    if (files && files[0]) {
-      const file = files[0];
-      const fileSizeKB = Math.round(file.size / 1024);
-      setFileName(file.name);
-      setRemainingKB(fileSizeKB);
-      setSecondsRemaining(5);
-      setUploading(true);
-
-      let uploadedKB = 0;
-      const interval = setInterval(() => {
-        const increment = Math.ceil(fileSizeKB / 5);
-        uploadedKB += increment;
-
-        const newProgress = Math.min((uploadedKB / fileSizeKB) * 100, 100);
-        const remaining = Math.max(fileSizeKB - uploadedKB, 0);
-        const timeLeft = Math.ceil((remaining / fileSizeKB) * 5);
-
-        setProgress(newProgress);
-        setRemainingKB(remaining);
-        setSecondsRemaining(timeLeft);
-
-        if (newProgress === 100) {
-          clearInterval(interval);
-          setUploading(false);
-          setFileInputKey((prevKey) => prevKey + 1);
-        }
-      }, 1000);
-    }
+    if (e.dataTransfer.files?.[0]) processFile(e.dataTransfer.files[0]);
   };
 
+  // Legacy handler kept for cloud upload button
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-
-      reader.onload = (event) => {
-        const text = event.target?.result as string;
-        const rows = text.split("\n").map((row) => row.split(","));
-        const importedData = rows.slice(1).map(([product, price, stock]) => ({
-          product,
-          price: parseFloat(price),
-          stock,
-        }));
-        onImport(importedData);
-        onModalClose();
-      };
-      reader.readAsText(file);
-    }
-  };
- const handleUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const url = event.target.value;
-    setImageUrl(url);
+    if (e.target.files?.[0]) processFile(e.target.files[0]);
   };
 
-  const handleImageClick = () => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
+  const handleUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setImageUrl(event.target.value);
   };
-  
-  const openFilePicker = () => {
-    fileInputRef.current?.click();
-  };
+
+  const handleImageClick = () => inputRef.current?.focus();
+  const openFilePicker = () => fileInputRef.current?.click();
 
   return {
-    uploading,
-    progress,
-    remainingKB,
-    secondsRemaining,
-    fileName,
-    fileInputKey,
-    handleFileSelect,
-    handleFileDrop,
-    handleFileUpload,
-    openFilePicker,
-    fileInputRef,
-    imageUrl,
-    setImageUrl,
-    inputRef,
-    handleUrlChange,
-    handleImageClick,
+    uploading, progress, remainingKB, secondsRemaining,
+    fileName, fileInputKey, error, importing, preview,
+    handleFileSelect, handleFileDrop, handleFileUpload,
+    openFilePicker, fileInputRef,
+    imageUrl, setImageUrl, inputRef, handleUrlChange, handleImageClick,
   };
 };

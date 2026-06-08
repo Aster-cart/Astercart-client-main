@@ -17,9 +17,17 @@ import ForgotPasswordAD from "./admin/ForgotPasswordAD";
 import AdminAD from "./admin/AdminAD";
 import { useAdminAuthStore } from "./store/adminAuthStore";
 
+// Protects admin routes — redirects to admin login if no admin token
 function AdminGuard({ children }: { children: React.ReactNode }) {
   const ok = useAdminAuthStore((s) => s.checkAuth());
   if (!ok) return <Navigate to="/admin/login" replace />;
+  return <>{children}</>;
+}
+
+// Protects store dashboard routes — redirects to login if no store token
+function StoreGuard({ children }: { children: React.ReactNode }) {
+  const token = localStorage.getItem("token");
+  if (!token) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
@@ -27,35 +35,35 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Store auth */}
-        <Route path="/" element={<AuthLayout />}>
+        {/* Store auth — no guard, just layout wrapper */}
+        <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/forgotpassword" element={<ForgotPassword />} />
         </Route>
 
-        {/* Store dashboard */}
-        <Route path="/" element={<DashboardLayout />}>
+        {/* Store dashboard — protected by StoreGuard */}
+        <Route
+          element={
+            <StoreGuard>
+              <DashboardLayout />
+            </StoreGuard>
+          }
+        >
           <Route index element={<Dashboard />} />
           <Route path="orders" element={<Order />} />
           <Route path="inventory" element={<Inventory />} />
           <Route path="settings" element={<Setting />} />
         </Route>
 
-        {/* Platform admin */}
+        {/* Platform admin auth */}
         <Route path="/admin/login" element={<LoginAD />} />
         <Route path="/admin/signup" element={<SignupAD />} />
         <Route path="/admin/forgotpassword" element={<ForgotPasswordAD />} />
+
+        {/* Platform admin dashboard — protected by AdminGuard */}
         <Route
           path="/admin"
-          element={
-            <AdminGuard>
-              <AdminAD />
-            </AdminGuard>
-          }
-        />
-        <Route
-          path="/adminad"
           element={
             <AdminGuard>
               <AdminAD />

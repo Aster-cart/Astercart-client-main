@@ -6,18 +6,15 @@ import PageHeader from "../component/PageHeader";
 
 const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // Get the current route
+  const location = useLocation();
   const [activeMenu, setActiveMenu] = useState("");
-  const { storeProfile, checkAuth } = useAuthStore();
+  const { checkAuth } = useAuthStore();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-    // Try to fetch profile, but do not block UI if it fails
-    checkAuth().catch(() => {/* ignore 403 */});
+    if (!token) { navigate("/login"); return; }
+    // Fetch profile in background — don't block render
+    checkAuth().catch(() => {});
 
     const map: Record<string, string> = {
       "/": "Dashboard",
@@ -25,7 +22,7 @@ const DashboardLayout: React.FC = () => {
       "/inventory": "Inventory",
       "/settings": "Settings",
     };
-    setActiveMenu(map[location.pathname] || "");
+    setActiveMenu(map[location.pathname] || "Dashboard");
   }, [location.pathname, navigate, checkAuth]);
 
   return (
@@ -33,7 +30,10 @@ const DashboardLayout: React.FC = () => {
       <Sidebar activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
       <main className="ml-[70px] md:ml-[250px] w-full h-full bg-gray-100 overflow-y-auto transition-all">
         <PageHeader title={activeMenu} />
-        {storeProfile && <Outlet />}
+        {/* Render outlet immediately — no longer blocked by storeProfile */}
+        <div className="p-4">
+          <Outlet />
+        </div>
       </main>
     </div>
   );
