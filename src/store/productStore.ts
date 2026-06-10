@@ -21,13 +21,15 @@ export const useProductStore = create<ProductStore>((set) => ({
     }
   },
   addProduct: async (product) => {
-    console.log(product);
-    
     try {
-      const response = await api.post(`/store/create-product`, [product]);      
-      console.log("Product added successfully"+ response);
-    } catch (error) {
+      await api.post(`/store/create-product`, [product]);
+      // Always refresh list immediately after adding
+      const response = await api.get(`/store/all-products`);
+      set((state) => ({ ...state, products: response.data.products }));
+    } catch (error: any) {
       console.error("Error adding product:", error);
+      // Re-throw so the UI can display the real error to the user
+      throw error;
     }
   },
   updateProduct: async (id: string, product: Record<string, unknown>) => {

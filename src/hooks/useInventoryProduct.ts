@@ -1,3 +1,4 @@
+import { toast } from "react-toastify";
 import { useState } from "react";
 import { useProductStore } from "../store/productStore";
 import { ProductForm } from "../types/product.types";
@@ -81,23 +82,33 @@ export const useInventoryProduct = (
 
   const handleAdd = async(e: React.FormEvent) => {
     e.preventDefault();
-    console.log(formData);
 
-    const formDataToSend = new FormData();
-    formDataToSend.append("productName", formData.name);
-    formDataToSend.append("description", formData.description);
-    formDataToSend.append("category", formData.category);
-    formDataToSend.append("price", formData.price);
-    formDataToSend.append("qty", formData.quantity);
-    formDataToSend.append("discount", formData.discount);
-    formDataToSend.append("taxRate", formData.taxRate);
+    if (!formData.name || !formData.price || !formData.quantity || !formData.category) {
+      toast.error("Please fill in all required fields: name, price, quantity and category.");
+      return;
+    }
 
-    formData.images.forEach((image, index) => {
-      formDataToSend.append(`images[${index}]`, image);
-    });
-    console.log(formData);
-    await addProduct(formData);
-    onClose();
+    // Build clean product object with correct field names the server expects
+    const productPayload = {
+      name: formData.name,
+      description: formData.description,
+      category: formData.category,
+      price: Number(formData.price),
+      quantity: Number(formData.quantity),
+      discount: Number(formData.discount) || 0,
+      taxRate: Number(formData.taxRate) || 0,
+      // Only include image URLs (strings), not File objects
+      images: images.filter((img): img is string => typeof img === "string"),
+    };
+
+    try {
+      await addProduct(productPayload);
+      toast.success("Product added successfully!");
+      onClose();
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || error?.message || "Failed to save product.";
+      toast.error(msg);
+    }
 
     // setFormData({
     //   name: "",
