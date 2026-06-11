@@ -46,7 +46,7 @@ const Order: React.FC = () => {
   const {
     activeDropdown, modalOpen, transactionDetails,
     dropdownRef, toggleDropdown, handleViewReceipt,
-    handleCloseModal, toggleRow, calculateSubtotal, formatDate,
+    handleCloseModal, expandedRows, toggleRow, calculateSubtotal, formatDate,
     mockOrderData, mockAllOrderData, mockDataOrder, loading, error,
   } = useOrder();
 
