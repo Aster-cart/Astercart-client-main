@@ -144,6 +144,7 @@ const Order: React.FC = () => {
                       </td>
                       <td className="px-2 text-gray-400 text-xs">
                         {order.orderDate ? formatDate(order.orderDate) : "—"}
+                        {order.orderTime ? <span className="block">{order.orderTime}</span> : null}
                       </td>
                       <td className="px-2">
                         <div className="flex gap-1 flex-wrap">
@@ -165,6 +166,40 @@ const Order: React.FC = () => {
                         </div>
                       </td>
                     </tr>
+                  {/* Progress tracker — expands on row click */}
+                  {expandedRows.includes(index) && (
+                    <tr>
+                      <td colSpan={7} className="bg-gray-50 px-4 py-4">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {["pending","processing","out_for_delivery","delivered","completed"].map((step, si) => {
+                            const statusOrder = ["pending","processing","out_for_delivery","delivered","completed"];
+                            const currentIdx = statusOrder.indexOf(order.status || order.transactionStatus?.toLowerCase() || "pending");
+                            const stepIdx = si;
+                            const done = stepIdx <= currentIdx;
+                            const isCurrent = stepIdx === currentIdx;
+                            return (
+                              <React.Fragment key={step}>
+                                <div className={`flex flex-col items-center text-xs ${done ? "text-pry" : "text-gray-300"}`}>
+                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold border-2 ${isCurrent ? "bg-pry text-white border-pry" : done ? "bg-pry text-white border-pry" : "bg-white border-gray-200 text-gray-300"}`}>
+                                    {done ? "✓" : si + 1}
+                                  </div>
+                                  <span className="mt-1 text-center whitespace-nowrap">{STATUS_LABEL[step]}</span>
+                                </div>
+                                {si < 4 && <div className={`flex-1 h-0.5 ${stepIdx < currentIdx ? "bg-pry" : "bg-gray-200"}`} />}
+                              </React.Fragment>
+                            );
+                          })}
+                        </div>
+                        {/* Delivery address */}
+                        {order.deliveryAddress && (
+                          <div className="mt-3 text-xs text-gray-500">
+                            <span className="font-medium">Deliver to: </span>
+                            {order.deliveryAddress.address}, {order.deliveryAddress.lga}, {order.deliveryAddress.state}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  )}
                   </React.Fragment>
                 );
               })}
@@ -178,6 +213,7 @@ const Order: React.FC = () => {
 
       {modalOpen && transactionDetails && (
         <TransactionModal
+          isOpen={modalOpen}
           transactionDetails={transactionDetails}
           onClose={handleCloseModal}
         />
