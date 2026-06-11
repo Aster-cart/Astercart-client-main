@@ -240,7 +240,7 @@ const Inventory: React.FC = () => {
       {/* Modals */}
       {showProductForm && (
         <ProductForm
-          onClose={() => { setShowProductForm(false); fetchProducts(); }}
+          onClose={async () => { setShowProductForm(false); await fetchProducts(); }}
         />
       )}
       {showImportModal && (
