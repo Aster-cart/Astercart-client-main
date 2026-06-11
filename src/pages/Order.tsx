@@ -166,8 +166,8 @@ const Order: React.FC = () => {
                         </div>
                       </td>
                     </tr>
-                  {/* Progress tracker — expands on row click */}
-                  {expandedRows.includes(index) && (
+                    {/* Progress tracker — expands on row click */}
+                    {expandedRows.includes(index) && (
                     <tr>
                       <td colSpan={7} className="bg-gray-50 px-4 py-4">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -199,7 +199,7 @@ const Order: React.FC = () => {
                         )}
                       </td>
                     </tr>
-                  )}
+                    )}
                   </React.Fragment>
                 );
               })}
