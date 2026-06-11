@@ -48,15 +48,21 @@ const Dashboard: React.FC = () => {
           </span>
         </div>
         <div className="flex flex-col  bg-white border-fade rounded-lg border h-[70px]  justify-between p-3 w-[432px] mx-1">
-          <span className="text-sm leading-4">Amount Made (₦)</span>
+          <span className="text-sm leading-4">Gross Revenue (₦)</span>
           <span className="font-medium text-xl leading-7">
             {mockDashboardData.amountMade}
           </span>
         </div>
         <div className="flex flex-col  bg-white border-fade rounded-lg border  h-[70px] justify-between p-3 w-[432px] mx-1">
-          <span className="text-sm leading-4">Total Amount After Deduction of Fees</span>
+          <span className="text-sm leading-4">Your Store Payout (after 10% fee)</span>
           <span className="font-medium text-xl leading-7">
             {mockDashboardData.totalFeesCharged}
+          </span>
+        </div>
+        <div className="flex flex-col justify-between p-3 border bg-white border-fade rounded-lg h-[70px] w-[432px] mx-1">
+          <span className="text-sm leading-4 text-gray-600">Platform Fee (10%)</span>
+          <span className="font-medium text-xl leading-7 text-orange-600">
+            {(mockDashboardData as any).platformFee || "₦0"}
           </span>
         </div>
       </div>

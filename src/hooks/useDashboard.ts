@@ -184,26 +184,29 @@ export const useDashboard = () => {
   }, [baseRows, selectedFilter]);
 
   const totals = useMemo(() => {
-    let totalAmount = 0;
-    lines.forEach((l) => {
-      const q = l.quantity ? Number(l.quantity) : 1;
-      totalAmount += (Number(l.price) || 0) * q;
-    });
-    return {
-      totalAmount,
-      totalTax: 0,
-      totalDiscount: 0,
-      leftAfterDeductions: totalAmount,
-    };
-  }, [lines]);
+    // Sum gross revenue (what customer paid) from completed/paid payments only
+    const grossRevenue = payments
+      .filter((p) => p.status === "completed")
+      .reduce((s, p) => s + (p.amount || 0), 0);
+
+    // Store payout = 90% of gross (platform takes 10%)
+    const storePayout = payments
+      .filter((p) => p.status === "completed")
+      .reduce((s, p) => s + (p.storePayout || p.amount * 0.9 || 0), 0);
+
+    // Platform fee = 10%
+    const platformFee = grossRevenue - storePayout;
+
+    return { grossRevenue, storePayout, platformFee };
+  }, [payments]);
 
   // 6) dashboard tiles
   const mockDashboardData = useMemo(() => {
     return {
       transactions: filteredTransactions.length,
-      amountMade: formatNaira(totals.totalAmount),
-      // Total left AFTER tax and discount (store payout ignored)
-      totalFeesCharged: formatNaira(totals.leftAfterDeductions),
+      amountMade: formatNaira(totals.grossRevenue),
+      totalFeesCharged: formatNaira(totals.storePayout),
+      platformFee: formatNaira(totals.platformFee),
     };
   }, [filteredTransactions.length, totals]);
 
