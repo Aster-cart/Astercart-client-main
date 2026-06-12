@@ -61,8 +61,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ onClose }) => {
 
 
   return (
-    <div className="flex font-inter flex-col">
-      <div className="flex-grow overflow-x-auto bg-white mx-2 rounded-2xl p-5 scrollbar-hide h-[calc(100vh-120px)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+    <div className="font-inter bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="p-5">
         <div className="overflow-y-auto">
           <div className="flex mb-3">
             <p className="text-lg  font-semibold leading-6">Add new product</p>
@@ -396,6 +397,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onClose }) => {
           </form>
         </div>
       </div>
+    </div>
     </div>
   );
 };

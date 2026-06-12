@@ -1,7 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import api from "../utils/api";
 import { toast } from "react-toastify";
 import { useAdminAuthStore } from "../store/adminAuthStore";
+
+interface FeeConfig {
+  platformCommission: number;
+  storePayout: number;
+  serviceFee: number;
+  deliveryFee: number;
+}
 
 const SettingsAD: React.FC = () => {
   const admin = useAdminAuthStore((s) => s.admin);
@@ -9,14 +16,44 @@ const SettingsAD: React.FC = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [saving, setSaving] = useState(false);
+  const [feeConfig, setFeeConfig] = useState<FeeConfig>({
+    platformCommission: 10,
+    storePayout: 90,
+    serviceFee: 5,
+    deliveryFee: 800,
+  });
+  const [savingFees, setSavingFees] = useState(false);
 
-  // Platform settings (read-only for now — editable in future)
-  const platformSettings = [
-    { label: "Platform commission", value: "10%", desc: "Percentage taken from each order" },
-    { label: "Store payout", value: "90%", desc: "Percentage paid to store after order" },
-    { label: "Service fee", value: "5%", desc: "Fee charged to customer at checkout" },
-    { label: "Delivery fee", value: "₦800 flat", desc: "Standard delivery charge per order" },
-  ];
+  const handleFeeChange = (key: keyof FeeConfig, value: string) => {
+    const num = parseFloat(value) || 0;
+    setFeeConfig((prev) => {
+      const updated = { ...prev, [key]: num };
+      // Keep storePayout in sync with platformCommission
+      if (key === "platformCommission") {
+        updated.storePayout = Math.max(0, 100 - num);
+      }
+      if (key === "storePayout") {
+        updated.platformCommission = Math.max(0, 100 - num);
+      }
+      return updated;
+    });
+  };
+
+  const handleSaveFees = async () => {
+    if (feeConfig.platformCommission + feeConfig.storePayout > 100) {
+      toast.error("Platform commission + store payout cannot exceed 100%");
+      return;
+    }
+    setSavingFees(true);
+    try {
+      await api.put("/admin/platform-config", feeConfig);
+      toast.success("Platform fee structure updated.");
+    } catch {
+      toast.error("Failed to save fee config. Endpoint may need to be added to server.");
+    } finally {
+      setSavingFees(false);
+    }
+  };
 
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -58,21 +95,48 @@ const SettingsAD: React.FC = () => {
         </div>
       </div>
 
-      {/* Platform settings */}
+      {/* Platform fee configuration — editable */}
       <div className="bg-white rounded-xl p-6 border">
-        <h2 className="text-lg font-semibold mb-1">Platform settings</h2>
-        <p className="text-sm text-gray-400 mb-4">Current fee structure. To change these, update the values in the server configuration.</p>
-        <div className="grid grid-cols-2 gap-4">
-          {platformSettings.map((s, i) => (
-            <div key={i} className="border border-gray-100 rounded-xl p-4 bg-gray-50">
-              <p className="text-xs text-gray-500 mb-1">{s.desc}</p>
-              <div className="flex justify-between items-center">
-                <p className="text-sm font-medium">{s.label}</p>
-                <p className="text-base font-bold text-pry">{s.value}</p>
+        <h2 className="text-lg font-semibold mb-1">Platform fee structure</h2>
+        <p className="text-sm text-gray-400 mb-4">
+          These are the default rates applied to all orders. You can adjust per-store rates by
+          editing the store directly from Store Management.
+        </p>
+        <div className="grid grid-cols-2 gap-4 max-w-lg">
+          {[
+            { key: "platformCommission" as keyof FeeConfig, label: "Platform commission (%)", suffix: "%" },
+            { key: "storePayout" as keyof FeeConfig, label: "Store payout (%)", suffix: "%" },
+            { key: "serviceFee" as keyof FeeConfig, label: "Service fee (%)", suffix: "%" },
+            { key: "deliveryFee" as keyof FeeConfig, label: "Delivery fee (₦)", suffix: "₦" },
+          ].map((field) => (
+            <div key={field.key}>
+              <label className="text-xs text-gray-500 font-medium mb-1 block">{field.label}</label>
+              <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+                <input
+                  type="number"
+                  value={feeConfig[field.key]}
+                  onChange={(e) => handleFeeChange(field.key, e.target.value)}
+                  className="flex-1 px-3 py-2 text-sm focus:outline-none"
+                  min={0}
+                  max={field.suffix === "%" ? 100 : 99999}
+                />
+                <span className="px-3 py-2 bg-gray-50 text-gray-500 text-sm border-l border-gray-200">
+                  {field.suffix}
+                </span>
               </div>
             </div>
           ))}
         </div>
+        <button
+          onClick={handleSaveFees}
+          disabled={savingFees}
+          className="mt-4 bg-pry text-white rounded-lg px-6 py-2 text-sm font-medium disabled:opacity-60"
+        >
+          {savingFees ? "Saving…" : "Save fee structure"}
+        </button>
+        <p className="text-xs text-gray-400 mt-2">
+          Note: Changes apply to new orders. Existing orders are not affected.
+        </p>
       </div>
 
       {/* Change password */}
@@ -108,11 +172,17 @@ const SettingsAD: React.FC = () => {
       <div className="bg-white rounded-xl p-6 border">
         <h2 className="text-lg font-semibold mb-4">System information</h2>
         <div className="space-y-2 text-sm text-gray-600">
-          <div className="flex justify-between"><span>Platform</span><span className="font-medium">Astercart Marketplace</span></div>
-          <div className="flex justify-between"><span>Payment provider</span><span className="font-medium">Flutterwave</span></div>
-          <div className="flex justify-between"><span>Database</span><span className="font-medium">MongoDB Atlas</span></div>
-          <div className="flex justify-between"><span>Server</span><span className="font-medium">Render (Node.js)</span></div>
-          <div className="flex justify-between"><span>Currency</span><span className="font-medium">NGN (₦)</span></div>
+          {[
+            ["Platform", "Astercart Marketplace"],
+            ["Payment provider", "Flutterwave"],
+            ["Database", "MongoDB Atlas"],
+            ["Server", "Render (Node.js)"],
+            ["Currency", "NGN (₦)"],
+          ].map(([k, v]) => (
+            <div key={k} className="flex justify-between">
+              <span>{k}</span><span className="font-medium">{v}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
