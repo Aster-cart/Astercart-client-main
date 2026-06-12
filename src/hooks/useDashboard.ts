@@ -1,218 +1,168 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../utils/api";
 
-type StoreOrderLine = {
-  productId: string;
-  name: string;
-  price: number;
-  adminFee: number;
-  storePayout: number;
-  createdAt: string;
-  status: "pending" | "completed" | "failed" | "canceled";
-  quantity?: number;
-};
-
-type PaymentProduct = { name: string; price: number; quantity?: number };
-type Payment = {
-  _id: string;
-  amount: number;
-  taxRate?: number;
-  additionalFee?: number;
-  discount?: number;
-  storePayout?: number;
-  status: string;
-  createdAt: string;
-  store?: { name?: string };
-  products?: PaymentProduct[];
+type Order = {
+  _id?: string;
+  orderNo?: string;
+  name?: string;          // customer name
+  status?: string;
+  transactionStatus?: string;
+  paymentStatus?: string;
+  subTotal?: string | number;
+  items?: { itemName: string; qty: number; unitPrice: number }[];
+  createdAt?: string;
+  storeName?: string;
+  storeId?: string;
+  deliveryAddress?: { address?: string; state?: string; lga?: string };
 };
 
 type TableRow = {
   id: string;
   user: string;
   transactionId: string;
-  productName: string;
-  price: string;
-  fee: string;
-  qty: number;
-  discount: string;
-  taxRate: string;
+  orderNo: string;
+  amount: string;
+  status: string;
+  paymentStatus: string;
+  itemCount: number;
   createdAt?: string;
-};
-
-type PaymentBreakdown = {
-  amount: number;   // == price
-  taxRate: number;
-  tax: number;
-  discount: number;
-  fee: number;      // amount - tax - discount
+  storeName?: string;
 };
 
 const formatNaira = (n: number) =>
   new Intl.NumberFormat("en-NG", {
     style: "currency",
     currency: "NGN",
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 0,
   }).format(Number.isFinite(n) ? n : 0);
 
 const formatNum = (n: number) =>
-  new Intl.NumberFormat("en-NG", { maximumFractionDigits: 0 }).format(
-    Math.round(n || 0)
-  );
+  new Intl.NumberFormat("en-NG", { maximumFractionDigits: 0 }).format(Math.round(n || 0));
 
 export const useDashboard = () => {
-  // UI state
-  const [selectedFilter, setSelectedFilter] = useState<string>("All Transactions");
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-
-  const [lines, setLines] = useState<StoreOrderLine[]>([]);
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const [selectedFilter, setSelectedFilter] = useState("All Transactions");
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState({ orders: false, payments: false });
   const [error, setError] = useState<string | null>(null);
 
-  const storeId = localStorage.getItem("storeId") || "";
-  const storeName = (localStorage.getItem("storeName") || "").trim();
-
-  // Helper: compute consistent breakdown per payment
-  const breakdownFromPayment = (p: Payment): PaymentBreakdown => {
-    const amount   = Number(p.amount) || 0;
-    const taxRate  = Number(p.taxRate) || 0;
-    const discount = Number(p.discount) || 0;
-    const tax      = (amount * taxRate) / 100;
-    const fee      = Math.max(0, amount - tax - discount);
-    return { amount, taxRate, tax, discount, fee };
-  };
-
-  // fetch store order lines
   useEffect(() => {
-    if (!storeId) return;
-    let cancelled = false;
+    const token = localStorage.getItem("token");
+    if (!token) return;
     (async () => {
+      setLoading((s) => ({ ...s, orders: true }));
       try {
-        setLoading((s) => ({ ...s, orders: true }));
-        const res = await api.get<{ orders: StoreOrderLine[] }>("/store/orders");
-        if (!cancelled) {
-          const orders = res.data?.orders || [];
-          setLines(
-            orders.flatMap((o: { items?: { itemName: string; qty: number; unitPrice: number }[]; orderNo?: string; transactionStatus?: string; createdAt?: string; name?: string }) =>
-              (o.items || []).map((item) => ({
-                productId: o.orderNo || "",
-                name: item.itemName,
-                price: item.unitPrice,
-                adminFee: 0,
-                storePayout: item.unitPrice * item.qty,
-                createdAt: o.createdAt || new Date().toISOString(),
-                status: (o.transactionStatus === "Successful" ? "completed" : "pending") as StoreOrderLine["status"],
-                quantity: item.qty,
-              }))
-            )
-          );
-        }
-      } catch (e: any) {
-        if (!cancelled) setError(e?.response?.data?.message || "Failed to load store orders");
+        const res = await api.get<{ orders: Order[] }>("/store/orders");
+        setOrders(res.data?.orders || []);
+      } catch (e: unknown) {
+        const err = e as { response?: { data?: { message?: string } } };
+        setError(err?.response?.data?.message || "Failed to load orders");
       } finally {
-        if (!cancelled) setLoading((s) => ({ ...s, orders: false }));
+        setLoading((s) => ({ ...s, orders: false }));
       }
     })();
-    return () => { cancelled = true; };
-  }, [storeId]);
+  }, []);
 
-  // Payment breakdown comes from order lines (store cannot access admin /payment/all)
-  useEffect(() => {
-    setPayments([]);
-    setLoading((s) => ({ ...s, payments: false }));
-  }, [storeName]);
+  // One row per ORDER not per product
+  const baseRows: TableRow[] = useMemo(() =>
+    orders.map((o) => {
+      const status = o.transactionStatus?.toLowerCase() === "successful"
+        ? "completed"
+        : (o.status || "pending");
+      const payStatus = o.paymentStatus || (status === "completed" ? "paid" : "unpaid");
+      const amount = typeof o.subTotal === "number"
+        ? formatNaira(o.subTotal)
+        : o.subTotal || "₦0";
+      return {
+        id: o._id || o.orderNo || "",
+        user: o.name || "Customer",
+        transactionId: (o._id || "").slice(-8).toUpperCase(),
+        orderNo: (o.orderNo || o._id || "").slice(0, 10).toUpperCase(),
+        amount,
+        status,
+        paymentStatus: payStatus,
+        itemCount: o.items?.length || 0,
+        createdAt: o.createdAt,
+        storeName: o.storeName,
+      };
+    }),
+  [orders]);
 
-  // 1) payments that belong to this store  ⬅ declare FIRST
-  const targetPayments = useMemo(() => {
-    const nameLower = storeName.toLowerCase();
-    const idsFromTable = new Set(lines.map((l) => String(l.productId)).filter(Boolean));
-    return payments.filter((p) => {
-      const byName = (p.store?.name || "").toLowerCase() === nameLower;
-      const byId = idsFromTable.has(String(p._id));
-      return byName || byId;
-    });
-  }, [payments, lines, storeName]);
-
-  // 2) breakdown map per payment id
-  const paymentBreakdownById = useMemo(() => {
-    const m = new Map<string, PaymentBreakdown>();
-    targetPayments.forEach((p) => m.set(String(p._id), breakdownFromPayment(p)));
-    return m;
-  }, [targetPayments]);
-
-  // 3) table rows from order lines
-  const baseRows: TableRow[] = useMemo(() => {
-    const rows: TableRow[] = [];
-    lines.forEach((l, idx) => {
-      const q = l.quantity ? Number(l.quantity) : 1;
-      const priceNum = (Number(l.price) || 0) * q;
-
-      const rawUser = (l as any).user;
-      const userDisplay = (rawUser && String(rawUser).trim()) || "Unknown";
-
-      const b = paymentBreakdownById.get(String(l.productId));
-
-      const taxFromLine = Number((l as any).taxRate) ? `${Number((l as any).taxRate)}%` : "";
-      const taxRateDisplay = b?.taxRate ? `${b.taxRate}%` : taxFromLine;
-
-      const feeForRow = b?.fee ?? 0;
-
-      rows.push({
-        id: `${l.productId}-${idx}`,
-        user: userDisplay,
-        transactionId: (l.productId || String(idx + 1)).slice(0, 8).toUpperCase(),
-        productName: l.name || "—",
-        price: formatNaira(priceNum),
-        fee: formatNaira(feeForRow),
-        qty: q,
-        discount: formatNaira(0),
-        taxRate: taxRateDisplay,
-        createdAt: l.createdAt,
-      });
-    });
-    return rows;
-  }, [lines, paymentBreakdownById]);
-
-  // 4) filter: recent transactions
-  const filteredTransactions = useMemo(() => {
-    if (selectedFilter !== "Recent Transaction") return baseRows;
-    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    return baseRows.filter(
-      (r) => new Date(r.createdAt || 0).getTime() >= sevenDaysAgo
+  // Stats — calculated from real orders
+  const stats = useMemo(() => {
+    const completed = orders.filter((o) =>
+      o.status === "completed" || o.transactionStatus?.toLowerCase() === "successful"
     );
-  }, [baseRows, selectedFilter]);
+    const pending = orders.filter((o) =>
+      !["completed", "failed", "canceled"].includes(o.status || "") &&
+      o.transactionStatus?.toLowerCase() !== "successful"
+    );
+    const failed = orders.filter((o) =>
+      o.status === "failed" || o.status === "canceled"
+    );
 
-  const totals = useMemo(() => {
-    // Sum gross revenue (what customer paid) from completed/paid payments only
-    const grossRevenue = payments
-      .filter((p) => p.status === "completed")
-      .reduce((s, p) => s + (p.amount || 0), 0);
-
-    // Store payout = 90% of gross (platform takes 10%)
-    const storePayout = payments
-      .filter((p) => p.status === "completed")
-      .reduce((s, p) => s + (p.storePayout || p.amount * 0.9 || 0), 0);
-
-    // Platform fee = 10%
-    const platformFee = grossRevenue - storePayout;
-
-    return { grossRevenue, storePayout, platformFee };
-  }, [payments]);
-
-  // 6) dashboard tiles
-  const mockDashboardData = useMemo(() => {
-    return {
-      transactions: filteredTransactions.length,
-      amountMade: formatNaira(totals.grossRevenue),
-      totalFeesCharged: formatNaira(totals.storePayout),
-      platformFee: formatNaira(totals.platformFee),
+    const parseAmt = (v: string | number | undefined) => {
+      if (!v) return 0;
+      if (typeof v === "number") return v;
+      return Number(String(v).replace(/[^0-9.]/g, "")) || 0;
     };
-  }, [filteredTransactions.length, totals]);
 
-  const mockAllTransactionData = useMemo(() => {
-    return { allTransactions: formatNum(baseRows.length) };
-  }, [baseRows.length]);
+    const totalRevenue = orders.reduce((s, o) => s + parseAmt(o.subTotal), 0);
+    const completedRevenue = completed.reduce((s, o) => s + parseAmt(o.subTotal), 0);
+    const pendingRevenue = pending.reduce((s, o) => s + parseAmt(o.subTotal), 0);
+    const failedRevenue = failed.reduce((s, o) => s + parseAmt(o.subTotal), 0);
+
+    return {
+      totalOrdersSale: formatNaira(totalRevenue),
+      totalCompletedOrders: formatNaira(completedRevenue),
+      totalPendingOrders: formatNaira(pendingRevenue),
+      totalFailedOrders: formatNaira(failedRevenue),
+    };
+  }, [orders]);
+
+  const filteredTransactions = useMemo(() => {
+    let rows = baseRows;
+    if (selectedFilter === "Recent Transaction") {
+      const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      rows = rows.filter((r) => new Date(r.createdAt || 0).getTime() >= sevenDaysAgo);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      rows = rows.filter(
+        (r) =>
+          r.user.toLowerCase().includes(q) ||
+          r.transactionId.toLowerCase().includes(q) ||
+          r.orderNo.toLowerCase().includes(q)
+      );
+    }
+    return rows;
+  }, [baseRows, selectedFilter, searchQuery]);
+
+  // Dashboard tiles — gross revenue = sum of all order amounts
+  const mockDashboardData = useMemo(() => {
+    const parseAmt = (v: string | number | undefined) => {
+      if (!v) return 0;
+      if (typeof v === "number") return v;
+      return Number(String(v).replace(/[^0-9.]/g, "")) || 0;
+    };
+    const gross = orders
+      .filter((o) => o.status === "completed" || o.paymentStatus === "paid")
+      .reduce((s, o) => s + parseAmt(o.subTotal), 0);
+    const payout = gross * 0.9;
+    const fee = gross * 0.1;
+
+    return {
+      transactions: orders.length,
+      amountMade: formatNaira(gross),         // Gross revenue
+      totalFeesCharged: formatNaira(payout),  // Store payout (90%)
+      platformFee: formatNaira(fee),          // Platform fee (10%)
+    };
+  }, [orders]);
+
+  const mockAllTransactionData = useMemo(() => ({
+    allTransactions: formatNum(baseRows.length),
+  }), [baseRows.length]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setSearchQuery(e.target.value);
@@ -229,5 +179,8 @@ export const useDashboard = () => {
     handleSearchChange,
     loading,
     error,
+    mockOrderData: stats,
+    mockAllOrderData: { allOrder: String(orders.length) },
+    mockDataOrder: orders,
   };
 };

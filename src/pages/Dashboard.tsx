@@ -1,194 +1,153 @@
+import React from "react";
 import { search } from "../assets/res";
 import { useDashboard } from "../hooks/useDashboard";
 
-type TableRow = {
-  id: string;
-  user: string;
-  transactionId: string;
-  productName: string;
-  price: string;   // already formatted
-  fee: string;     // already formatted
-  qty: number;
-  discount: string; // already formatted
-  taxRate: string;  // e.g. "5%"
-  createdAt?: string;
+const STATUS_COLOR: Record<string, string> = {
+  pending: "bg-yellow-100 text-yellow-700",
+  processing: "bg-blue-100 text-blue-700",
+  out_for_delivery: "bg-purple-100 text-purple-700",
+  delivered: "bg-green-100 text-green-700",
+  completed: "bg-green-100 text-green-700",
+  canceled: "bg-gray-100 text-gray-500",
+  failed: "bg-red-100 text-red-600",
 };
 
 const Dashboard: React.FC = () => {
   const {
-    mockDashboardData,            // { transactions, amountMade, totalFeesCharged }
-    mockAllTransactionData,       // { allTransactions }
+    mockDashboardData,
+    mockAllTransactionData,
     selectedFilter,
     setSelectedFilter,
     isOpen,
     setIsOpen,
     searchQuery,
     handleSearchChange,
-    filteredTransactions,         // <-- already an array<TableRow>
+    filteredTransactions,
   } = useDashboard();
 
-  // Our table rows are already prepared by the hook
-  const tableRows: TableRow[] = filteredTransactions;
-
-  // Keep your additional frontend search exactly as before
-  const visibleRows = tableRows.filter(
-    (r) =>
-      r.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.user.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const rows = filteredTransactions as any[];
 
   return (
     <div>
-      {/* Dashboard Stats */}
-      <div className="flex w-full font-inter justify-between py-2">
-        <div className="flex flex-col  justify-between p-3 border bg-white border-fade rounded-lg h-[70px] w-[432px] mx-1">
-          <span className="text-sm leading-4">All Transaction</span>
-          <span className="font-medium text-xl leading-7">
-            {mockDashboardData.transactions}
-          </span>
-        </div>
-        <div className="flex flex-col  bg-white border-fade rounded-lg border h-[70px]  justify-between p-3 w-[432px] mx-1">
-          <span className="text-sm leading-4">Gross Revenue (₦)</span>
-          <span className="font-medium text-xl leading-7">
-            {mockDashboardData.amountMade}
-          </span>
-        </div>
-        <div className="flex flex-col  bg-white border-fade rounded-lg border  h-[70px] justify-between p-3 w-[432px] mx-1">
-          <span className="text-sm leading-4">Your Store Payout (after 10% fee)</span>
-          <span className="font-medium text-xl leading-7">
-            {mockDashboardData.totalFeesCharged}
-          </span>
-        </div>
-        <div className="flex flex-col justify-between p-3 border bg-white border-fade rounded-lg h-[70px] w-[432px] mx-1">
-          <span className="text-sm leading-4 text-gray-600">Platform Fee (10%)</span>
-          <span className="font-medium text-xl leading-7 text-orange-600">
-            {(mockDashboardData as any).platformFee || "₦0"}
-          </span>
-        </div>
+      {/* Stats tiles */}
+      <div className="flex w-full font-inter justify-between py-2 flex-wrap gap-2">
+        {[
+          { label: "All Transactions", value: mockDashboardData.transactions },
+          { label: "Gross Revenue", value: mockDashboardData.amountMade },
+          { label: "Your Store Payout (90%)", value: mockDashboardData.totalFeesCharged },
+          { label: "Platform Fee (10%)", value: (mockDashboardData as any).platformFee || "₦0", orange: true },
+        ].map((s, i) => (
+          <div key={i} className="flex flex-col justify-between p-3 border bg-white border-fade rounded-lg h-[70px] flex-1 min-w-[160px] mx-1">
+            <span className="text-sm leading-4 text-gray-600">{s.label}</span>
+            <span className={`font-medium text-xl leading-7 ${s.orange ? "text-orange-600" : ""}`}>
+              {s.value}
+            </span>
+          </div>
+        ))}
       </div>
 
-      {/* Transaction Table Section */}
-      <div className="mt-1 mx-2 p-2 py-3 font-inter bg-white rounded-2xl">
-        <div className="flex justify-between mb-4">
-          <div className="flex w-[20%] text-center justify-between items-center ">
-            <h2 className="text-base leading-6 pr-2 font-semibold">
-              All Transactions
-            </h2>
-            <span className="bg-pry rounded text-white px-2">
+      {/* Transaction table */}
+      <div className="mt-1 mx-2 p-3 font-inter bg-white rounded-2xl">
+        <div className="flex justify-between mb-4 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-semibold">All Transactions</h2>
+            <span className="bg-pry rounded text-white px-2 text-xs">
               {mockAllTransactionData.allTransactions}
             </span>
           </div>
 
-          <div className="flex justify-between w-[70%]">
-            {/* Search Bar */}
-            <div className="w-[50%] relative">
-              <div className="absolute left-3 top-5 transform -translate-y-1/2">
-                <img src={search} alt="search icon" className="w-4 h-4" />
+          <div className="flex gap-3 items-center flex-wrap">
+            {/* Search */}
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                <img src={search} alt="" className="w-4 h-4" />
               </div>
-
-              {/* Search Input */}
               <input
                 type="search"
-                placeholder="Search ..."
+                placeholder="Search customer or order no..."
                 value={searchQuery}
                 onChange={handleSearchChange}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg text-gray-400 font-medium text-xs sm:text-sm border-gray-300 focus:outline-none focus:ring-0"
+                className="pl-10 pr-4 py-2 border rounded-lg text-xs border-gray-200 focus:outline-none focus:border-pry w-64"
               />
             </div>
 
-            {/* Filter Dropdown */}
-            <div className="">
-              {/* Dropdown Button */}
+            {/* Filter dropdown */}
+            <div className="relative">
               <button
-                className="bg-bginput text-[#434343] rounded-md px-2 py-2 flex items-center space-x-2"
+                className="bg-gray-50 border border-gray-200 text-gray-600 rounded-lg px-3 py-2 flex items-center gap-2 text-sm"
                 onClick={() => setIsOpen(!isOpen)}
               >
                 <span>{selectedFilter}</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-
-              {/* Dropdown Menu */}
               {isOpen && (
-                <div className="absolute bg-white border border-gray-300 rounded-md mt-2 w-[200px] shadow-lg">
-                  <ul className="py-2">
-                    <li
-                      className="px-4 py-2 text-sm cursor-pointer hover:bg-fade hover:mx-2 hover:rounded-lg"
-                      onClick={() => {
-                        setSelectedFilter("All Transactions");
-                        setIsOpen(false);
-                      }}
+                <div className="absolute right-0 bg-white border border-gray-200 rounded-lg mt-1 w-48 shadow-lg z-10">
+                  {["All Transactions", "Recent Transaction"].map((opt) => (
+                    <button
+                      key={opt}
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
+                      onClick={() => { setSelectedFilter(opt); setIsOpen(false); }}
                     >
-                      All Transactions
-                    </li>
-                    <li
-                      className="px-4 py-2 text-sm cursor-pointer hover:bg-fade hover:mx-2 hover:rounded-lg"
-                      onClick={() => {
-                        setSelectedFilter("Recent Transaction");
-                        setIsOpen(false);
-                      }}
-                    >
-                      Recent Transaction
-                    </li>
-                  </ul>
+                      {opt}
+                    </button>
+                  ))}
                 </div>
               )}
-            </div>
-
-            {/* Apply Filter Button */}
-            <div>
-              <button className="bg-black text-white rounded-md px-4 py-2">
-                Apply Filter
-              </button>
             </div>
           </div>
         </div>
 
-        {/* Table Displaying Transaction Data */}
-        <table className="w-full table-auto border-collapse">
-          <thead className="text-xs text-left text-[#7B7B7B] border-b py-3 gap-2 leading-4 font-normal">
-            <tr>
-              <th className="px-2 py-3">S/N</th>
-              <th className="px-2 py-3">User</th>
-              <th className="px-2 py-3">Transaction ID</th>
-              <th className="px-2 py-3">Product Name</th>
-              <th className="px-2 py-3">Price</th>
-              <th className="px-2 py-3">Fee</th>
-              <th className="px-2 py-3">Qty</th>
-              <th className="px-2 py-3">Discount</th>
-              <th className="px-2 py-3">Tax Rate</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {visibleRows.map((row, index) => (
-              <tr key={row.id} className="border-b text-xs gap-2 leading-4 font-normal border-gray-300">
-                <td className="px-2 py-3">{String(index + 1).padStart(2, "0")}</td>
-                <td className="px-2 py-3">{row.user}</td>
-                <td className="px-2 py-3">{row.transactionId}</td>
-                <td className="px-2 py-3">{row.productName}</td>
-                <td className="px-2 py-3">{row.price}</td>
-                <td className="px-2 py-3">{row.fee}</td>
-                <td className="px-2 py-3">{row.qty}</td>
-                <td className="px-2 py-3">{row.discount}</td>
-                <td className="px-2 py-3">{row.taxRate}</td>
+        {/* Table — one row per ORDER */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs text-left">
+            <thead className="text-gray-400 border-b">
+              <tr>
+                <th className="px-2 py-3">S/N</th>
+                <th className="px-2 py-3">Customer</th>
+                <th className="px-2 py-3">Order No</th>
+                <th className="px-2 py-3">Amount</th>
+                <th className="px-2 py-3">Items</th>
+                <th className="px-2 py-3">Status</th>
+                <th className="px-2 py-3">Payment</th>
+                <th className="px-2 py-3">Date</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-
+            </thead>
+            <tbody>
+              {rows.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="text-center py-8 text-gray-400">
+                    No transactions yet.
+                  </td>
+                </tr>
+              ) : (
+                rows.map((row, i) => (
+                  <tr key={row.id} className="border-b hover:bg-gray-50">
+                    <td className="px-2 py-3">{String(i + 1).padStart(2, "0")}</td>
+                    <td className="px-2 py-3">{row.user}</td>
+                    <td className="px-2 py-3 font-mono">{row.orderNo || row.transactionId}</td>
+                    <td className="px-2 py-3 font-medium">{row.amount}</td>
+                    <td className="px-2 py-3">{row.itemCount} item{row.itemCount !== 1 ? "s" : ""}</td>
+                    <td className="px-2 py-3">
+                      <span className={`px-2 py-1 rounded-full font-medium ${STATUS_COLOR[row.status] || "bg-gray-100 text-gray-500"}`}>
+                        {row.status}
+                      </span>
+                    </td>
+                    <td className="px-2 py-3">
+                      <span className={`px-2 py-1 rounded-full font-medium ${row.paymentStatus === "paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                        {row.paymentStatus}
+                      </span>
+                    </td>
+                    <td className="px-2 py-3 text-gray-400">
+                      {row.createdAt ? new Date(row.createdAt).toLocaleDateString("en-GB") : "—"}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

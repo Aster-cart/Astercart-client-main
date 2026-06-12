@@ -10,6 +10,7 @@ import StoresAD from "./StoresAD";
 import UsersAD from "./UsersAD";
 import OrdersAD from "./OrdersAD";
 import PaymentAD from "./PaymentAD";
+import SettingsAD from "./SettingsAD";
 import ProductsAD from "./ProductsAD";
 import { useAdminAuthStore } from "../store/adminAuthStore";
 import api from "../utils/api";
@@ -150,15 +151,7 @@ const AdminAD: React.FC = () => {
     Orders: { title: "Orders", content: <OrdersAD /> },
     Payment: { title: "Payments", content: <PaymentAD /> },
     Products: { title: "Product Management", content: <ProductsAD /> },
-    Settings: {
-      title: "Settings",
-      content: (
-        <div className="p-6 bg-white rounded-xl">
-          <h2 className="text-lg font-semibold mb-2">Platform Settings</h2>
-          <p className="text-gray-500 text-sm">Platform-wide settings such as commission rates, feature flags, and maintenance mode will be managed here in a future update.</p>
-        </div>
-      ),
-    },
+    Settings: { title: "Settings", content: <SettingsAD /> },
   };
 
   const current = contentMap[activeMenu] || contentMap["Dashboard"];
