@@ -10,6 +10,9 @@ interface StoreDetail {
     status: string;
     picture?: string;
     storeDetails?: { address?: string; state?: string; lga?: string };
+    cacNumber?: string;
+    phoneNumber?: string;
+    supportingPhone?: string;
     createdAt: string;
   };
   stats: {
@@ -54,8 +57,7 @@ interface Props {
 const formatNaira = (n: number) =>
   new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(n || 0);
 
-
-// ─── Per-store fee override component ───────────────────────────────────────
+// ─── Per-store fee override ───────────────────────────────────────────────────
 const PerStoreFeeOverride: React.FC<{ storeId: string; storeName: string }> = ({ storeId, storeName }) => {
   const [commission, setCommission] = useState<number | "">("");
   const [deliveryFee, setDeliveryFee] = useState<number | "">("");
@@ -81,7 +83,7 @@ const PerStoreFeeOverride: React.FC<{ storeId: string; storeName: string }> = ({
     <div className="bg-white rounded-xl p-5 border">
       <h3 className="font-semibold mb-1">Custom fee override for this store</h3>
       <p className="text-xs text-gray-400 mb-4">
-        Leave blank to use the global platform defaults. Set a value to override for this store only.
+        Leave blank to use global platform defaults. Set a value to override for this store only.
       </p>
       <div className="flex gap-4 items-end flex-wrap">
         <div>
@@ -130,7 +132,6 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(false);
 
-  // Load store overview on mount
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -145,7 +146,6 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
     })();
   }, [storeId]);
 
-  // Load products when tab switches to products
   useEffect(() => {
     if (tab !== "products" || products.length > 0) return;
     (async () => {
@@ -155,7 +155,6 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
           `/store/get-all-products-admin?storeId=${storeId}`
         );
         const list = Array.isArray(data) ? data : (data as { products: Product[] }).products || [];
-        // Filter to this store only
         setProducts(list.filter((p: any) => p.storeId?.toString() === storeId || !p.storeId));
       } catch {
         toast.error("Failed to load products.");
@@ -165,7 +164,6 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
     })();
   }, [tab, storeId]);
 
-  // Load orders when tab switches to orders
   useEffect(() => {
     if (tab !== "orders" || orders.length > 0) return;
     (async () => {
@@ -196,7 +194,7 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
 
   return (
     <div className="font-inter">
-      {/* Back button */}
+      {/* Back */}
       <button
         onClick={onBack}
         className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 mb-4"
@@ -229,7 +227,7 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
           <p className="text-xs text-gray-400 mt-1">
             Joined {new Date(store.createdAt).toLocaleDateString("en-GB")}
           </p>
-          {/* Verification documents section */}
+          {/* Verification documents */}
           <div className="mt-3 w-full bg-gray-50 rounded-lg p-3 text-left">
             <p className="text-xs font-semibold text-gray-500 mb-2">Verification documents</p>
             <div className="flex gap-4 text-sm">
@@ -250,7 +248,7 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
         </div>
       </div>
 
-      {/* Stats cards */}
+      {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         {[
           { label: "Total products", value: stats.totalProducts },
@@ -287,24 +285,26 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
 
       {/* Overview tab */}
       {tab === "overview" && (
-        <div className="bg-white rounded-xl p-6 border">
-          <h3 className="font-semibold mb-4">Revenue breakdown</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Gross revenue (customer paid)</span>
-              <span className="font-medium">{formatNaira(stats.totalRevenue)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Store payout (90%)</span>
-              <span className="font-medium text-green-600">{formatNaira(stats.totalStorePayout)}</span>
-            </div>
-            <div className="flex justify-between text-sm border-t pt-3">
-              <span className="text-gray-500">Platform fee (10%)</span>
-              <span className="font-medium text-blue-600">{formatNaira(stats.platformFee)}</span>
+        <div className="space-y-4">
+          <PerStoreFeeOverride storeId={storeId} storeName={store.name} />
+          <div className="bg-white rounded-xl p-6 border">
+            <h3 className="font-semibold mb-4">Revenue breakdown</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Gross revenue (customer paid)</span>
+                <span className="font-medium">{formatNaira(stats.totalRevenue)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Store payout (90%)</span>
+                <span className="font-medium text-green-600">{formatNaira(stats.totalStorePayout)}</span>
+              </div>
+              <div className="flex justify-between text-sm border-t pt-3">
+                <span className="text-gray-500">Platform fee (10%)</span>
+                <span className="font-medium text-blue-600">{formatNaira(stats.platformFee)}</span>
+              </div>
             </div>
           </div>
         </div>
-        </>
       )}
 
       {/* Products tab */}
@@ -329,11 +329,10 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
                 {products.map((p) => {
                   const qty = Number(p.quantity ?? 0);
                   const stockStatus = qty === 0 ? "Out of stock" : qty < 10 ? "Low stock" : "In stock";
-                  const stockColor = qty === 0
-                    ? "bg-red-100 text-red-600"
-                    : qty < 10
-                    ? "bg-yellow-100 text-yellow-700"
-                    : "bg-green-100 text-green-700";
+                  const stockColor =
+                    qty === 0 ? "bg-red-100 text-red-600" :
+                    qty < 10 ? "bg-yellow-100 text-yellow-700" :
+                    "bg-green-100 text-green-700";
                   return (
                     <tr key={p._id} className="border-b hover:bg-gray-50">
                       <td className="py-3 px-4">

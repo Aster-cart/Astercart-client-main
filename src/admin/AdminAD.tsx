@@ -17,7 +17,6 @@ import DisputesAD from "./DisputesAD";
 import TeamAD from "./TeamAD";
 import { useAdminAuthStore, canAccess } from "../store/adminAuthStore";
 import ProductsAD from "./ProductsAD";
-import { useAdminAuthStore } from "../store/adminAuthStore";
 import api from "../utils/api";
 
 interface Notification {
