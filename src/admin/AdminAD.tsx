@@ -133,7 +133,12 @@ const AdminAD: React.FC = () => {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState("Dashboard");
 
-  const { admin } = useAdminAuthStore();
+  const { admin, restoreSession } = useAdminAuthStore();
+
+  useEffect(() => {
+    restoreSession();
+  }, []);
+
   const adminRole = admin?.role || "super_admin";
 
   // Role-based menu visibility
