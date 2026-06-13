@@ -75,8 +75,44 @@ const Inventory: React.FC = () => {
     fetchProducts(); // Refresh after bulk import
   };
 
+  const lowStockItems = filteredProducts.filter(item => {
+    const q = Number(item.quantity ?? item.qty ?? 0);
+    return q > 0 && q <= 5;
+  });
+
+  const outOfStockItems = filteredProducts.filter(item =>
+    Number(item.quantity ?? item.qty ?? 0) === 0
+  );
+
   return (
     <div className="font-inter pb-8">
+      {/* Alerts */}
+      {(lowStockItems.length > 0 || outOfStockItems.length > 0) && (
+        <div className="mb-4 space-y-2">
+          {outOfStockItems.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center gap-3">
+              <span className="text-xl">🚨</span>
+              <div>
+                <p className="font-semibold text-red-700 text-sm">
+                  {outOfStockItems.length} product{outOfStockItems.length > 1 ? "s" : ""} out of stock
+                </p>
+                <p className="text-xs text-red-500">{outOfStockItems.slice(0, 3).map(p => p.name).join(", ")}{outOfStockItems.length > 3 ? "..." : ""}</p>
+              </div>
+            </div>
+          )}
+          {lowStockItems.length > 0 && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 flex items-center gap-3">
+              <span className="text-xl">⚠️</span>
+              <div>
+                <p className="font-semibold text-yellow-700 text-sm">
+                  {lowStockItems.length} product{lowStockItems.length > 1 ? "s" : ""} running low (5 or fewer left)
+                </p>
+                <p className="text-xs text-yellow-600">{lowStockItems.slice(0, 3).map(p => `${p.name} (${p.quantity ?? p.qty ?? 0} left)`).join(", ")}{lowStockItems.length > 3 ? "..." : ""}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         {[

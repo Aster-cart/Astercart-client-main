@@ -12,6 +12,8 @@ import OrdersAD from "./OrdersAD";
 import PaymentAD from "./PaymentAD";
 import SettingsAD from "./SettingsAD";
 import SupportAD from "./SupportAD";
+import AnalyticsAD from "./AnalyticsAD";
+import DisputesAD from "./DisputesAD";
 import ProductsAD from "./ProductsAD";
 import { useAdminAuthStore } from "../store/adminAuthStore";
 import api from "../utils/api";
@@ -137,6 +139,8 @@ const AdminAD: React.FC = () => {
     { label: "Payment", icon: wallet, activeIcon: walet },
     { label: "Products", icon: storem, activeIcon: stom },
     { label: "Settings", icon: setting, activeIcon: set },
+    { label: "Analytics", icon: set, activeIcon: set },
+    { label: "Disputes", icon: set, activeIcon: set },
     { label: "Support", icon: set, activeIcon: set },
     { label: "Logout", icon: logoutIcon, activeIcon: log },
   ];
@@ -154,6 +158,8 @@ const AdminAD: React.FC = () => {
     Payment: { title: "Payments", content: <PaymentAD /> },
     Products: { title: "Product Management", content: <ProductsAD /> },
     Settings: { title: "Settings", content: <SettingsAD /> },
+    Analytics: { title: "Analytics", content: <AnalyticsAD /> },
+    Disputes: { title: "Disputes", content: <DisputesAD /> },
     Support: { title: "Support", content: <SupportAD /> },
   };
 

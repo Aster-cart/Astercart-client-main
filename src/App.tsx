@@ -11,6 +11,8 @@ import Error404 from "./pages/Error404";
 import Order from "./pages/Order";
 import Inventory from "./pages/Inventory";
 import Setting from "./pages/Setting";
+import Earnings from "./pages/Earnings";
+import Analytics from "./pages/Analytics";
 import LoginAD from "./admin/LoginAD";
 import SignupAD from "./admin/SignupAD";
 import ForgotPasswordAD from "./admin/ForgotPasswordAD";
@@ -54,6 +56,8 @@ function App() {
           <Route path="orders" element={<Order />} />
           <Route path="inventory" element={<Inventory />} />
           <Route path="settings" element={<Setting />} />
+          <Route path="earnings" element={<Earnings />} />
+          <Route path="analytics" element={<Analytics />} />
         </Route>
 
         {/* Platform admin auth */}

@@ -118,7 +118,15 @@ const PaymentAD: React.FC = () => {
 
       {/* Table */}
       <div className="bg-white rounded-xl p-4 overflow-x-auto">
-        <h2 className="text-lg font-semibold mb-4">Payment records</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold">Payment records</h2>
+          <button
+            onClick={() => exportToCSV(filtered)}
+            className="text-sm px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
+          >
+            📥 Export CSV
+          </button>
+        </div>
         {filtered.length === 0 ? (
           <p className="text-gray-400 text-sm">No payments found.</p>
         ) : (
@@ -191,3 +199,27 @@ const PaymentAD: React.FC = () => {
 };
 
 export default PaymentAD;
+
+// Financial reconciliation export
+const exportToCSV = (payments: any[]) => {
+  const headers = ["Date", "Order ID", "Customer", "Store", "Amount", "Store Payout", "Platform Fee", "Status", "Payout Status"];
+  const rows = payments.map(p => [
+    new Date(p.createdAt).toLocaleDateString("en-GB"),
+    (p.orderId || p._id).slice(0, 10).toUpperCase(),
+    p.name || "",
+    p.store?.name || "",
+    p.amount || 0,
+    p.storePayout || 0,
+    p.adminFee || 0,
+    p.status || "",
+    p.payoutStatus || "pending",
+  ]);
+  const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `astercart-payments-${new Date().toISOString().split("T")[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};

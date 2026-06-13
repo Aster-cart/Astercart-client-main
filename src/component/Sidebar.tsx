@@ -33,6 +33,18 @@ const Sidebar: React.FC<{
       path: "/inventory",
     },
     {
+      label: "Analytics",
+      icon: setting,
+      activeIcon: setting,
+      path: "/analytics",
+    },
+    {
+      label: "Earnings",
+      icon: setting,
+      activeIcon: setting,
+      path: "/earnings",
+    },
+    {
       label: "Settings",
       icon: setting,
       activeIcon: set,

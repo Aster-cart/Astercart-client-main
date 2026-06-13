@@ -24,7 +24,7 @@ const SupportAD: React.FC = () => {
               title: "Email inbox",
               desc: "Every support request sends a formatted email copy to your admin email.",
               action: "Open email",
-              href: `mailto:${process.env.COMPANY_EMAIL || "support@astercart.com"}`,
+              href: "mailto:support@astercart.com",
             },
             {
               icon: "⚙️",

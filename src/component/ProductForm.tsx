@@ -65,8 +65,14 @@ const ProductForm: React.FC<ProductFormProps> = ({ onClose }) => {
     <div className="font-inter bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
       <div className="p-5">
         <div className="overflow-y-auto">
-          <div className="flex mb-3">
-            <p className="text-lg  font-semibold leading-6">Add new product</p>
+          <div className="flex justify-between items-center mb-3">
+            <p className="text-lg font-semibold leading-6">Add new product</p>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-lg"
+            >
+              ✕
+            </button>
           </div>
           {/* Scrollable Form Section */}
           <form

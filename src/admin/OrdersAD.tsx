@@ -40,6 +40,8 @@ const OrdersAD: React.FC = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
+  const [storeFilter, setStoreFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
 
   useEffect(() => {
@@ -63,7 +65,15 @@ const OrdersAD: React.FC = () => {
       o._id?.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === "all" || o.status === statusFilter;
     const matchPayment = paymentFilter === "all" || o.paymentStatus === paymentFilter;
-    return matchSearch && matchStatus && matchPayment;
+    const matchStore = storeFilter === "all" || o.storeName === storeFilter;
+    const now = Date.now();
+    const orderTime = new Date(o.createdAt).getTime();
+    const matchDate =
+      dateFilter === "all" ? true :
+      dateFilter === "today" ? orderTime >= new Date().setHours(0,0,0,0) :
+      dateFilter === "week" ? orderTime >= now - 7 * 24 * 60 * 60 * 1000 :
+      dateFilter === "month" ? orderTime >= now - 30 * 24 * 60 * 60 * 1000 : true;
+    return matchSearch && matchStatus && matchPayment && matchStore && matchDate;
   });
 
   const stats = {
@@ -74,18 +84,31 @@ const OrdersAD: React.FC = () => {
     paid: orders.filter((o) => o.paymentStatus === "paid").length,
   };
 
+  const storeNames = Array.from(new Set(orders.map(o => o.storeName).filter(Boolean)));
+
   if (loading) return <p className="p-4 text-gray-500">Loading orders...</p>;
 
   // Order detail view
   if (selectedOrder) {
     return (
       <div className="font-inter">
-        <button
-          onClick={() => setSelectedOrder(null)}
-          className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 mb-4"
-        >
-          ← Back to orders
-        </button>
+        <div className="flex justify-between items-center mb-4">
+          <button
+            onClick={() => setSelectedOrder(null)}
+            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800"
+          >
+            ← Back to orders
+          </button>
+          {selectedOrder.paymentStatus === "paid" && selectedOrder.status !== "delivered" && selectedOrder.status !== "completed" && (
+            <button
+              onClick={() => handleRefund(selectedOrder)}
+              disabled={refunding}
+              className="text-sm px-4 py-2 bg-red-100 text-red-600 rounded-lg font-medium"
+            >
+              {refunding ? "Processing..." : "Issue refund"}
+            </button>
+          )}
+        </div>
 
         <div className="bg-white rounded-xl p-6 border mb-4">
           <div className="flex justify-between items-start mb-4">
@@ -124,8 +147,29 @@ const OrdersAD: React.FC = () => {
               <p className="text-sm text-gray-500">{selectedOrder.state}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-400 mb-1">Total amount</p>
-              <p className="font-bold text-lg">{formatNaira(selectedOrder.totalAmount)}</p>
+              <p className="text-xs text-gray-400 mb-1">Financial breakdown</p>
+              <div className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Order subtotal</span>
+                  <span>{formatNaira(selectedOrder.totalAmount)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Service fee (5%)</span>
+                  <span>{formatNaira(Math.round(selectedOrder.totalAmount * 0.05))}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Delivery fee</span>
+                  <span>₦800</span>
+                </div>
+                <div className="flex justify-between text-sm font-bold border-t pt-1">
+                  <span>Grand total</span>
+                  <span className="text-pry">{formatNaira(selectedOrder.totalAmount + Math.round(selectedOrder.totalAmount * 0.05) + 800)}</span>
+                </div>
+                <div className="flex justify-between text-xs text-green-600">
+                  <span>Store payout (90%)</span>
+                  <span>{formatNaira(Math.round(selectedOrder.totalAmount * 0.9))}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -219,6 +263,24 @@ const OrdersAD: React.FC = () => {
           <option value="paid">Paid</option>
           <option value="unpaid">Unpaid</option>
           <option value="refunded">Refunded</option>
+        </select>
+        <select
+          value={storeFilter}
+          onChange={(e) => setStoreFilter(e.target.value)}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
+        >
+          <option value="all">All stores</option>
+          {storeNames.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select
+          value={dateFilter}
+          onChange={(e) => setDateFilter(e.target.value)}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
+        >
+          <option value="all">All dates</option>
+          <option value="today">Today</option>
+          <option value="week">Last 7 days</option>
+          <option value="month">Last 30 days</option>
         </select>
         <p className="text-sm text-gray-400 my-auto">
           {filtered.length} of {orders.length} orders

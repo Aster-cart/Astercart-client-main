@@ -12,12 +12,16 @@ const SignUp: React.FC = () => {
   });
   const [email, setEmail] = useState<string>("");
   const [name, setName] = useState<string>("");
-  const [storeAddress, setStoreAddress] = useState<string>("");
+  const [storeAddress,
+          cacNumber,
+          phoneNumber, setStoreAddress] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [state, setState] = useState<string>("");
   const [lga, setLGA] = useState<string>("");
   const [postalCode, setPostalCode] = useState<string>("");
+  const [cacNumber, setCacNumber] = useState<string>("");
+  const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [apiError, setApiError] = useState<string>("");
@@ -228,6 +232,27 @@ const SignUp: React.FC = () => {
           ${postalCode ? "bg-fade" : "bg-bginput"}`}
                     required
                   />
+                </div>
+                <div className="form-group">
+                  <label>Business Phone Number</label>
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    placeholder="e.g. 08012345678"
+                    className="input"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>CAC Registration Number <span className="text-gray-400">(optional — required before approval)</span></label>
+                  <input
+                    type="text"
+                    value={cacNumber}
+                    onChange={(e) => setCacNumber(e.target.value)}
+                    placeholder="e.g. RC-123456"
+                    className="input"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Your store will be reviewed by admin before going live.</p>
                 </div>
               </div>
 

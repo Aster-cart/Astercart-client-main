@@ -54,6 +54,73 @@ interface Props {
 const formatNaira = (n: number) =>
   new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(n || 0);
 
+
+// ─── Per-store fee override component ───────────────────────────────────────
+const PerStoreFeeOverride: React.FC<{ storeId: string; storeName: string }> = ({ storeId, storeName }) => {
+  const [commission, setCommission] = useState<number | "">("");
+  const [deliveryFee, setDeliveryFee] = useState<number | "">("");
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (commission === "" && deliveryFee === "") return;
+    setSaving(true);
+    try {
+      await api.put(`/store/adminstore/${storeId}/fee-config`, {
+        platformCommission: commission === "" ? undefined : Number(commission),
+        deliveryFee: deliveryFee === "" ? undefined : Number(deliveryFee),
+      });
+      toast.success(`Fee override saved for ${storeName}`);
+    } catch {
+      toast.error("Failed to save. The fee-config endpoint needs to be added to the server.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl p-5 border">
+      <h3 className="font-semibold mb-1">Custom fee override for this store</h3>
+      <p className="text-xs text-gray-400 mb-4">
+        Leave blank to use the global platform defaults. Set a value to override for this store only.
+      </p>
+      <div className="flex gap-4 items-end flex-wrap">
+        <div>
+          <label className="text-xs text-gray-500 font-medium block mb-1">Platform commission (%)</label>
+          <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+            <input
+              type="number" min={0} max={100} placeholder="e.g. 8"
+              value={commission}
+              onChange={(e) => setCommission(e.target.value === "" ? "" : Number(e.target.value))}
+              className="px-3 py-2 text-sm focus:outline-none w-28"
+            />
+            <span className="px-3 py-2 bg-gray-50 text-gray-500 text-sm border-l">%</span>
+          </div>
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 font-medium block mb-1">Delivery fee (₦)</label>
+          <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+            <input
+              type="number" min={0} placeholder="e.g. 500"
+              value={deliveryFee}
+              onChange={(e) => setDeliveryFee(e.target.value === "" ? "" : Number(e.target.value))}
+              className="px-3 py-2 text-sm focus:outline-none w-28"
+            />
+            <span className="px-3 py-2 bg-gray-50 text-gray-500 text-sm border-l">₦</span>
+          </div>
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="bg-pry text-white rounded-lg px-5 py-2 text-sm font-medium disabled:opacity-60"
+        >
+          {saving ? "Saving…" : "Save override"}
+        </button>
+      </div>
+    </div>
+  );
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
 const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
   const [detail, setDetail] = useState<StoreDetail | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -219,6 +286,7 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
             </div>
           </div>
         </div>
+        </>
       )}
 
       {/* Products tab */}

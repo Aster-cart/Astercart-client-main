@@ -10,6 +10,9 @@ interface StoreRow {
   state: string;
   status: string;
   createdAt: string;
+  orderCount?: number;
+  revenue?: number;
+  cacNumber?: string;
 }
 
 const StoresAD: React.FC = () => {
@@ -123,7 +126,9 @@ const StoresAD: React.FC = () => {
                 <th className="px-4">Email</th>
                 <th className="px-4">State</th>
                 <th className="px-4">Status</th>
-                <th className="px-4">Joined</th>
+                <th className="px-4">Orders / Revenue</th>
+                <th className="px-4">Joined / CAC</th>
+                <th className="px-4">Orders</th>
                 <th className="px-4">Actions</th>
               </tr>
             </thead>
