@@ -139,22 +139,6 @@ const AdminAD: React.FC = () => {
     restoreSession();
   }, []);
 
-  // Ensure role is always valid — fallback to super_admin if not set
-  // This handles accounts created before the role field was added
-  const validRoles = ["super_admin", "finance", "operations", "support"];
-  const rawRole = admin?.role as string | undefined;
-  const adminRole = rawRole && validRoles.includes(rawRole) ? rawRole : "super_admin";
-
-  // Role-based menu visibility
-  const roleMenuAccess: Record<string, string[]> = {
-    super_admin: ["Dashboard", "StoreManagement", "UserManagement", "Orders", "Payment", "Payouts", "Products", "Analytics", "Disputes", "Team", "Settings", "Support"],
-    finance: ["Dashboard", "Payment", "Payouts", "Analytics", "Settings"],
-    operations: ["Dashboard", "StoreManagement", "Orders", "Products", "Analytics"],
-    support: ["Dashboard", "Orders", "Disputes", "UserManagement", "Support"],
-  };
-
-  const allowedMenuItems = roleMenuAccess[adminRole] || [];
-
   const allMenuItems = [
     { label: "Dashboard", icon: dashboard, activeIcon: dash },
     { label: "StoreManagement", icon: storem, activeIcon: stom },
@@ -171,9 +155,7 @@ const AdminAD: React.FC = () => {
     { label: "Logout", icon: logoutIcon, activeIcon: log },
   ];
 
-  const menuItems = allMenuItems.filter(item =>
-    allowedMenuItems.includes(item.label) || item.label === "Logout"
-  );
+  const menuItems = allMenuItems;
 
   const handleMenuClick = (label: string) => {
     if (label === "Logout") { adminLogout(); navigate("/admin/login"); return; }
