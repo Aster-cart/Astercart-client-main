@@ -5,8 +5,10 @@ const Earnings: React.FC = () => {
   const { mockDashboardData, filteredTransactions, mockOrderData } = useDashboard();
 
   const rows = filteredTransactions as any[];
-  const paidRows = rows.filter(r => r.paymentStatus === "paid");
-  const pendingPayout = paidRows.filter(r => r.payoutStatus !== "paid_out");
+  // Show all orders - paymentStatus field may not always be set correctly
+  const paidRows = rows.filter(r => r.status === "completed" || r.paymentStatus === "paid");
+  const allEarningsRows = rows; // Show all orders in the table
+  const pendingPayout = rows.filter(r => r.payoutStatus !== "paid_out" && r.status !== "canceled" && r.status !== "failed");
 
   return (
     <div className="font-inter pb-8">
@@ -54,15 +56,16 @@ const Earnings: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {paidRows.length === 0 ? (
+              {allEarningsRows.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-8 text-gray-400">
-                    No earnings yet. Orders will appear here once payment is confirmed.
+                    No orders yet.
                   </td>
                 </tr>
               ) : (
-                paidRows.map((row, i) => {
-                  const amount = Number(String(row.amount || "0").replace(/[^0-9.]/g, "")) || 0;
+                allEarningsRows.map((row, i) => {
+                  const rawAmt = row.amount || row.subTotal || "0";
+                  const amount = Number(String(rawAmt).replace(/[^0-9.]/g, "")) || 0;
                   const payout = Math.round(amount * 0.9);
                   const fee = amount - payout;
                   return (

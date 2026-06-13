@@ -17,6 +17,7 @@ import DisputesAD from "./DisputesAD";
 import TeamAD from "./TeamAD";
 import { useAdminAuthStore, canAccess } from "../store/adminAuthStore";
 import ProductsAD from "./ProductsAD";
+import { useAdminAuthStore } from "../store/adminAuthStore";
 import api from "../utils/api";
 
 interface Notification {
@@ -164,6 +165,10 @@ const AdminAD: React.FC = () => {
     { label: "Support", icon: set, activeIcon: set },
     { label: "Logout", icon: logoutIcon, activeIcon: log },
   ];
+
+  const menuItems = allMenuItems.filter(item =>
+    allowedMenuItems.includes(item.label) || item.label === "Logout"
+  );
 
   const handleMenuClick = (label: string) => {
     if (label === "Logout") { adminLogout(); navigate("/admin/login"); return; }

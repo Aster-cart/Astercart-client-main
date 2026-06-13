@@ -54,6 +54,7 @@ const Order: React.FC = () => {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("all");
 
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     setUpdatingId(orderId);
@@ -75,7 +76,16 @@ const Order: React.FC = () => {
       (order.orderNo || "").toLowerCase().includes(search.toLowerCase());
     const orderStatus = order.status || "pending";
     const matchStatus = statusFilter === "all" || orderStatus === statusFilter;
-    return matchSearch && matchStatus;
+    const orderDate = new Date(order.createdAt || order.orderDate || 0);
+    const now = new Date();
+    const matchDate =
+      dateFilter === "all" ? true :
+      dateFilter === "today" ? orderDate.toDateString() === now.toDateString() :
+      dateFilter === "week" ? (now.getTime() - orderDate.getTime()) < 7 * 24 * 60 * 60 * 1000 :
+      dateFilter === "month" ? orderDate.getMonth() === now.getMonth() && orderDate.getFullYear() === now.getFullYear() :
+      dateFilter === "last_month" ? orderDate.getMonth() === (now.getMonth() - 1 + 12) % 12 :
+      true;
+    return matchSearch && matchStatus && matchDate;
   });
 
   return (
@@ -116,6 +126,17 @@ const Order: React.FC = () => {
           {Object.entries(STATUS_LABEL).map(([val, label]) => (
             <option key={val} value={val}>{label}</option>
           ))}
+        </select>
+        <select
+          value={dateFilter}
+          onChange={(e) => setDateFilter(e.target.value)}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
+        >
+          <option value="all">All time</option>
+          <option value="today">Today</option>
+          <option value="week">This week</option>
+          <option value="month">This month</option>
+          <option value="last_month">Last month</option>
         </select>
       </div>
 
