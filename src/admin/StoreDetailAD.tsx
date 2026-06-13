@@ -229,6 +229,24 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
           <p className="text-xs text-gray-400 mt-1">
             Joined {new Date(store.createdAt).toLocaleDateString("en-GB")}
           </p>
+          {/* Verification documents section */}
+          <div className="mt-3 w-full bg-gray-50 rounded-lg p-3 text-left">
+            <p className="text-xs font-semibold text-gray-500 mb-2">Verification documents</p>
+            <div className="flex gap-4 text-sm">
+              <div>
+                <p className="text-xs text-gray-400">CAC Number</p>
+                {store.cacNumber ? (
+                  <p className="font-medium text-green-600">✓ {store.cacNumber}</p>
+                ) : (
+                  <p className="text-yellow-600 text-xs">⚠ Not provided</p>
+                )}
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">Business Phone</p>
+                <p className="font-medium">{store.phoneNumber || store.supportingPhone || "—"}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -286,6 +304,7 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
             </div>
           </div>
         </div>
+        </>
       )}
 
       {/* Products tab */}

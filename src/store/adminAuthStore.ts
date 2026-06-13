@@ -6,7 +6,23 @@ interface AdminUser {
   id: string;
   email: string;
   userType: string;
+  role: "super_admin" | "finance" | "support" | "operations";
+  name: string;
 }
+
+// Role permissions - mirrors server ROLE_PERMISSIONS
+export const ROLE_PERMISSIONS: Record<string, string[]> = {
+  super_admin: ["*"],
+  finance: ["payments", "payouts", "refunds", "reports"],
+  operations: ["stores", "orders", "products", "analytics"],
+  support: ["disputes", "customers", "orders_view"],
+};
+
+export const canAccess = (role: string | undefined, permission: string): boolean => {
+  if (!role) return false;
+  const perms = ROLE_PERMISSIONS[role] || [];
+  return perms.includes("*") || perms.includes(permission);
+};
 
 interface AdminAuthStore {
   admin: AdminUser | null;

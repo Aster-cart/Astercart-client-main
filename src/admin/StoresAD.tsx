@@ -13,13 +13,27 @@ interface StoreRow {
   orderCount?: number;
   revenue?: number;
   cacNumber?: string;
+  phoneNumber?: string;
 }
+
+type FilterTab = "all" | "pending" | "active" | "inactive";
+
+const STATUS_BADGE: Record<string, string> = {
+  active: "bg-green-100 text-green-700",
+  pending: "bg-yellow-100 text-yellow-700",
+  inactive: "bg-red-100 text-red-600",
+};
+
+const formatNaira = (n: number) =>
+  new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(n || 0);
 
 const StoresAD: React.FC = () => {
   const [stores, setStores] = useState<StoreRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "pending" | "active" | "inactive">("all");
+  const [filter, setFilter] = useState<FilterTab>("all");
+  const [search, setSearch] = useState("");
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
+  const [actionId, setActionId] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -35,118 +49,131 @@ const StoresAD: React.FC = () => {
 
   useEffect(() => { load(); }, []);
 
-  // If a store is selected, show its detail page
   if (selectedStoreId) {
-    return (
-      <StoreDetailAD
-        storeId={selectedStoreId}
-        onBack={() => setSelectedStoreId(null)}
-      />
-    );
+    return <StoreDetailAD storeId={selectedStoreId} onBack={() => setSelectedStoreId(null)} />;
   }
 
   const setStatus = async (id: string, action: "block" | "unblock") => {
+    setActionId(id);
     try {
       await api.put(`/store/adminstore/${id}/${action}`);
       toast.success(action === "block" ? "Store blocked" : "Store activated");
       load();
     } catch {
       toast.error("Action failed");
+    } finally {
+      setActionId(null);
     }
   };
 
-  const filtered = stores.filter((s) =>
-    filter === "all" ? true : s.status === filter
-  );
+  const filtered = stores.filter((s) => {
+    const matchFilter = filter === "all" || s.status === filter;
+    const matchSearch = search === "" ||
+      s.name.toLowerCase().includes(search.toLowerCase()) ||
+      s.email.toLowerCase().includes(search.toLowerCase()) ||
+      (s.state || "").toLowerCase().includes(search.toLowerCase());
+    return matchFilter && matchSearch;
+  });
 
-  const pending = stores.filter((s) => s.status === "pending").length;
-  const active = stores.filter((s) => s.status === "active").length;
-  const inactive = stores.filter((s) => s.status === "inactive").length;
-
-  const statusBadge = (status: string) => {
-    const map: Record<string, string> = {
-      active: "bg-green-100 text-green-700",
-      pending: "bg-yellow-100 text-yellow-700",
-      inactive: "bg-red-100 text-red-600",
-    };
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${map[status] || "bg-gray-100 text-gray-600"}`}>
-        {status}
-      </span>
-    );
+  const counts = {
+    pending: stores.filter(s => s.status === "pending").length,
+    active: stores.filter(s => s.status === "active").length,
+    inactive: stores.filter(s => s.status === "inactive").length,
   };
 
   return (
     <div className="font-inter">
-      {/* Stats */}
+      {/* Summary tiles */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        {[
-          { label: "Pending approval", value: pending, color: "text-yellow-600" },
-          { label: "Active stores", value: active, color: "text-green-600" },
-          { label: "Blocked stores", value: inactive, color: "text-red-500" },
-        ].map((s, i) => (
-          <div key={i} className="bg-white rounded-xl p-4 border">
-            <p className="text-sm text-gray-500">{s.label}</p>
-            <p className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value}</p>
-          </div>
-        ))}
+        <div className="bg-white rounded-xl p-4 border">
+          <p className="text-sm text-gray-500">Pending approval</p>
+          <p className="text-2xl font-bold text-yellow-600 mt-1">{counts.pending}</p>
+          <p className="text-xs text-gray-400 mt-1">Awaiting your review</p>
+        </div>
+        <div className="bg-white rounded-xl p-4 border">
+          <p className="text-sm text-gray-500">Active stores</p>
+          <p className="text-2xl font-bold text-green-600 mt-1">{counts.active}</p>
+          <p className="text-xs text-gray-400 mt-1">Live on the platform</p>
+        </div>
+        <div className="bg-white rounded-xl p-4 border">
+          <p className="text-sm text-gray-500">Blocked stores</p>
+          <p className="text-2xl font-bold text-red-500 mt-1">{counts.inactive}</p>
+          <p className="text-xs text-gray-400 mt-1">Currently suspended</p>
+        </div>
       </div>
 
-      {/* Filter tabs */}
-      <div className="flex gap-2 mb-4">
-        {(["all", "pending", "active", "inactive"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-1.5 rounded-full text-xs border font-medium ${
-              filter === f ? "bg-pry text-white border-pry" : "text-gray-500 border-gray-200"
-            }`}
-          >
-            {f.charAt(0).toUpperCase() + f.slice(1)}
-            {f === "pending" && pending > 0 && (
-              <span className="ml-1 bg-yellow-400 text-white rounded-full px-1.5 py-0.5 text-xs">
-                {pending}
-              </span>
-            )}
-          </button>
-        ))}
+      {/* Search + filter row */}
+      <div className="flex gap-3 mb-4 flex-wrap items-center">
+        <input
+          type="text"
+          placeholder="Search by name, email or state..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border border-gray-200 rounded-lg px-4 py-2 text-sm w-72 focus:outline-none focus:border-pry"
+        />
+        <div className="flex gap-2">
+          {(["all", "pending", "active", "inactive"] as FilterTab[]).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-2 rounded-full text-xs border font-medium ${
+                filter === f ? "bg-pry text-white border-pry" : "text-gray-500 border-gray-200"
+              }`}
+            >
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+              {f === "pending" && counts.pending > 0 && (
+                <span className="ml-1 bg-yellow-400 text-white rounded-full px-1.5 text-xs">
+                  {counts.pending}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Table */}
+      {/* Store table */}
       <div className="bg-white rounded-xl border overflow-x-auto">
         {loading ? (
-          <div className="p-8 text-center text-gray-400 text-sm">Loading stores…</div>
+          <p className="p-8 text-center text-gray-400 text-sm">Loading stores…</p>
         ) : filtered.length === 0 ? (
-          <div className="p-8 text-center text-gray-400 text-sm">No stores found.</div>
+          <p className="p-8 text-center text-gray-400 text-sm">No stores found.</p>
         ) : (
           <table className="w-full text-sm text-left">
-            <thead className="text-gray-400 border-b text-xs">
+            <thead className="text-gray-400 border-b text-xs bg-gray-50">
               <tr>
                 <th className="py-3 px-4">Store name</th>
                 <th className="px-4">Email</th>
                 <th className="px-4">State</th>
                 <th className="px-4">Status</th>
-                <th className="px-4">Orders / Revenue</th>
-                <th className="px-4">Joined / CAC</th>
                 <th className="px-4">Orders</th>
+                <th className="px-4">Revenue</th>
+                <th className="px-4">Joined</th>
                 <th className="px-4">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((s) => (
-                <tr
-                  key={s.storeId}
-                  className="border-b hover:bg-gray-50 cursor-pointer"
-                >
-                  <td
-                    className="py-3 px-4 font-medium text-pry hover:underline"
-                    onClick={() => setSelectedStoreId(s.storeId)}
-                  >
-                    {s.name}
+                <tr key={s.storeId} className="border-b hover:bg-gray-50">
+                  {/* Clickable store name */}
+                  <td className="py-3 px-4">
+                    <button
+                      onClick={() => setSelectedStoreId(s.storeId)}
+                      className="font-medium text-pry hover:underline text-left"
+                    >
+                      {s.name}
+                    </button>
                   </td>
-                  <td className="px-4 text-gray-500">{s.email}</td>
+                  <td className="px-4 text-gray-500 text-xs">{s.email}</td>
                   <td className="px-4 text-gray-500">{s.state || "—"}</td>
-                  <td className="px-4">{statusBadge(s.status)}</td>
+                  <td className="px-4">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_BADGE[s.status] || "bg-gray-100 text-gray-500"}`}>
+                      {s.status}
+                    </span>
+                  </td>
+                  <td className="px-4 font-medium">{s.orderCount || 0}</td>
+                  <td className="px-4 text-green-600 font-medium">
+                    {s.revenue ? formatNaira(s.revenue) : "—"}
+                  </td>
                   <td className="px-4 text-gray-400 text-xs">
                     {new Date(s.createdAt).toLocaleDateString("en-GB")}
                   </td>
@@ -161,6 +188,7 @@ const StoresAD: React.FC = () => {
                       {s.status === "pending" && (
                         <button
                           onClick={() => setStatus(s.storeId, "unblock")}
+                          disabled={actionId === s.storeId}
                           className="text-xs px-3 py-1.5 bg-green-500 text-white rounded-lg font-medium"
                         >
                           Approve
@@ -169,6 +197,7 @@ const StoresAD: React.FC = () => {
                       {s.status === "active" && (
                         <button
                           onClick={() => setStatus(s.storeId, "block")}
+                          disabled={actionId === s.storeId}
                           className="text-xs px-3 py-1.5 bg-red-100 text-red-600 rounded-lg font-medium"
                         >
                           Block
@@ -177,6 +206,7 @@ const StoresAD: React.FC = () => {
                       {s.status === "inactive" && (
                         <button
                           onClick={() => setStatus(s.storeId, "unblock")}
+                          disabled={actionId === s.storeId}
                           className="text-xs px-3 py-1.5 bg-blue-100 text-blue-600 rounded-lg font-medium"
                         >
                           Reactivate

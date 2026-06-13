@@ -14,6 +14,8 @@ import SettingsAD from "./SettingsAD";
 import SupportAD from "./SupportAD";
 import AnalyticsAD from "./AnalyticsAD";
 import DisputesAD from "./DisputesAD";
+import TeamAD from "./TeamAD";
+import { useAdminAuthStore, canAccess } from "../store/adminAuthStore";
 import ProductsAD from "./ProductsAD";
 import { useAdminAuthStore } from "../store/adminAuthStore";
 import api from "../utils/api";
@@ -131,7 +133,20 @@ const AdminAD: React.FC = () => {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState("Dashboard");
 
-  const menuItems = [
+  const { admin } = useAdminAuthStore();
+  const adminRole = admin?.role || "super_admin";
+
+  // Role-based menu visibility
+  const roleMenuAccess: Record<string, string[]> = {
+    super_admin: ["Dashboard", "StoreManagement", "UserManagement", "Orders", "Payment", "Products", "Analytics", "Disputes", "Team", "Settings", "Support"],
+    finance: ["Dashboard", "Payment", "Analytics", "Settings"],
+    operations: ["Dashboard", "StoreManagement", "Orders", "Products", "Analytics"],
+    support: ["Dashboard", "Orders", "Disputes", "UserManagement", "Support"],
+  };
+
+  const allowedMenuItems = roleMenuAccess[adminRole] || [];
+
+  const allMenuItems = [
     { label: "Dashboard", icon: dashboard, activeIcon: dash },
     { label: "StoreManagement", icon: storem, activeIcon: stom },
     { label: "UserManagement", icon: userm, activeIcon: usem },
@@ -141,6 +156,7 @@ const AdminAD: React.FC = () => {
     { label: "Settings", icon: setting, activeIcon: set },
     { label: "Analytics", icon: set, activeIcon: set },
     { label: "Disputes", icon: set, activeIcon: set },
+    { label: "Team", icon: set, activeIcon: set },
     { label: "Support", icon: set, activeIcon: set },
     { label: "Logout", icon: logoutIcon, activeIcon: log },
   ];
@@ -160,6 +176,7 @@ const AdminAD: React.FC = () => {
     Settings: { title: "Settings", content: <SettingsAD /> },
     Analytics: { title: "Analytics", content: <AnalyticsAD /> },
     Disputes: { title: "Disputes", content: <DisputesAD /> },
+    Team: { title: "Admin Team", content: <TeamAD /> },
     Support: { title: "Support", content: <SupportAD /> },
   };
 

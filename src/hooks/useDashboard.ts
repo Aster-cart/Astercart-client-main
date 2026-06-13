@@ -139,7 +139,7 @@ export const useDashboard = () => {
     return rows;
   }, [baseRows, selectedFilter, searchQuery]);
 
-  // Dashboard tiles — gross revenue = sum of all order amounts
+  // Dashboard tiles — financial summary
   const mockDashboardData = useMemo(() => {
     const parseAmt = (v: string | number | undefined) => {
       if (!v) return 0;
@@ -149,14 +149,14 @@ export const useDashboard = () => {
     const gross = orders
       .filter((o) => o.status === "completed" || o.paymentStatus === "paid")
       .reduce((s, o) => s + parseAmt(o.subTotal), 0);
-    const payout = gross * 0.9;
-    const fee = gross * 0.1;
+    const payout = Math.round(gross * 0.9);
+    const fee = Math.round(gross * 0.1);
 
     return {
       transactions: orders.length,
-      amountMade: formatNaira(gross),         // Gross revenue
-      totalFeesCharged: formatNaira(payout),  // Store payout (90%)
-      platformFee: formatNaira(fee),          // Platform fee (10%)
+      amountMade: formatNaira(gross),
+      totalFeesCharged: formatNaira(payout),
+      platformFee: formatNaira(fee),
     };
   }, [orders]);
 
