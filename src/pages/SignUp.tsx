@@ -65,7 +65,9 @@ const SignUp: React.FC = () => {
     postalCode: postalCode.trim(),
     lga: lga.trim(),
   },
-  userType: "Store", 
+  cacNumber: cacNumber.trim(),
+  phoneNumber: phoneNumber.trim(),
+  userType: "Store",
 };
 
     try {
@@ -231,26 +233,34 @@ const SignUp: React.FC = () => {
                     required
                   />
                 </div>
-                <div className="form-group">
-                  <label>Business Phone Number</label>
+              </div>
+
+              <div className="grid grid-cols-2 gap-[7px] mb-2">
+                <div>
+                  <label className="block text-sm font-medium text-input" htmlFor="phone">
+                    Business Phone
+                  </label>
                   <input
                     type="tel"
+                    id="phone"
+                    placeholder="e.g. 08012345678"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder="e.g. 08012345678"
-                    className="input"
+                    className={`mt-1 block text-sm h-[40px] w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${phoneNumber ? "bg-fade" : "bg-bginput"}`}
                   />
                 </div>
-                <div className="form-group">
-                  <label>CAC Registration Number <span className="text-gray-400">(optional — required before approval)</span></label>
+                <div>
+                  <label className="block text-sm font-medium text-input" htmlFor="cac">
+                    CAC Number <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
                   <input
                     type="text"
+                    id="cac"
+                    placeholder="e.g. RC-123456"
                     value={cacNumber}
                     onChange={(e) => setCacNumber(e.target.value)}
-                    placeholder="e.g. RC-123456"
-                    className="input"
+                    className={`mt-1 block text-sm h-[40px] w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${cacNumber ? "bg-fade" : "bg-bginput"}`}
                   />
-                  <p className="text-xs text-gray-400 mt-1">Your store will be reviewed by admin before going live.</p>
                 </div>
               </div>
 

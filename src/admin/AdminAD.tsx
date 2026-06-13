@@ -15,8 +15,9 @@ import SupportAD from "./SupportAD";
 import AnalyticsAD from "./AnalyticsAD";
 import DisputesAD from "./DisputesAD";
 import TeamAD from "./TeamAD";
+import PayoutsAD from "./PayoutsAD";
+import { useAdminAuthStore, canAccess } from "../store/adminAuthStore";
 import ProductsAD from "./ProductsAD";
-import { useAdminAuthStore } from "../store/adminAuthStore";
 import api from "../utils/api";
 
 interface Notification {
@@ -138,12 +139,16 @@ const AdminAD: React.FC = () => {
     restoreSession();
   }, []);
 
-  const adminRole = admin?.role || "super_admin";
+  // Ensure role is always valid — fallback to super_admin if not set
+  // This handles accounts created before the role field was added
+  const validRoles = ["super_admin", "finance", "operations", "support"];
+  const rawRole = admin?.role as string | undefined;
+  const adminRole = rawRole && validRoles.includes(rawRole) ? rawRole : "super_admin";
 
   // Role-based menu visibility
   const roleMenuAccess: Record<string, string[]> = {
-    super_admin: ["Dashboard", "StoreManagement", "UserManagement", "Orders", "Payment", "Products", "Analytics", "Disputes", "Team", "Settings", "Support"],
-    finance: ["Dashboard", "Payment", "Analytics", "Settings"],
+    super_admin: ["Dashboard", "StoreManagement", "UserManagement", "Orders", "Payment", "Payouts", "Products", "Analytics", "Disputes", "Team", "Settings", "Support"],
+    finance: ["Dashboard", "Payment", "Payouts", "Analytics", "Settings"],
     operations: ["Dashboard", "StoreManagement", "Orders", "Products", "Analytics"],
     support: ["Dashboard", "Orders", "Disputes", "UserManagement", "Support"],
   };
@@ -156,6 +161,7 @@ const AdminAD: React.FC = () => {
     { label: "UserManagement", icon: userm, activeIcon: usem },
     { label: "Orders", icon: orderm, activeIcon: ordm },
     { label: "Payment", icon: wallet, activeIcon: walet },
+    { label: "Payouts", icon: wallet, activeIcon: walet },
     { label: "Products", icon: storem, activeIcon: stom },
     { label: "Settings", icon: setting, activeIcon: set },
     { label: "Analytics", icon: set, activeIcon: set },
@@ -180,6 +186,7 @@ const AdminAD: React.FC = () => {
     UserManagement: { title: "Customers", content: <UsersAD /> },
     Orders: { title: "Orders", content: <OrdersAD /> },
     Payment: { title: "Payments", content: <PaymentAD /> },
+    Payouts: { title: "Payouts & Settlement", content: <PayoutsAD /> },
     Products: { title: "Product Management", content: <ProductsAD /> },
     Settings: { title: "Settings", content: <SettingsAD /> },
     Analytics: { title: "Analytics", content: <AnalyticsAD /> },
