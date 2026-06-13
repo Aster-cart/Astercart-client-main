@@ -286,7 +286,6 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
             </div>
           </div>
         </div>
-        </>
       )}
 
       {/* Products tab */}
