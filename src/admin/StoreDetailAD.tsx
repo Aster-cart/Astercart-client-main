@@ -49,6 +49,18 @@ interface Order {
 
 type Tab = "overview" | "products" | "orders";
 
+const STATUS_FLOW: Record<string, string | null> = {
+  pending: "processing", processing: "out_for_delivery",
+  out_for_delivery: "delivered", delivered: "completed",
+  completed: null, canceled: null, failed: null,
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: "Pending", processing: "Preparing",
+  out_for_delivery: "Out for delivery", delivered: "Delivered",
+  completed: "Completed", canceled: "Canceled", failed: "Failed",
+};
+
 interface Props {
   storeId: string;
   onBack: () => void;
@@ -131,6 +143,19 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
   const [loading, setLoading] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+
+  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+    setUpdatingOrderId(orderId);
+    try {
+      await api.put(`/store/orders/${orderId}/status`, { status: newStatus });
+      toast.success(`Order marked as ${STATUS_LABEL[newStatus]}`);
+      setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: newStatus } : o));
+      if (selectedOrder?._id === orderId) setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
+    } catch { toast.error("Failed to update status."); }
+    finally { setUpdatingOrderId(null); }
+  };
 
   useEffect(() => {
     (async () => {
@@ -364,53 +389,119 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
 
       {/* Orders tab */}
       {tab === "orders" && (
-        <div className="bg-white rounded-xl border overflow-x-auto">
+        <div>
           {loadingOrders ? (
             <p className="p-6 text-gray-500">Loading orders…</p>
           ) : orders.length === 0 ? (
-            <p className="p-6 text-gray-400">No orders for this store yet.</p>
-          ) : (
-            <table className="w-full text-sm text-left">
-              <thead className="text-gray-400 border-b text-xs">
-                <tr>
-                  <th className="py-3 px-4">Customer</th>
-                  <th className="px-4">Items</th>
-                  <th className="px-4">Amount</th>
-                  <th className="px-4">Status</th>
-                  <th className="px-4">Payment</th>
-                  <th className="px-4">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((o) => (
-                  <tr key={o._id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4 font-medium">{o.customerName}</td>
-                    <td className="px-4 text-gray-500 text-xs">
-                      {o.products.slice(0, 2).map((p) => p.name).join(", ")}
-                      {o.products.length > 2 && ` +${o.products.length - 2} more`}
-                    </td>
-                    <td className="px-4">{formatNaira(o.totalAmount)}</td>
-                    <td className="px-4">
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 capitalize">
-                        {o.status.replace(/_/g, " ")}
-                      </span>
-                    </td>
-                    <td className="px-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        o.paymentStatus === "paid"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}>
-                        {o.paymentStatus}
-                      </span>
-                    </td>
-                    <td className="px-4 text-gray-400 text-xs">
-                      {new Date(o.createdAt).toLocaleDateString("en-GB")}
-                    </td>
+            <p className="p-6 bg-white rounded-xl border text-gray-400">No orders for this store yet.</p>
+          ) : selectedOrder ? (
+            /* ── Order detail view ── */
+            <div className="bg-white rounded-xl border p-6">
+              <button onClick={() => setSelectedOrder(null)} className="text-sm text-gray-500 hover:text-gray-800 mb-4 flex items-center gap-1">
+                ← Back to orders
+              </button>
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="font-bold text-lg">Order #{selectedOrder._id.slice(-8).toUpperCase()}</h3>
+                  <p className="text-sm text-gray-500">{selectedOrder.customerName} · {new Date(selectedOrder.createdAt).toLocaleDateString("en-GB")}</p>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${selectedOrder.paymentStatus === "paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                    {selectedOrder.paymentStatus}
+                  </span>
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 capitalize">
+                    {selectedOrder.status.replace(/_/g, " ")}
+                  </span>
+                </div>
+              </div>
+              {/* Products */}
+              <table className="w-full text-sm mb-4">
+                <thead className="text-gray-400 border-b text-xs">
+                  <tr>
+                    <th className="py-2 text-left">Product</th>
+                    <th className="text-right">Qty</th>
+                    <th className="text-right">Price</th>
+                    <th className="text-right">Total</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {selectedOrder.products.map((p, i) => (
+                    <tr key={i} className="border-b">
+                      <td className="py-2">{p.name}</td>
+                      <td className="text-right">{p.quantity}</td>
+                      <td className="text-right">{formatNaira(p.price)}</td>
+                      <td className="text-right font-medium">{formatNaira(p.price * p.quantity)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colSpan={3} className="pt-3 text-right font-bold">Total</td>
+                    <td className="pt-3 text-right font-bold text-pry">{formatNaira(selectedOrder.totalAmount)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+              {/* Status update */}
+              {STATUS_FLOW[selectedOrder.status] && (
+                <button
+                  onClick={() => handleStatusUpdate(selectedOrder._id, STATUS_FLOW[selectedOrder.status]!)}
+                  disabled={updatingOrderId === selectedOrder._id}
+                  className="bg-pry text-white px-5 py-2 rounded-lg text-sm font-medium disabled:opacity-60"
+                >
+                  {updatingOrderId === selectedOrder._id ? "Updating..." : `Mark as ${STATUS_LABEL[STATUS_FLOW[selectedOrder.status]!]}`}
+                </button>
+              )}
+            </div>
+          ) : (
+            /* ── Orders list ── */
+            <div className="bg-white rounded-xl border overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="text-gray-400 border-b text-xs bg-gray-50">
+                  <tr>
+                    <th className="py-3 px-4">Order ID</th>
+                    <th className="px-4">Customer</th>
+                    <th className="px-4">Items</th>
+                    <th className="px-4">Amount</th>
+                    <th className="px-4">Status</th>
+                    <th className="px-4">Payment</th>
+                    <th className="px-4">Date</th>
+                    <th className="px-4">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((o) => (
+                    <tr key={o._id} className="border-b hover:bg-gray-50">
+                      <td className="py-3 px-4 font-mono text-xs">#{o._id.slice(-8).toUpperCase()}</td>
+                      <td className="px-4 font-medium">{o.customerName}</td>
+                      <td className="px-4 text-gray-500 text-xs">
+                        {o.products.slice(0, 2).map((p) => p.name).join(", ")}
+                        {o.products.length > 2 && ` +${o.products.length - 2} more`}
+                      </td>
+                      <td className="px-4">{formatNaira(o.totalAmount)}</td>
+                      <td className="px-4">
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 capitalize">
+                          {STATUS_LABEL[o.status] || o.status}
+                        </span>
+                      </td>
+                      <td className="px-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${o.paymentStatus === "paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                          {o.paymentStatus}
+                        </span>
+                      </td>
+                      <td className="px-4 text-gray-400 text-xs">{new Date(o.createdAt).toLocaleDateString("en-GB")}</td>
+                      <td className="px-4">
+                        <button
+                          onClick={() => setSelectedOrder(o)}
+                          className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}

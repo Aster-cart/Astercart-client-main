@@ -131,11 +131,23 @@ export const useInventoryModal = (
       setPreview(products.slice(0, 3)); // Show preview of first 3 rows
       setUploading(false);
 
-      // Send to server
+      // Send to server in batches of 50 to avoid 413 errors
       setImporting(true);
-      const response = await api.post("/store/create-product", products);
-      const imported = response.data?.products || products;
-      onImport(imported);
+      const BATCH_SIZE = 50;
+      const batches = [];
+      for (let i = 0; i < products.length; i += BATCH_SIZE) {
+        batches.push(products.slice(i, i + BATCH_SIZE));
+      }
+
+      let allImported: unknown[] = [];
+      for (let b = 0; b < batches.length; b++) {
+        setProgress(Math.round(((b + 1) / batches.length) * 100));
+        const response = await api.post("/store/create-product", batches[b]);
+        const imported = response.data?.products || batches[b];
+        allImported = allImported.concat(imported);
+      }
+
+      onImport(allImported);
       onModalClose();
     } catch (err: unknown) {
       setUploading(false);

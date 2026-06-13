@@ -83,9 +83,16 @@ const ImportModal: React.FC<ImportModalProps> = ({ onClose, onImport }) => {
           )}
 
           {importing && (
-            <div className="text-center">
+            <div className="w-full text-center">
               <div className="animate-spin w-6 h-6 border-2 border-pry border-t-transparent rounded-full mx-auto mb-2" />
-              <p className="text-xs text-gray-500">Saving products to your store…</p>
+              <p className="text-xs text-gray-500 mb-2">Uploading in batches…</p>
+              <div className="relative w-full bg-gray-100 rounded h-2">
+                <div
+                  className="absolute top-0 left-0 h-full bg-orange-500 rounded transition-all"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <p className="text-xs text-gray-400 mt-1">{progress}% complete</p>
             </div>
           )}
         </div>
