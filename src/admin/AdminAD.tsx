@@ -16,6 +16,7 @@ import AnalyticsAD from "./AnalyticsAD";
 import DisputesAD from "./DisputesAD";
 import TeamAD from "./TeamAD";
 import PayoutsAD from "./PayoutsAD";
+import MonitorAD from "./MonitorAD";
 import { useAdminAuthStore, canAccess } from "../store/adminAuthStore";
 import ProductsAD from "./ProductsAD";
 import api from "../utils/api";
@@ -141,6 +142,7 @@ const AdminAD: React.FC = () => {
 
   const allMenuItems = [
     { label: "Dashboard", icon: dashboard, activeIcon: dash },
+    { label: "Monitor", icon: dashboard, activeIcon: dash },
     { label: "StoreManagement", icon: storem, activeIcon: stom },
     { label: "UserManagement", icon: userm, activeIcon: usem },
     { label: "Orders", icon: orderm, activeIcon: ordm },
@@ -164,6 +166,7 @@ const AdminAD: React.FC = () => {
 
   const contentMap: Record<string, { title: string; content: React.ReactNode }> = {
     Dashboard: { title: "Dashboard", content: <DashboardAD /> },
+    Monitor: { title: "System Monitor", content: <MonitorAD /> },
     StoreManagement: { title: "Store Management", content: <StoresAD /> },
     UserManagement: { title: "Customers", content: <UsersAD /> },
     Orders: { title: "Orders", content: <OrdersAD /> },

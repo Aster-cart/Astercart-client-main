@@ -13,6 +13,7 @@ import Inventory from "./pages/Inventory";
 import Setting from "./pages/Setting";
 import Earnings from "./pages/Earnings";
 import Analytics from "./pages/Analytics";
+import Disputes from "./pages/Disputes";
 import LoginAD from "./admin/LoginAD";
 import SignupAD from "./admin/SignupAD";
 import ForgotPasswordAD from "./admin/ForgotPasswordAD";
@@ -58,6 +59,7 @@ function App() {
           <Route path="settings" element={<Setting />} />
           <Route path="earnings" element={<Earnings />} />
           <Route path="analytics" element={<Analytics />} />
+          <Route path="disputes" element={<Disputes />} />
         </Route>
 
         {/* Platform admin auth */}
