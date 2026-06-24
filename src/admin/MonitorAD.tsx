@@ -48,20 +48,26 @@ const MonitorAD: React.FC = () => {
 
   const load = useCallback(async () => {
     try {
-      const [storesRes, ordersRes, disputesRes, productsRes, customersRes] = await Promise.all([
-        api.get<{ stores: any[] }>("/store/adminstore"),
-        api.get<any[]>("/adminOrder"),
-        api.get<any[]>("/admin/disputes"),
-        api.get<any[]>("/store/get-all-products-admin?limit=1000"),
-        api.get<any[]>("/adminCustomer/customers"),
+      // Fetch each independently so one failure doesn't kill everything
+      const results = await Promise.allSettled([
+        api.get("/store/adminstore"),
+        api.get("/adminOrder"),
+        api.get("/admin/disputes"),
+        api.get("/store/get-all-products-admin?limit=500"),
+        api.get("/adminCustomer/customers"),
       ]);
 
-      const stores = storesRes.data?.stores || [];
-      const orders = Array.isArray(ordersRes.data) ? ordersRes.data : [];
-      const disputes = Array.isArray(disputesRes.data) ? disputesRes.data : [];
-      const products = Array.isArray(productsRes.data) ? productsRes.data :
-        (productsRes.data as any)?.products || [];
-      const customers = Array.isArray(customersRes.data) ? customersRes.data : [];
+      const storesData = results[0].status === "fulfilled" ? results[0].value.data : {};
+      const ordersData = results[1].status === "fulfilled" ? results[1].value.data : [];
+      const disputesData = results[2].status === "fulfilled" ? results[2].value.data : [];
+      const productsData = results[3].status === "fulfilled" ? results[3].value.data : [];
+      const customersData = results[4].status === "fulfilled" ? results[4].value.data : [];
+
+      const stores = (storesData as any)?.stores || (Array.isArray(storesData) ? storesData : []);
+      const orders = Array.isArray(ordersData) ? ordersData : (ordersData as any)?.orders || [];
+      const disputes = Array.isArray(disputesData) ? disputesData : [];
+      const products = Array.isArray(productsData) ? productsData : (productsData as any)?.products || [];
+      const customers = Array.isArray(customersData) ? customersData : (customersData as any)?.customers || [];
 
       const today = new Date().toDateString();
       const todayOrders = orders.filter(o => new Date(o.createdAt).toDateString() === today);
