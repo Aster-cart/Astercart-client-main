@@ -6,9 +6,14 @@ interface PaymentRow {
   _id: string;
   orderId: string;
   name: string;
-  amount: number;
-  storePayout: number;
-  adminFee: number;
+  amount: number;          // store's OWN price total — the base store commission is taken from
+  storePayout: number;     // amount - adminFee. What the store actually receives.
+  adminFee: number;        // commission of store's OWN price (amount) — never includes markup
+  serviceFee?: number;     // % of customerProductTotal (after markup), paid BY the customer, kept entirely by platform
+  deliveryFee?: number;    // flat delivery fee paid by customer — not store money, not commissioned
+  markupRevenue?: number;  // platform's cut from per-product markup — revenue stream #1
+  customerProductTotal?: number; // what customer actually paid for products, after markup
+  grandTotal?: number;     // customerProductTotal + deliveryFee + serviceFee — the actual total the customer was charged
   status: string;
   payoutStatus?: string;
   createdAt: string;
@@ -22,7 +27,8 @@ const PaymentAD: React.FC = () => {
   const [payments, setPayments] = useState<PaymentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    total: 0, totalRevenue: 0, totalStorePayout: 0, totalAdminFee: 0, pendingPayouts: 0,
+    total: 0, totalRevenue: 0, totalStorePayout: 0, totalAdminFee: 0,
+    totalServiceFee: 0, totalDeliveryFee: 0, totalMarkupRevenue: 0, totalGrandTotal: 0, pendingPayouts: 0,
   });
   const [markingId, setMarkingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "pending_payout" | "paid_out">("all");
@@ -38,6 +44,10 @@ const PaymentAD: React.FC = () => {
         totalRevenue: list.reduce((s, p) => s + (p.amount || 0), 0),
         totalStorePayout: list.reduce((s, p) => s + (p.storePayout || 0), 0),
         totalAdminFee: list.reduce((s, p) => s + (p.adminFee || 0), 0),
+        totalServiceFee: list.reduce((s, p) => s + (p.serviceFee || 0), 0),
+        totalDeliveryFee: list.reduce((s, p) => s + (p.deliveryFee || 0), 0),
+        totalMarkupRevenue: list.reduce((s, p) => s + (p.markupRevenue || 0), 0),
+        totalGrandTotal: list.reduce((s, p) => s + (p.grandTotal || p.amount || 0), 0),
         pendingPayouts: list.filter(
           (p) => p.status === "completed" && p.payoutStatus !== "paid_out"
         ).length,
@@ -75,13 +85,20 @@ const PaymentAD: React.FC = () => {
 
   return (
     <div className="font-inter">
+      {/* Explains the Payments vs Payouts distinction directly in the UI */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm text-blue-800">
+        <strong>Payments</strong> is a read-only ledger of money received from customers.
+        To actually send a store their share, go to the <strong>Payouts</strong> tab.
+      </div>
       {/* Stats */}
-      <div className="grid grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-6 gap-4 mb-6">
         {[
           { label: "Total Payments", value: stats.total.toString() },
-          { label: "Gross Revenue", value: formatNaira(stats.totalRevenue) },
+          { label: "Gross Revenue (store prices)", value: formatNaira(stats.totalRevenue) },
           { label: "Store Payouts", value: formatNaira(stats.totalStorePayout) },
-          { label: "Platform Fees", value: formatNaira(stats.totalAdminFee) },
+          { label: "Store Commission", value: formatNaira(stats.totalAdminFee) },
+          { label: "Service Fee", value: formatNaira(stats.totalServiceFee) },
+          { label: "Markup Revenue", value: formatNaira(stats.totalMarkupRevenue) },
           {
             label: "Pending Payouts",
             value: stats.pendingPayouts.toString(),
@@ -95,6 +112,71 @@ const PaymentAD: React.FC = () => {
             </p>
           </div>
         ))}
+      </div>
+
+      {/* Money flow breakdown — exactly where every naira goes, in plain terms */}
+      <div className="bg-white rounded-xl border p-5 mb-6">
+        <h3 className="font-semibold text-gray-800 mb-1">Where the money goes</h3>
+        <p className="text-xs text-gray-400 mb-4">
+          For every order: the customer pays the total below, split across the store and three
+          separate platform revenue streams.
+        </p>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div>
+              <p className="font-medium text-gray-800">Total customer paid (grand total)</p>
+              <p className="text-xs text-gray-400">Marked-up product total + delivery fee + service fee</p>
+            </div>
+            <p className="font-bold text-lg">{formatNaira(stats.totalGrandTotal)}</p>
+          </div>
+
+          <div className="pl-4 border-l-2 border-gray-200 space-y-3">
+            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+              <div>
+                <p className="font-medium text-green-800">→ Goes to stores</p>
+                <p className="text-xs text-green-600">Store's own price minus their commission — never affected by markup</p>
+              </div>
+              <p className="font-bold text-green-700">{formatNaira(stats.totalStorePayout)}</p>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+              <div>
+                <p className="font-medium text-blue-800">→ Delivery / logistics</p>
+                <p className="text-xs text-blue-600">Flat fee per order — never commissioned, not store money, not platform revenue</p>
+              </div>
+              <p className="font-bold text-blue-700">{formatNaira(stats.totalDeliveryFee)}</p>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-teal-50 rounded-lg">
+              <div>
+                <p className="font-medium text-teal-800">→ Platform keeps (Product Markup)</p>
+                <p className="text-xs text-teal-600">Set individually per product — added on top of the store's own price</p>
+              </div>
+              <p className="font-bold text-teal-700">{formatNaira(stats.totalMarkupRevenue)}</p>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+              <div>
+                <p className="font-medium text-orange-800">→ Platform keeps (Service Fee)</p>
+                <p className="text-xs text-orange-600">% of the customer's order total (after markup), charged on top</p>
+              </div>
+              <p className="font-bold text-orange-700">{formatNaira(stats.totalServiceFee)}</p>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+              <div>
+                <p className="font-medium text-purple-800">→ Platform keeps (Store Commission)</p>
+                <p className="text-xs text-purple-600">Taken out of the store's OWN price only — never from markup or delivery fee</p>
+              </div>
+              <p className="font-bold text-purple-700">{formatNaira(stats.totalAdminFee)}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-gray-900 rounded-lg mt-2">
+            <p className="font-medium text-white">Total platform revenue (Markup + Service Fee + Commission)</p>
+            <p className="font-bold text-lg text-white">{formatNaira(stats.totalMarkupRevenue + stats.totalServiceFee + stats.totalAdminFee)}</p>
+          </div>
+        </div>
       </div>
 
       {/* Filter tabs */}
@@ -136,9 +218,13 @@ const PaymentAD: React.FC = () => {
                 <th className="py-2">Order ID</th>
                 <th>Customer</th>
                 <th>Store</th>
-                <th>Amount</th>
-                <th>Store Payout</th>
-                <th>Platform Fee</th>
+                <th>Subtotal (store price)</th>
+                <th>Markup</th>
+                <th>Delivery</th>
+                <th>Service Fee</th>
+                <th>Customer Paid</th>
+                <th>Store Gets</th>
+                <th>Commission</th>
                 <th>Status</th>
                 <th>Payout</th>
                 <th>Date</th>
@@ -149,13 +235,20 @@ const PaymentAD: React.FC = () => {
               {filtered.map((p) => (
                 <tr key={p._id} className="border-b hover:bg-gray-50">
                   <td className="py-3 font-mono text-xs">
-                    {(p.orderId || p._id).slice(0, 8).toUpperCase()}
+                    {/* Consistent with admin/client elsewhere: last 8 chars
+                        of the Mongo ID, so the same order shows the same
+                        reference number everywhere across the platform. */}
+                    {(p.orderId || p._id).slice(-8).toUpperCase()}
                   </td>
                   <td>{p.name || "—"}</td>
                   <td>{p.store?.name || "—"}</td>
                   <td className="font-medium">{formatNaira(p.amount)}</td>
+                  <td className="text-teal-600">{formatNaira(p.markupRevenue || 0)}</td>
+                  <td className="text-blue-500">{formatNaira(p.deliveryFee || 0)}</td>
+                  <td className="text-orange-500">{formatNaira(p.serviceFee || 0)}</td>
+                  <td className="font-bold">{formatNaira(p.grandTotal || p.amount)}</td>
                   <td className="text-green-600">{formatNaira(p.storePayout)}</td>
-                  <td className="text-blue-600">{formatNaira(p.adminFee)}</td>
+                  <td className="text-purple-600">{formatNaira(p.adminFee)}</td>
                   <td>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       p.status === "completed"
@@ -177,17 +270,6 @@ const PaymentAD: React.FC = () => {
                   <td className="text-gray-400 text-xs">
                     {new Date(p.createdAt).toLocaleDateString("en-GB")}
                   </td>
-                  <td>
-                    {p.status === "completed" && p.payoutStatus !== "paid_out" && (
-                      <button
-                        onClick={() => markAsPaidOut(p._id)}
-                        disabled={markingId === p._id}
-                        className="text-xs px-3 py-1.5 bg-green-500 text-white rounded-lg font-medium"
-                      >
-                        {markingId === p._id ? "..." : "Mark paid out"}
-                      </button>
-                    )}
-                  </td>
                 </tr>
               ))}
             </tbody>
@@ -202,13 +284,22 @@ export default PaymentAD;
 
 // Financial reconciliation export
 const exportToCSV = (payments: any[]) => {
-  const headers = ["Date", "Order ID", "Customer", "Store", "Amount", "Store Payout", "Platform Fee", "Status", "Payout Status"];
+  const headers = [
+    "Date", "Order ID", "Customer", "Store",
+    "Store Price Subtotal", "Markup Revenue", "Delivery Fee", "Service Fee", "Customer Paid (Total)",
+    "Store Payout", "Platform Commission",
+    "Status", "Payout Status",
+  ];
   const rows = payments.map(p => [
     new Date(p.createdAt).toLocaleDateString("en-GB"),
-    (p.orderId || p._id).slice(0, 10).toUpperCase(),
+    (p.orderId || p._id).slice(-8).toUpperCase(),
     p.name || "",
     p.store?.name || "",
     p.amount || 0,
+    p.markupRevenue || 0,
+    p.deliveryFee || 0,
+    p.serviceFee || 0,
+    p.grandTotal || p.amount || 0,
     p.storePayout || 0,
     p.adminFee || 0,
     p.status || "",

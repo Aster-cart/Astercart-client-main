@@ -4,8 +4,7 @@ import { toast } from "react-toastify";
 
 interface PayoutRow {
   _id: string;
-  storeName: string;
-  storeEmail: string;
+  store?: { name?: string; address?: string };
   amount: number;
   storePayout: number;
   adminFee: number;
@@ -49,7 +48,7 @@ const PayoutsAD: React.FC = () => {
     const headers = ["Date", "Store", "Email", "Order Amount", "Store Payout", "Platform Fee", "Status", "Payout Status"];
     const csvRows = filtered.map(r => [
       new Date(r.createdAt).toLocaleDateString("en-GB"),
-      r.storeName || "",
+      r.store?.name || "",
       r.storeEmail || "",
       r.amount || 0,
       r.storePayout || 0,
@@ -76,6 +75,12 @@ const PayoutsAD: React.FC = () => {
 
   return (
     <div className="font-inter">
+      {/* Explains the Payments vs Payouts distinction directly in the UI */}
+      <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4 text-sm text-green-800">
+        <strong>Payouts</strong> is where you send each store their share of what
+        customers paid. Mark an entry as paid once the bank transfer has actually
+        been sent — this updates the store's earnings page too.
+      </div>
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-xl p-4 border">
@@ -90,7 +95,7 @@ const PayoutsAD: React.FC = () => {
         <div className="bg-white rounded-xl p-4 border">
           <p className="text-sm text-gray-500">Platform earnings</p>
           <p className="text-2xl font-bold text-pry mt-1">{formatNaira(totalPlatformEarned)}</p>
-          <p className="text-xs text-gray-400 mt-1">10% commission</p>
+          <p className="text-xs text-gray-400 mt-1">Commission only — excludes delivery and service fee</p>
         </div>
       </div>
 
@@ -117,7 +122,7 @@ const PayoutsAD: React.FC = () => {
               <tr>
                 <th className="py-3 px-4">Store</th>
                 <th className="px-4">Order amount</th>
-                <th className="px-4">Store payout (90%)</th>
+                <th className="px-4">Store payout</th>
                 <th className="px-4">Platform fee (10%)</th>
                 <th className="px-4">Date</th>
                 <th className="px-4">Payout status</th>
@@ -130,12 +135,12 @@ const PayoutsAD: React.FC = () => {
               ) : filtered.map(r => (
                 <tr key={r._id} className="border-b hover:bg-gray-50">
                   <td className="py-3 px-4">
-                    <p className="font-medium">{r.storeName || "—"}</p>
+                    <p className="font-medium">{r.store?.name || "—"}</p>
                     <p className="text-xs text-gray-400">{r.storeEmail || ""}</p>
                   </td>
                   <td className="px-4">{formatNaira(r.amount)}</td>
-                  <td className="px-4 text-green-600 font-medium">{formatNaira(r.storePayout || r.amount * 0.9)}</td>
-                  <td className="px-4 text-orange-500">{formatNaira(r.adminFee || r.amount * 0.1)}</td>
+                  <td className="px-4 text-green-600 font-medium">{formatNaira(r.storePayout)}</td>
+                  <td className="px-4 text-orange-500">{formatNaira(r.adminFee)}</td>
                   <td className="px-4 text-gray-400 text-xs">{new Date(r.createdAt).toLocaleDateString("en-GB")}</td>
                   <td className="px-4">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${r.payoutStatus === "paid_out" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>

@@ -19,6 +19,8 @@ interface StoreDetail {
     totalProducts: number;
     totalOrders: number;
     totalRevenue: number;
+    totalDeliveryFee: number;
+    totalServiceFee: number;
     totalStorePayout: number;
     platformFee: number;
     outOfStock: number;
@@ -40,7 +42,12 @@ interface Product {
 interface Order {
   _id: string;
   customerName: string;
-  totalAmount: number;
+  totalAmount: number; // product subtotal only
+  deliveryFee?: number;
+  serviceFee?: number;
+  platformCommission?: number;
+  storePayout?: number;
+  grandTotal?: number;
   status: string;
   paymentStatus: string;
   createdAt: string;
@@ -180,7 +187,12 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
           `/store/get-all-products-admin?storeId=${storeId}`
         );
         const list = Array.isArray(data) ? data : (data as { products: Product[] }).products || [];
-        setProducts(list.filter((p: any) => p.storeId?.toString() === storeId || !p.storeId));
+        setProducts(list.filter((p: any) => {
+          const sid = typeof p.storeId === "object" && p.storeId !== null
+            ? p.storeId._id?.toString()
+            : p.storeId?.toString();
+          return sid === storeId || !sid;
+        }));
       } catch {
         toast.error("Failed to load products.");
       } finally {
@@ -278,9 +290,10 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
         {[
           { label: "Total products", value: stats.totalProducts },
           { label: "Total orders", value: stats.totalOrders },
-          { label: "Gross revenue", value: formatNaira(stats.totalRevenue) },
+          { label: "Product subtotal (paid orders)", value: formatNaira(stats.totalRevenue) },
           { label: "Store payout", value: formatNaira(stats.totalStorePayout) },
-          { label: "Platform fee", value: formatNaira(stats.platformFee) },
+          { label: "Platform commission", value: formatNaira(stats.platformFee) },
+          { label: "Delivery fees collected", value: formatNaira(stats.totalDeliveryFee) },
           { label: "Out of stock", value: stats.outOfStock, color: "text-red-500" },
           { label: "Low stock", value: stats.lowStock, color: "text-yellow-600" },
         ].map((s, i) => (
@@ -313,19 +326,31 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
         <div className="space-y-4">
           <PerStoreFeeOverride storeId={storeId} storeName={store.name} />
           <div className="bg-white rounded-xl p-6 border">
-            <h3 className="font-semibold mb-4">Revenue breakdown</h3>
+            <h3 className="font-semibold mb-4">Revenue breakdown — paid orders only</h3>
+            {/* This breakdown MUST agree exactly with what the store sees
+                on their own Earnings page for the same orders — both read
+                directly from the same Transaction fields, nothing here is
+                independently recalculated. */}
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Gross revenue (customer paid)</span>
+                <span className="text-gray-500">Product subtotal (store's sales)</span>
                 <span className="font-medium">{formatNaira(stats.totalRevenue)}</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Store payout (90%)</span>
+              <div className="flex justify-between text-sm pl-4 border-l-2 border-gray-200">
+                <span className="text-gray-500">→ Store payout</span>
                 <span className="font-medium text-green-600">{formatNaira(stats.totalStorePayout)}</span>
               </div>
+              <div className="flex justify-between text-sm pl-4 border-l-2 border-gray-200">
+                <span className="text-gray-500">→ Platform commission</span>
+                <span className="font-medium text-purple-600">{formatNaira(stats.platformFee)}</span>
+              </div>
               <div className="flex justify-between text-sm border-t pt-3">
-                <span className="text-gray-500">Platform fee (10%)</span>
-                <span className="font-medium text-blue-600">{formatNaira(stats.platformFee)}</span>
+                <span className="text-gray-500">Delivery fees collected (not store money)</span>
+                <span className="font-medium text-blue-600">{formatNaira(stats.totalDeliveryFee)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Service fees collected (platform keeps entirely)</span>
+                <span className="font-medium text-orange-600">{formatNaira(stats.totalServiceFee)}</span>
               </div>
             </div>
           </div>
@@ -436,8 +461,28 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td colSpan={3} className="pt-3 text-right font-bold">Total</td>
-                    <td className="pt-3 text-right font-bold text-pry">{formatNaira(selectedOrder.totalAmount)}</td>
+                    <td colSpan={3} className="pt-3 text-right font-medium text-gray-500">Product subtotal</td>
+                    <td className="pt-3 text-right font-medium">{formatNaira(selectedOrder.totalAmount)}</td>
+                  </tr>
+                  <tr>
+                    <td colSpan={3} className="text-right text-gray-500">Delivery fee</td>
+                    <td className="text-right text-blue-600">{formatNaira(selectedOrder.deliveryFee || 0)}</td>
+                  </tr>
+                  <tr>
+                    <td colSpan={3} className="text-right text-gray-500">Service fee</td>
+                    <td className="text-right text-orange-600">{formatNaira(selectedOrder.serviceFee || 0)}</td>
+                  </tr>
+                  <tr>
+                    <td colSpan={3} className="text-right font-bold border-t pt-1">Customer paid (total)</td>
+                    <td className="text-right font-bold text-pry border-t pt-1">{formatNaira(selectedOrder.grandTotal || selectedOrder.totalAmount)}</td>
+                  </tr>
+                  <tr>
+                    <td colSpan={3} className="text-right text-xs text-green-600 pt-2">Store payout</td>
+                    <td className="text-right text-xs text-green-600 pt-2">{formatNaira(selectedOrder.storePayout != null ? selectedOrder.storePayout : selectedOrder.totalAmount)}</td>
+                  </tr>
+                  <tr>
+                    <td colSpan={3} className="text-right text-xs text-purple-600">Platform commission</td>
+                    <td className="text-right text-xs text-purple-600">{formatNaira(selectedOrder.platformCommission || 0)}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -461,7 +506,8 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
                     <th className="py-3 px-4">Order ID</th>
                     <th className="px-4">Customer</th>
                     <th className="px-4">Items</th>
-                    <th className="px-4">Amount</th>
+                    <th className="px-4">Subtotal</th>
+                    <th className="px-4">Store payout</th>
                     <th className="px-4">Status</th>
                     <th className="px-4">Payment</th>
                     <th className="px-4">Date</th>
@@ -478,6 +524,7 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
                         {o.products.length > 2 && ` +${o.products.length - 2} more`}
                       </td>
                       <td className="px-4">{formatNaira(o.totalAmount)}</td>
+                      <td className="px-4 text-green-600 font-medium">{formatNaira(o.storePayout != null ? o.storePayout : o.totalAmount)}</td>
                       <td className="px-4">
                         <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 capitalize">
                           {STATUS_LABEL[o.status] || o.status}

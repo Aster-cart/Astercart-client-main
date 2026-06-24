@@ -13,6 +13,7 @@ interface StoreRevenue {
   revenue: number;
   orders: number;
   platformFee: number;
+  storePayout: number;
 }
 
 interface DailyData {
@@ -28,6 +29,9 @@ const AnalyticsAD: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalPlatformFee, setTotalPlatformFee] = useState(0);
+  const [totalStorePayout, setTotalStorePayout] = useState(0);
+  const [totalDeliveryFee, setTotalDeliveryFee] = useState(0);
+  const [totalServiceFee, setTotalServiceFee] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -40,23 +44,36 @@ const AnalyticsAD: React.FC = () => {
         const orders = Array.isArray(ordersRes.data) ? ordersRes.data : [];
         const payments = Array.isArray(paymentsRes.data) ? paymentsRes.data : [];
 
-        // Revenue by store
+        // Revenue by store — every figure read directly from the order's
+        // own real fields, never recomputed as a flat percentage. This was
+        // previously hardcoding platformFee at totalAmount * 0.1 regardless
+        // of any per-store commission override, which silently disagreed
+        // with the real number shown on the Payments page for the same
+        // orders.
         const storeMap: Record<string, StoreRevenue> = {};
         orders.forEach((o: any) => {
           const name = o.storeName || "Unknown";
-          if (!storeMap[name]) storeMap[name] = { storeName: name, revenue: 0, orders: 0, platformFee: 0 };
+          if (!storeMap[name]) storeMap[name] = { storeName: name, revenue: 0, orders: 0, platformFee: 0, storePayout: 0 };
           storeMap[name].revenue += o.totalAmount || 0;
           storeMap[name].orders += 1;
-          storeMap[name].platformFee += (o.totalAmount || 0) * 0.1;
+          storeMap[name].platformFee += o.platformCommission || 0;
+          storeMap[name].storePayout += o.storePayout != null ? o.storePayout : (o.totalAmount || 0);
         });
         const sortedStores = Object.values(storeMap).sort((a, b) => b.revenue - a.revenue);
         setStoreRevenue(sortedStores);
 
-        // Totals
+        // Totals — read directly from the Payment ledger, which already
+        // carries the real, authoritative figures for every paid order.
         const total = payments.reduce((s: number, p: any) => s + (p.amount || 0), 0);
         const fee = payments.reduce((s: number, p: any) => s + (p.adminFee || 0), 0);
+        const payout = payments.reduce((s: number, p: any) => s + (p.storePayout || 0), 0);
+        const deliveryTotal = payments.reduce((s: number, p: any) => s + (p.deliveryFee || 0), 0);
+        const serviceTotal = payments.reduce((s: number, p: any) => s + (p.serviceFee || 0), 0);
         setTotalRevenue(total);
         setTotalPlatformFee(fee);
+        setTotalStorePayout(payout);
+        setTotalDeliveryFee(deliveryTotal);
+        setTotalServiceFee(serviceTotal);
 
         // Daily data - last 14 days
         const now = new Date();
@@ -86,11 +103,13 @@ const AnalyticsAD: React.FC = () => {
   return (
     <div className="font-inter space-y-6">
       {/* Platform totals */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-5 gap-4">
         {[
-          { label: "Total marketplace revenue", value: formatNaira(totalRevenue) },
-          { label: "Platform earnings (10%)", value: formatNaira(totalPlatformFee), color: "text-pry" },
-          { label: "Store payouts (90%)", value: formatNaira(totalRevenue - totalPlatformFee), color: "text-green-600" },
+          { label: "Total product subtotal (all stores)", value: formatNaira(totalRevenue) },
+          { label: "Store payouts", value: formatNaira(totalStorePayout), color: "text-green-600" },
+          { label: "Platform commission", value: formatNaira(totalPlatformFee), color: "text-purple-600" },
+          { label: "Delivery fees collected", value: formatNaira(totalDeliveryFee), color: "text-blue-600" },
+          { label: "Service fees collected", value: formatNaira(totalServiceFee), color: "text-orange-600" },
         ].map((s, i) => (
           <div key={i} className="bg-white rounded-xl p-4 border">
             <p className="text-sm text-gray-500">{s.label}</p>
@@ -160,8 +179,8 @@ const AnalyticsAD: React.FC = () => {
                     <td className="py-3 font-medium">{s.storeName}</td>
                     <td className="text-right">{s.orders}</td>
                     <td className="text-right">{formatNaira(s.revenue)}</td>
-                    <td className="text-right text-orange-500">{formatNaira(s.platformFee)}</td>
-                    <td className="text-right text-green-600">{formatNaira(s.revenue - s.platformFee)}</td>
+                    <td className="text-right text-purple-500">{formatNaira(s.platformFee)}</td>
+                    <td className="text-right text-green-600">{formatNaira(s.storePayout)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -6,7 +6,12 @@ type AdminOrder = {
   _id: string;
   customerName: string;
   storeName: string;
-  totalAmount: number;
+  totalAmount: number;        // product subtotal only
+  deliveryFee?: number;
+  serviceFee?: number;
+  platformCommission?: number;
+  storePayout?: number;
+  grandTotal?: number;
   status: string;
   paymentStatus: string;
   createdAt: string;
@@ -148,26 +153,37 @@ const OrdersAD: React.FC = () => {
             </div>
             <div>
               <p className="text-xs text-gray-400 mb-1">Financial breakdown</p>
+              {/* Every figure below is read directly from the transaction's
+                  real, already-calculated fields — never recomputed here.
+                  Previously this guessed a flat 5% service fee, a flat ₦800
+                  delivery fee, and a flat 90% store payout regardless of
+                  what was actually charged or any per-store fee override,
+                  which is exactly what made this page disagree with the
+                  store's own dashboard for the same order. */}
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Order subtotal</span>
+                  <span className="text-gray-500">Product subtotal</span>
                   <span>{formatNaira(selectedOrder.totalAmount)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Service fee (5%)</span>
-                  <span>{formatNaira(Math.round(selectedOrder.totalAmount * 0.05))}</span>
+                  <span className="text-gray-500">Service fee</span>
+                  <span>{formatNaira(selectedOrder.serviceFee || 0)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Delivery fee</span>
-                  <span>₦800</span>
+                  <span>{formatNaira(selectedOrder.deliveryFee || 0)}</span>
                 </div>
                 <div className="flex justify-between text-sm font-bold border-t pt-1">
-                  <span>Grand total</span>
-                  <span className="text-pry">{formatNaira(selectedOrder.totalAmount + Math.round(selectedOrder.totalAmount * 0.05) + 800)}</span>
+                  <span>Grand total (customer paid)</span>
+                  <span className="text-pry">{formatNaira(selectedOrder.grandTotal || selectedOrder.totalAmount)}</span>
                 </div>
                 <div className="flex justify-between text-xs text-green-600">
-                  <span>Store payout (90%)</span>
-                  <span>{formatNaira(Math.round(selectedOrder.totalAmount * 0.9))}</span>
+                  <span>Store payout</span>
+                  <span>{formatNaira(selectedOrder.storePayout != null ? selectedOrder.storePayout : selectedOrder.totalAmount)}</span>
+                </div>
+                <div className="flex justify-between text-xs text-purple-600">
+                  <span>Platform commission</span>
+                  <span>{formatNaira(selectedOrder.platformCommission || 0)}</span>
                 </div>
               </div>
             </div>

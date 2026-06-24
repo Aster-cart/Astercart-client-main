@@ -22,7 +22,25 @@ const SettingsAD: React.FC = () => {
     serviceFee: 5,
     deliveryFee: 800,
   });
+  const [loadingFees, setLoadingFees] = useState(true);
   const [savingFees, setSavingFees] = useState(false);
+
+  // Load the REAL, currently-active rates from the server on mount —
+  // previously this screen always showed hardcoded 10/90/5/800 regardless
+  // of what (if anything) had actually been saved before, which meant the
+  // admin had no way to even see what rate was really in effect.
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await api.get<FeeConfig>("/admin/platform-config");
+        setFeeConfig(data);
+      } catch {
+        // Fall back to the visible defaults if the endpoint isn't reachable
+      } finally {
+        setLoadingFees(false);
+      }
+    })();
+  }, []);
 
   const handleFeeChange = (key: keyof FeeConfig, value: string) => {
     const num = parseFloat(value) || 0;
@@ -46,10 +64,10 @@ const SettingsAD: React.FC = () => {
     }
     setSavingFees(true);
     try {
-      await api.put("/admin/platform-config", feeConfig);
-      toast.success("Platform fee structure updated.");
-    } catch {
-      toast.error("Failed to save fee config. Endpoint may need to be added to server.");
+      const { data } = await api.put("/admin/platform-config", feeConfig);
+      toast.success(data?.message || "Platform fee structure updated.");
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || "Failed to save fee config.");
     } finally {
       setSavingFees(false);
     }
@@ -99,9 +117,13 @@ const SettingsAD: React.FC = () => {
       <div className="bg-white rounded-xl p-6 border">
         <h2 className="text-lg font-semibold mb-1">Platform fee structure</h2>
         <p className="text-sm text-gray-400 mb-4">
-          These are the default rates applied to all orders. You can adjust per-store rates by
-          editing the store directly from Store Management.
+          These are the live default rates currently in effect for every new order. You can
+          set a different rate for a specific store from Store Management — that override
+          always takes priority over these defaults for that store.
         </p>
+        {loadingFees ? (
+          <p className="text-sm text-gray-400">Loading current rates…</p>
+        ) : (
         <div className="grid grid-cols-2 gap-4 max-w-lg">
           {[
             { key: "platformCommission" as keyof FeeConfig, label: "Platform commission (%)", suffix: "%" },
@@ -127,6 +149,7 @@ const SettingsAD: React.FC = () => {
             </div>
           ))}
         </div>
+        )}
         <button
           onClick={handleSaveFees}
           disabled={savingFees}

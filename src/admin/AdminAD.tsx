@@ -17,8 +17,10 @@ import DisputesAD from "./DisputesAD";
 import TeamAD from "./TeamAD";
 import PayoutsAD from "./PayoutsAD";
 import MonitorAD from "./MonitorAD";
+import RidersAD from "./RidersAD";
 import { useAdminAuthStore, canAccess } from "../store/adminAuthStore";
 import ProductsAD from "./ProductsAD";
+import PricingAD from "./PricingAD";
 import api from "../utils/api";
 
 interface Notification {
@@ -149,9 +151,11 @@ const AdminAD: React.FC = () => {
     { label: "Payment", icon: wallet, activeIcon: walet },
     { label: "Payouts", icon: wallet, activeIcon: walet },
     { label: "Products", icon: storem, activeIcon: stom },
+    { label: "Pricing", icon: storem, activeIcon: stom },
     { label: "Settings", icon: setting, activeIcon: set },
     { label: "Analytics", icon: set, activeIcon: set },
     { label: "Disputes", icon: set, activeIcon: set },
+    { label: "Riders", icon: set, activeIcon: set },
     { label: "Team", icon: set, activeIcon: set },
     { label: "Support", icon: set, activeIcon: set },
     { label: "Logout", icon: logoutIcon, activeIcon: log },
@@ -173,9 +177,11 @@ const AdminAD: React.FC = () => {
     Payment: { title: "Payments", content: <PaymentAD /> },
     Payouts: { title: "Payouts & Settlement", content: <PayoutsAD /> },
     Products: { title: "Product Management", content: <ProductsAD /> },
+    Pricing: { title: "Pricing & Markup", content: <PricingAD /> },
     Settings: { title: "Settings", content: <SettingsAD /> },
     Analytics: { title: "Analytics", content: <AnalyticsAD /> },
     Disputes: { title: "Disputes", content: <DisputesAD /> },
+    Riders: { title: "Riders", content: <RidersAD /> },
     Team: { title: "Admin Team", content: <TeamAD /> },
     Support: { title: "Support", content: <SupportAD /> },
   };
