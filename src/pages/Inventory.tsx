@@ -225,7 +225,11 @@ const Inventory: React.FC = () => {
                       </td>
                       <td className="pr-4 text-gray-500">{item.category}</td>
                       <td className="pr-4 font-medium">
-                        ₦{formatWithCommas(item.adminPrice ?? item.price ?? 0)}
+                        {/* Stores see ONLY their own raw price — never the
+                            platform's marked-up customer-facing price. The
+                            markup is the platform's own revenue stream and
+                            isn't the store's business to see. */}
+                        ₦{formatWithCommas(item.price ?? 0)}
                       </td>
                       <td className="pr-4">{formatWithCommas(qty)}</td>
                       <td className="pr-4 text-gray-500">{item.discount || 0}%</td>

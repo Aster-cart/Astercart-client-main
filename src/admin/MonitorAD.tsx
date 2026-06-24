@@ -48,13 +48,21 @@ const MonitorAD: React.FC = () => {
 
   const load = useCallback(async () => {
     try {
-      // Fetch each independently so one failure doesn't kill everything
+      // Fetch each independently so one failure doesn't kill everything.
+      // Note: getProductStats uses MongoDB's countDocuments for the
+      // headline numbers — accurate regardless of how many products exist.
+      // The capped get-all-products-admin fetch below is kept ONLY to
+      // build the low-stock alert detail text (which needs a sample of
+      // actual product names) — previously its capped length was also
+      // being used as if it were the platform's TRUE total product count,
+      // which silently undercounted anything beyond the cap.
       const results = await Promise.allSettled([
         api.get("/store/adminstore"),
         api.get("/adminOrder"),
         api.get("/admin/disputes"),
         api.get("/store/get-all-products-admin?limit=500"),
         api.get("/adminCustomer/customers"),
+        api.get("/store/admin/products/stats"),
       ]);
 
       const storesData = results[0].status === "fulfilled" ? results[0].value.data : {};
@@ -62,6 +70,7 @@ const MonitorAD: React.FC = () => {
       const disputesData = results[2].status === "fulfilled" ? results[2].value.data : [];
       const productsData = results[3].status === "fulfilled" ? results[3].value.data : [];
       const customersData = results[4].status === "fulfilled" ? results[4].value.data : [];
+      const productStatsData = results[5].status === "fulfilled" ? results[5].value.data : null;
 
       const stores = (storesData as any)?.stores || (Array.isArray(storesData) ? storesData : []);
       const orders = Array.isArray(ordersData) ? ordersData : (ordersData as any)?.orders || [];
@@ -79,8 +88,11 @@ const MonitorAD: React.FC = () => {
         totalOrders: orders.length,
         unpaidOrders: orders.filter((o: any) => o.paymentStatus !== "paid").length,
         openDisputes: disputes.filter((d: any) => d.status === "open").length,
-        totalProducts: products.length,
-        outOfStockProducts: products.filter((p: any) => Number(p.quantity ?? 0) === 0).length,
+        // Use the accurate countDocuments-based stats when available,
+        // falling back to the capped sample's length only if that request
+        // genuinely failed.
+        totalProducts: productStatsData?.totalProducts ?? products.length,
+        outOfStockProducts: productStatsData?.outOfStock ?? products.filter((p: any) => Number(p.quantity ?? 0) === 0).length,
         totalCustomers: customers.length,
         todayOrders: todayOrders.length,
         todayRevenue,

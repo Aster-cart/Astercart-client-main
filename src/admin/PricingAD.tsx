@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import api from "../utils/api";
 import { toast } from "react-toastify";
 
 interface PricingProduct {
   _id: string;
   name: string;
-  storeName: string;
+  storeId: string | null;
+  storeName: string;       // GUARANTEED non-null string from the server — safe to call .toLowerCase() on
+  category: string;        // GUARANTEED non-null string from the server
   images?: string[];
   storePrice: number;
   customerPrice: number;
@@ -21,20 +23,28 @@ interface PricingProduct {
 const formatNaira = (n: number) =>
   new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(n || 0);
 
+type StoreGroup = {
+  storeId: string;
+  storeName: string;
+  products: PricingProduct[];
+  expanded: boolean;
+};
+
 const PricingAD: React.FC = () => {
-  const [products, setProducts] = useState<PricingProduct[]>([]);
+  const [allProducts, setAllProducts] = useState<PricingProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editingProduct, setEditingProduct] = useState<PricingProduct | null>(null);
   const [showBatchModal, setShowBatchModal] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [expandedStores, setExpandedStores] = useState<Set<string>>(new Set());
 
   const load = async () => {
     setLoading(true);
     try {
       const { data } = await api.get<{ products: PricingProduct[] }>("/store/admin/products/pricing-overview");
-      setProducts(data.products || []);
+      setAllProducts(data.products || []);
     } catch {
       toast.error("Failed to load pricing data.");
     } finally {
@@ -44,30 +54,75 @@ const PricingAD: React.FC = () => {
 
   useEffect(() => { load(); }, []);
 
-  const filtered = products.filter(p =>
-    !search.trim() ||
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.storeName.toLowerCase().includes(search.toLowerCase())
-  );
+  // Every field used in this filter (storeName, category, name) is
+  // GUARANTEED by the server to always be a real string, never
+  // undefined/null — that guarantee is what makes .toLowerCase() safe to
+  // call here unconditionally. Previously the server could send
+  // storeName: undefined for a product whose Product document never had
+  // that field saved on it directly, and calling .toLowerCase() on
+  // undefined threw a runtime error on every keystroke, crashing this
+  // entire page to a blank screen the moment anyone typed in the search
+  // box. Defensive `(x || "")` here is a second layer of protection in
+  // case that guarantee is ever violated by a future change.
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return allProducts.filter((p) => {
+      const matchesSearch = !q ||
+        (p.name || "").toLowerCase().includes(q) ||
+        (p.storeName || "").toLowerCase().includes(q);
+      const matchesCategory = categoryFilter === "All" || p.category === categoryFilter;
+      return matchesSearch && matchesCategory;
+    });
+  }, [allProducts, search, categoryFilter]);
 
-  const totalMarkupRevenue = products.reduce((s, p) => s + (p.markupRevenue || 0), 0);
-  const markedUpCount = products.filter(p => p.markupType !== "none").length;
-  const markedDownCount = products.filter(p => p.markdownType !== "none").length;
+  // Group the filtered products by store, mirroring the same pattern used
+  // on the Products tab — click a store to expand and see/manage just
+  // their products.
+  const storeGroups: StoreGroup[] = useMemo(() => {
+    const map = new Map<string, StoreGroup>();
+    filtered.forEach((p) => {
+      const key = p.storeId || "unknown";
+      if (!map.has(key)) {
+        map.set(key, { storeId: key, storeName: p.storeName, products: [], expanded: expandedStores.has(key) });
+      }
+      map.get(key)!.products.push(p);
+    });
+    return Array.from(map.values()).sort((a, b) => a.storeName.localeCompare(b.storeName));
+  }, [filtered, expandedStores]);
+
+  const categories = useMemo(() => {
+    const set = new Set(allProducts.map((p) => p.category || "Uncategorized"));
+    return ["All", ...Array.from(set).sort()];
+  }, [allProducts]);
+
+  const totalMarkupRevenue = allProducts.reduce((s, p) => s + (p.markupRevenue || 0), 0);
+  const markedUpCount = allProducts.filter((p) => p.markupType !== "none").length;
+  const markedDownCount = allProducts.filter((p) => p.markdownType !== "none").length;
+
+  const toggleStore = (storeId: string) => {
+    setExpandedStores((prev) => {
+      const next = new Set(prev);
+      if (next.has(storeId)) next.delete(storeId); else next.add(storeId);
+      return next;
+    });
+  };
 
   const toggleSelect = (id: string) => {
-    setSelectedIds(prev => {
+    setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   };
 
-  const selectAll = () => {
-    if (selectedIds.size === filtered.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(filtered.map(p => p._id)));
-    }
+  const selectAllInStore = (group: StoreGroup) => {
+    const ids = group.products.map((p) => p._id);
+    const allSelected = ids.every((id) => selectedIds.has(id));
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      ids.forEach((id) => (allSelected ? next.delete(id) : next.add(id)));
+      return next;
+    });
   };
 
   return (
@@ -77,7 +132,8 @@ const PricingAD: React.FC = () => {
         <strong>Markup</strong> is set individually per product — there is no single global rate. Each
         product can have a different markup (or none). The markup amount belongs to the platform; it's
         added on top of the store's own price. <strong>Markdown</strong> works the same way for
-        promotions/bonanzas, and can have an expiry date.
+        promotions/bonanzas, and can have an expiry date. Click a store below to see and adjust their
+        products, or filter by category to batch-update a whole category at once.
       </div>
 
       {/* Stats */}
@@ -96,19 +152,28 @@ const PricingAD: React.FC = () => {
         </div>
         <div className="bg-white rounded-xl p-4 border">
           <p className="text-sm text-gray-500">Total products</p>
-          <p className="text-2xl font-bold mt-1">{products.length}</p>
+          <p className="text-2xl font-bold mt-1">{allProducts.length}</p>
         </div>
       </div>
 
       {/* Controls */}
-      <div className="flex gap-3 mb-4 items-center">
+      <div className="flex gap-3 mb-4 items-center flex-wrap">
         <input
           type="text"
           placeholder="Search products or stores..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border border-gray-200 rounded-lg px-4 py-2 text-sm w-80 focus:outline-none focus:border-pry"
+          className="border border-gray-200 rounded-lg px-4 py-2 text-sm w-72 focus:outline-none focus:border-pry"
         />
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-pry"
+        >
+          {categories.map((c) => (
+            <option key={c} value={c}>{c === "All" ? "All categories" : c}</option>
+          ))}
+        </select>
         {selectedIds.size > 0 && (
           <button
             onClick={() => setShowBatchModal(true)}
@@ -117,80 +182,121 @@ const PricingAD: React.FC = () => {
             Apply markup/markdown to {selectedIds.size} selected
           </button>
         )}
+        {selectedIds.size > 0 && (
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="text-sm px-3 py-2 text-gray-500"
+          >
+            Clear selection
+          </button>
+        )}
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border overflow-x-auto">
+      {/* Store groups */}
+      <div className="space-y-4">
         {loading ? (
-          <p className="p-8 text-center text-gray-400">Loading...</p>
-        ) : filtered.length === 0 ? (
-          <p className="p-8 text-center text-gray-400">No products found.</p>
+          <p className="bg-white rounded-xl border p-8 text-center text-gray-400">Loading...</p>
+        ) : storeGroups.length === 0 ? (
+          <p className="bg-white rounded-xl border p-8 text-center text-gray-400">No products found.</p>
         ) : (
-          <table className="w-full text-sm text-left">
-            <thead className="text-gray-400 border-b text-xs bg-gray-50">
-              <tr>
-                <th className="py-3 px-4">
-                  <input type="checkbox" checked={selectedIds.size === filtered.length && filtered.length > 0} onChange={selectAll} />
-                </th>
-                <th className="px-4">Product</th>
-                <th className="px-4">Store</th>
-                <th className="px-4">Store price</th>
-                <th className="px-4">Markup</th>
-                <th className="px-4">Markdown</th>
-                <th className="px-4">Customer pays</th>
-                <th className="px-4">Markup revenue</th>
-                <th className="px-4">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((p) => (
-                <tr key={p._id} className="border-b hover:bg-gray-50">
-                  <td className="py-3 px-4">
-                    <input type="checkbox" checked={selectedIds.has(p._id)} onChange={() => toggleSelect(p._id)} />
-                  </td>
-                  <td className="px-4">
-                    <div className="flex items-center gap-2">
-                      {p.images?.[0]
-                        ? <img src={p.images[0]} alt="" className="w-8 h-8 rounded object-cover" />
-                        : <div className="w-8 h-8 rounded bg-gray-100" />
-                      }
-                      <span className="font-medium">{p.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 text-gray-500">{p.storeName}</td>
-                  <td className="px-4">{formatNaira(p.storePrice)}</td>
-                  <td className="px-4">
-                    {p.markupType === "none" ? (
-                      <span className="text-gray-400 text-xs">None</span>
-                    ) : (
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                        +{p.markupValue}{p.markupType === "percent" ? "%" : " ₦"}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4">
-                    {p.markdownType === "none" ? (
-                      <span className="text-gray-400 text-xs">{p.markdownExpired ? "Expired" : "None"}</span>
-                    ) : (
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-                        -{p.markdownValue}{p.markdownType === "percent" ? "%" : " ₦"}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 font-bold">{formatNaira(p.customerPrice)}</td>
-                  <td className="px-4 text-green-600">{formatNaira(p.markupRevenue)}</td>
-                  <td className="px-4">
-                    <button
-                      onClick={() => setEditingProduct(p)}
-                      className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
-                    >
-                      Edit
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          storeGroups.map((group) => (
+            <div key={group.storeId} className="bg-white rounded-xl border overflow-hidden">
+              {/* Store header */}
+              <button
+                onClick={() => toggleStore(group.storeId)}
+                className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-pry flex items-center justify-center text-white font-bold">
+                    {group.storeName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-sm">{group.storeName}</p>
+                    <p className="text-xs text-gray-400">{group.products.length} products</p>
+                  </div>
+                </div>
+                <span className="text-gray-400 text-lg">{group.expanded ? "▲" : "▼"}</span>
+              </button>
+
+              {group.expanded && (
+                <div>
+                  <div className="px-5 py-2 border-t bg-gray-50 flex justify-between items-center">
+                    <label className="flex items-center gap-2 text-xs text-gray-500">
+                      <input
+                        type="checkbox"
+                        checked={group.products.every((p) => selectedIds.has(p._id))}
+                        onChange={() => selectAllInStore(group)}
+                      />
+                      Select all in this store
+                    </label>
+                  </div>
+                  <table className="w-full text-sm text-left">
+                    <thead className="text-gray-400 border-t text-xs bg-gray-50">
+                      <tr>
+                        <th className="py-2 px-4"></th>
+                        <th className="px-4">Product</th>
+                        <th className="px-4">Category</th>
+                        <th className="px-4">Store price</th>
+                        <th className="px-4">Markup</th>
+                        <th className="px-4">Markdown</th>
+                        <th className="px-4">Customer pays</th>
+                        <th className="px-4">Markup revenue</th>
+                        <th className="px-4">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {group.products.map((p) => (
+                        <tr key={p._id} className="border-b hover:bg-gray-50">
+                          <td className="py-3 px-4">
+                            <input type="checkbox" checked={selectedIds.has(p._id)} onChange={() => toggleSelect(p._id)} />
+                          </td>
+                          <td className="px-4">
+                            <div className="flex items-center gap-2">
+                              {p.images?.[0]
+                                ? <img src={p.images[0]} alt="" className="w-8 h-8 rounded object-cover" />
+                                : <div className="w-8 h-8 rounded bg-gray-100" />
+                              }
+                              <span className="font-medium">{p.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 text-gray-500 text-xs">{p.category}</td>
+                          <td className="px-4">{formatNaira(p.storePrice)}</td>
+                          <td className="px-4">
+                            {p.markupType === "none" ? (
+                              <span className="text-gray-400 text-xs">None</span>
+                            ) : (
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                +{p.markupValue}{p.markupType === "percent" ? "%" : " ₦"}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4">
+                            {p.markdownType === "none" ? (
+                              <span className="text-gray-400 text-xs">{p.markdownExpired ? "Expired" : "None"}</span>
+                            ) : (
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                                -{p.markdownValue}{p.markdownType === "percent" ? "%" : " ₦"}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 font-bold">{formatNaira(p.customerPrice)}</td>
+                          <td className="px-4 text-green-600">{formatNaira(p.markupRevenue)}</td>
+                          <td className="px-4">
+                            <button
+                              onClick={() => setEditingProduct(p)}
+                              className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
+                            >
+                              Edit
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ))
         )}
       </div>
 

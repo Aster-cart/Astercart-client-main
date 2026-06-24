@@ -81,6 +81,35 @@ const PerStoreFeeOverride: React.FC<{ storeId: string; storeName: string }> = ({
   const [commission, setCommission] = useState<number | "">("");
   const [deliveryFee, setDeliveryFee] = useState<number | "">("");
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [defaultCommission, setDefaultCommission] = useState<number | null>(null);
+  const [defaultDelivery, setDefaultDelivery] = useState<number | null>(null);
+
+  // Fetch the store's CURRENT override (if any) plus the platform's
+  // current global defaults, so admin can immediately see the effective
+  // rate this store is actually paying right now — previously this form
+  // always opened blank regardless of what was already configured, with
+  // no way to tell whether a store had a custom rate without checking a
+  // separate page.
+  useEffect(() => {
+    (async () => {
+      try {
+        const [storeRes, configRes] = await Promise.all([
+          api.get<{ store: { feeOverride?: { platformCommission?: number; deliveryFee?: number } } }>(`/store/adminstore/${storeId}`),
+          api.get<{ platformCommission: number; deliveryFee: number }>("/admin/platform-config"),
+        ]);
+        const override = storeRes.data?.store?.feeOverride;
+        if (override?.platformCommission != null) setCommission(override.platformCommission);
+        if (override?.deliveryFee != null) setDeliveryFee(override.deliveryFee);
+        setDefaultCommission(configRes.data?.platformCommission ?? null);
+        setDefaultDelivery(configRes.data?.deliveryFee ?? null);
+      } catch {
+        // Non-fatal — form just opens blank if this fails
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [storeId]);
 
   const handleSave = async () => {
     if (commission === "" && deliveryFee === "") return;
@@ -92,18 +121,34 @@ const PerStoreFeeOverride: React.FC<{ storeId: string; storeName: string }> = ({
       });
       toast.success(`Fee override saved for ${storeName}`);
     } catch {
-      toast.error("Failed to save. The fee-config endpoint needs to be added to the server.");
+      toast.error("Failed to save fee override.");
     } finally {
       setSaving(false);
     }
   };
 
+  const effectiveCommission = commission !== "" ? commission : defaultCommission;
+  const effectiveDelivery = deliveryFee !== "" ? deliveryFee : defaultDelivery;
+
   return (
     <div className="bg-white rounded-xl p-5 border">
       <h3 className="font-semibold mb-1">Custom fee override for this store</h3>
-      <p className="text-xs text-gray-400 mb-4">
+      <p className="text-xs text-gray-400 mb-2">
         Leave blank to use global platform defaults. Set a value to override for this store only.
       </p>
+      {!loading && (
+        <p className="text-xs font-medium mb-4">
+          <span className={commission !== "" ? "text-purple-600" : "text-gray-500"}>
+            Currently paying: {effectiveCommission ?? "—"}% commission
+            {commission === "" && " (platform default)"}
+          </span>
+          {" · "}
+          <span className={deliveryFee !== "" ? "text-purple-600" : "text-gray-500"}>
+            ₦{effectiveDelivery ?? "—"} delivery fee
+            {deliveryFee === "" && " (platform default)"}
+          </span>
+        </p>
+      )}
       <div className="flex gap-4 items-end flex-wrap">
         <div>
           <label className="text-xs text-gray-500 font-medium block mb-1">Platform commission (%)</label>

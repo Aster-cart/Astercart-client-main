@@ -14,6 +14,9 @@ interface StoreRow {
   revenue?: number;
   cacNumber?: string;
   phoneNumber?: string;
+  effectiveCommissionPercent?: number; // the rate this store actually pays right now
+  hasCustomCommission?: boolean;       // true if this is an override, false if it's just the platform default
+  deliveryFeeOverride?: number | null;
 }
 
 type FilterTab = "all" | "pending" | "active" | "inactive";
@@ -145,6 +148,7 @@ const StoresAD: React.FC = () => {
                 <th className="px-4">Email</th>
                 <th className="px-4">State</th>
                 <th className="px-4">Status</th>
+                <th className="px-4">Commission</th>
                 <th className="px-4">Orders</th>
                 <th className="px-4">Revenue</th>
                 <th className="px-4">Joined</th>
@@ -169,6 +173,14 @@ const StoresAD: React.FC = () => {
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_BADGE[s.status] || "bg-gray-100 text-gray-500"}`}>
                       {s.status}
                     </span>
+                  </td>
+                  <td className="px-4">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${s.hasCustomCommission ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-500"}`}>
+                      {s.effectiveCommissionPercent ?? "—"}%
+                    </span>
+                    {s.hasCustomCommission && (
+                      <p className="text-xs text-purple-400 mt-0.5">Custom rate</p>
+                    )}
                   </td>
                   <td className="px-4 font-medium">{s.orderCount || 0}</td>
                   <td className="px-4 text-green-600 font-medium">

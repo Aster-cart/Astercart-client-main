@@ -1,11 +1,20 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useDashboard } from "../hooks/useDashboard";
+import api from "../utils/api";
 
 const formatNaira = (n: number) =>
   new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(n || 0);
 
 const Earnings: React.FC = () => {
   const { mockDashboardData, filteredTransactions } = useDashboard();
+  const [feeInfo, setFeeInfo] = useState<{ effectiveCommissionPercent: number; hasCustomCommission: boolean; effectiveDeliveryFee: number; hasCustomDelivery: boolean } | null>(null);
+
+  // Fetch the store's OWN actual rate — previously the page just said
+  // "default 10%, may vary per agreement" with no way for a store to know
+  // their real, current rate without contacting support.
+  useEffect(() => {
+    api.get("/store/my-fee-config").then(({ data }) => setFeeInfo(data as any)).catch(() => {});
+  }, []);
 
   const rows = filteredTransactions as any[];
   const pendingPayout = rows.filter(r => r.payoutStatus !== "paid_out" && r.status !== "canceled" && r.status !== "failed");
@@ -27,12 +36,25 @@ const Earnings: React.FC = () => {
         ))}
       </div>
 
+      {/* Your actual rate */}
+      {feeInfo && (
+        <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-6">
+          <h3 className="font-semibold text-purple-800 mb-1">Your current rate</h3>
+          <p className="text-sm text-purple-700">
+            Astercart takes <strong>{feeInfo.effectiveCommissionPercent}%</strong> commission on your product subtotal
+            {feeInfo.hasCustomCommission ? " (your custom agreed rate)" : " (platform standard rate)"}.
+            Delivery fee for your orders is <strong>₦{feeInfo.effectiveDeliveryFee}</strong>
+            {feeInfo.hasCustomDelivery ? " (custom rate)" : " (platform standard rate)"}.
+          </p>
+        </div>
+      )}
+
       {/* How payouts work */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
         <h3 className="font-semibold text-blue-800 mb-2">How payouts work</h3>
         <ul className="text-sm text-blue-700 space-y-1">
           <li>• You are paid based on your product subtotal — never the delivery fee or service fee</li>
-          <li>• Astercart retains a commission percentage from your product subtotal (default 10%, may vary per agreement)</li>
+          <li>• Astercart retains a commission percentage from your product subtotal — see your actual rate above</li>
           <li>• The customer separately pays a delivery fee and a service fee — neither of these come out of your payout</li>
           <li>• Payouts are processed by the admin team and marked as paid once transferred</li>
           <li>• Contact support if you have a payment dispute</li>
