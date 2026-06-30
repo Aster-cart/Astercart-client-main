@@ -37,12 +37,20 @@ const StoresAD: React.FC = () => {
   const [search, setSearch] = useState("");
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
   const [actionId, setActionId] = useState<string | null>(null);
+  const [pendingVerifications, setPendingVerifications] = useState<any[]>([]);
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [reviewNote, setReviewNote] = useState("");
+  const [showVerificationTab, setShowVerificationTab] = useState(false);
 
   const load = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get<{ stores: StoreRow[] }>("/store/adminstore");
-      setStores(data.stores || []);
+      const [storesRes, verifRes] = await Promise.allSettled([
+        api.get<{ stores: StoreRow[] }>("/store/adminstore"),
+        api.get<{ stores: any[] }>("/store/admin/verifications?status=pending_review"),
+      ]);
+      if (storesRes.status === "fulfilled") setStores(storesRes.value.data.stores || []);
+      if (verifRes.status === "fulfilled") setPendingVerifications(verifRes.value.data.stores || []);
     } catch {
       toast.error("Failed to load stores");
     } finally {
@@ -50,7 +58,19 @@ const StoresAD: React.FC = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  const reviewVerification = async (storeId: string, decision: "approved" | "rejected") => {
+    setReviewingId(storeId);
+    try {
+      await api.put(`/store/admin/verifications/${storeId}`, { decision, note: reviewNote });
+      toast.success(`Store ${decision} successfully.`);
+      setReviewNote("");
+      load();
+    } catch {
+      toast.error("Review action failed.");
+    } finally {
+      setReviewingId(null);
+    }
+  };
 
   if (selectedStoreId) {
     return <StoreDetailAD storeId={selectedStoreId} onBack={() => setSelectedStoreId(null)} />;
@@ -86,6 +106,104 @@ const StoresAD: React.FC = () => {
 
   return (
     <div className="font-inter">
+      {/* Tab switcher — Stores list vs Verification queue */}
+      <div className="flex gap-2 mb-6 border-b">
+        <button
+          onClick={() => setShowVerificationTab(false)}
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition ${!showVerificationTab ? "border-pry text-pry" : "border-transparent text-gray-400"}`}
+        >
+          All Stores
+        </button>
+        <button
+          onClick={() => setShowVerificationTab(true)}
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition flex items-center gap-2 ${showVerificationTab ? "border-pry text-pry" : "border-transparent text-gray-400"}`}
+        >
+          Verification Queue
+          {pendingVerifications.length > 0 && (
+            <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5">{pendingVerifications.length}</span>
+          )}
+        </button>
+      </div>
+
+      {showVerificationTab ? (
+        <div>
+          <p className="text-sm text-gray-500 mb-4">
+            These stores have submitted their documents and are waiting for your review before they can add products.
+          </p>
+          {pendingVerifications.length === 0 ? (
+            <p className="text-center text-gray-400 py-12">No pending verifications right now.</p>
+          ) : pendingVerifications.map((store: any) => (
+            <div key={store._id} className="bg-white rounded-xl border p-5 mb-4">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <p className="font-semibold">{store.name}</p>
+                  <p className="text-xs text-gray-400">{store.email}</p>
+                  {store.verificationDocuments?.submittedAt && (
+                    <p className="text-xs text-gray-400">Submitted: {new Date(store.verificationDocuments.submittedAt).toLocaleDateString("en-GB")}</p>
+                  )}
+                </div>
+              </div>
+
+              {store.verificationDocuments && (
+                <div className="grid grid-cols-2 gap-3 text-xs mb-4 bg-gray-50 rounded-lg p-3">
+                  <div><span className="text-gray-400">CAC Number: </span>{store.verificationDocuments.cacNumber}</div>
+                  <div><span className="text-gray-400">Business Email: </span>{store.verificationDocuments.businessEmail}</div>
+                  <div><span className="text-gray-400">Phone: </span>{store.verificationDocuments.businessPhone}</div>
+                  <div><span className="text-gray-400">Address: </span>{store.verificationDocuments.exactAddress}</div>
+                  {store.verificationDocuments.landmark && (
+                    <div><span className="text-gray-400">Landmark: </span>{store.verificationDocuments.landmark}</div>
+                  )}
+                  {store.verificationDocuments.cacCertificate && (
+                    <div>
+                      <a href={store.verificationDocuments.cacCertificate} target="_blank" rel="noopener noreferrer"
+                        className="text-pry underline">View CAC Certificate</a>
+                    </div>
+                  )}
+                  {store.verificationDocuments.ownerIdDocument && (
+                    <div>
+                      <a href={store.verificationDocuments.ownerIdDocument} target="_blank" rel="noopener noreferrer"
+                        className="text-pry underline">View Owner ID</a>
+                    </div>
+                  )}
+                  {store.verificationDocuments.storePhotos?.length > 0 && (
+                    <div className="col-span-2">
+                      <span className="text-gray-400">Store Photos: </span>
+                      {store.verificationDocuments.storePhotos.map((url: string, i: number) => (
+                        <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-pry underline mr-2">Photo {i + 1}</a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <input
+                placeholder="Rejection note (required if rejecting — explain what needs correcting)"
+                value={reviewingId === store._id ? reviewNote : ""}
+                onChange={e => { setReviewingId(store._id); setReviewNote(e.target.value); }}
+                className="w-full border rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:border-pry"
+              />
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => reviewVerification(store._id, "approved")}
+                  disabled={reviewingId === store._id}
+                  className="px-5 py-2 bg-green-600 text-white rounded-lg text-sm font-medium disabled:opacity-60"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => { if (!reviewNote.trim()) { toast.error("Please add a note explaining what needs correcting before rejecting."); return; } reviewVerification(store._id, "rejected"); }}
+                  disabled={reviewingId === store._id}
+                  className="px-5 py-2 bg-red-500 text-white rounded-lg text-sm font-medium disabled:opacity-60"
+                >
+                  Reject
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+      <>
       {/* Summary tiles */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-xl p-4 border">
@@ -232,6 +350,8 @@ const StoresAD: React.FC = () => {
           </table>
         )}
       </div>
+      </>
+      )}
     </div>
   );
 };

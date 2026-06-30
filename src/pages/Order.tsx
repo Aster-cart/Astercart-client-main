@@ -228,6 +228,21 @@ const Order: React.FC = () => {
                     {isExpanded && (
                       <tr>
                         <td colSpan={7} className="bg-orange-50 px-4 py-4 border-b">
+                          {/* Pickup OTP — shown prominently when a
+                              rider has been assigned but hasn't picked
+                              up yet. The store compares this against
+                              what the rider shows on their screen
+                              before handing anything over. */}
+                          {order.pickupOTP && order.riderId && status === "processing" && (
+                            <div className="bg-gray-900 rounded-xl p-4 mb-3 text-center">
+                              <p className="text-xs text-gray-400 mb-1">Rider pickup code</p>
+                              <p className="text-4xl font-bold text-orange-500 tracking-widest">{order.pickupOTP}</p>
+                              <p className="text-xs text-gray-500 mt-2">
+                                A rider is on their way. Before handing over this order, confirm the code on their screen matches this number.
+                              </p>
+                            </div>
+                          )}
+
                           {/* Progress steps */}
                           <div className="flex items-center gap-1 mb-3 overflow-x-auto pb-1">
                             {STATUS_STEPS.map((step, si) => {

@@ -21,6 +21,7 @@ import Inventory from "./Inventory";
 import Dashboard from "./Dashboard";
 import Order from "./Order";
 import Setting from "./Setting";
+import Verification from "./Verification";
 
 interface Notification {
   id: number;
@@ -218,6 +219,7 @@ const Admin: React.FC = () => {
     { label: "Dashboard", icon: dashboard, activeIcon: dash },
     { label: "Orders", icon: orders, activeIcon: ord },
     { label: "Inventory", icon: inventory, activeIcon: invent },
+    { label: "Verification", icon: setting, activeIcon: set },
     { label: "Settings", icon: setting, activeIcon: set },
     { label: "Logout", icon: logout, activeIcon: log },
   ];
@@ -254,6 +256,15 @@ const Admin: React.FC = () => {
           </>
         );
 
+      case "Verification":
+        return (
+          <>
+            <PageHeader title="Store Verification" />
+            <div className="flex flex-col h-[calc(100vh-50px)] bg-[#F9FAFB] overflow-y-auto">
+              <Verification />
+            </div>
+          </>
+        );
       case "Settings":
         return (
           <>
