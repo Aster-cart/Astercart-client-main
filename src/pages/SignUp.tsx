@@ -17,6 +17,10 @@ const SignUp: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [state, setState] = useState<string>("");
   const [lga, setLGA] = useState<string>("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const [postalCode, setPostalCode] = useState<string>("");
   const [cacNumber, setCacNumber] = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
@@ -34,6 +38,36 @@ const SignUp: React.FC = () => {
   }, [navigate]);
   const toggleVisibility = (field: "password" | "confirmPassword") => {
     setVisibility((prev) => ({ ...prev, [field]: !prev[field] }));
+  };
+
+  // Captures the store's real coordinates using the browser's own
+  // Geolocation API — no geocoding service or API key required. This is
+  // the prerequisite for distance-based delivery pricing: without a
+  // store's real lat/lng, delivery fee can never be calculated from
+  // actual distance, only guessed at with a flat fee.
+  const handleUseCurrentLocation = () => {
+    setLocationError(null);
+    if (!navigator.geolocation) {
+      setLocationError("Your browser doesn't support location detection. You can still sign up, but distance-based delivery pricing won't work for your store until this is set.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLatitude(position.coords.latitude);
+        setLongitude(position.coords.longitude);
+        setLocating(false);
+      },
+      (error) => {
+        setLocating(false);
+        setLocationError(
+          error.code === error.PERMISSION_DENIED
+            ? "Location access was denied. You can still sign up, but please set your store's location later from Settings so delivery fees calculate correctly."
+            : "Could not detect your location. Please try again, or set it later from Settings."
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -64,6 +98,8 @@ const SignUp: React.FC = () => {
     state: state.trim(),
     postalCode: postalCode.trim(),
     lga: lga.trim(),
+    latitude,
+    longitude,
   },
   cacNumber: cacNumber.trim(),
   phoneNumber: phoneNumber.trim(),
@@ -173,6 +209,33 @@ const SignUp: React.FC = () => {
           ${storeAddress ? "bg-fade" : "bg-bginput"}`}
                   required
                 />
+              </div>
+
+              {/* Location capture — required for distance-based delivery
+                  pricing to work for this store. Best captured while the
+                  store owner is physically at the shop during signup. */}
+              <div className="mb-4">
+                <button
+                  type="button"
+                  onClick={handleUseCurrentLocation}
+                  disabled={locating}
+                  className="text-sm px-4 py-2 bg-orange-50 text-orange-600 rounded-md font-medium border border-orange-200 disabled:opacity-60"
+                >
+                  {locating ? "Detecting location..." : latitude ? "📍 Location captured — tap to recapture" : "📍 Use my current location"}
+                </button>
+                {latitude && longitude && (
+                  <p className="text-xs text-green-600 mt-1">
+                    Location set ({latitude.toFixed(4)}, {longitude.toFixed(4)}) — needed for accurate delivery pricing.
+                  </p>
+                )}
+                {locationError && (
+                  <p className="text-xs text-yellow-600 mt-1">{locationError}</p>
+                )}
+                {!latitude && !locationError && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Stand at your shop and tap above — this lets us calculate accurate delivery fees by distance.
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-3 gap-[7px] mb-2">

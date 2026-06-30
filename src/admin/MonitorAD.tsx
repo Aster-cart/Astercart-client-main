@@ -24,6 +24,26 @@ interface SystemStats {
   todayRevenue: number;
 }
 
+interface SentryIssue {
+  id: string;
+  title: string;
+  culprit: string | null;
+  level: string;
+  count: string;
+  userCount: number;
+  firstSeen: string;
+  lastSeen: string;
+  permalink: string;
+  tags: string | null;
+}
+
+const LEVEL_COLOR: Record<string, string> = {
+  fatal: "bg-red-100 border-red-300 text-red-700",
+  error: "bg-red-100 border-red-300 text-red-700",
+  warning: "bg-yellow-100 border-yellow-300 text-yellow-700",
+  info: "bg-blue-100 border-blue-300 text-blue-700",
+};
+
 const SEV_COLOR = {
   high: "bg-red-100 border-red-300 text-red-700",
   medium: "bg-yellow-100 border-yellow-300 text-yellow-700",
@@ -42,6 +62,9 @@ const formatNaira = (n: number) =>
 const MonitorAD: React.FC = () => {
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [sentryIssues, setSentryIssues] = useState<SentryIssue[]>([]);
+  const [sentryConfigured, setSentryConfigured] = useState(true); // assume configured until we know otherwise, to avoid a flash of "not connected" on every load
+  const [sentryError, setSentryError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [autoRefresh, setAutoRefresh] = useState(true);
@@ -63,6 +86,7 @@ const MonitorAD: React.FC = () => {
         api.get("/store/get-all-products-admin?limit=500"),
         api.get("/adminCustomer/customers"),
         api.get("/store/admin/products/stats"),
+        api.get("/admin/monitoring/issues"),
       ]);
 
       const storesData = results[0].status === "fulfilled" ? results[0].value.data : {};
@@ -71,6 +95,19 @@ const MonitorAD: React.FC = () => {
       const productsData = results[3].status === "fulfilled" ? results[3].value.data : [];
       const customersData = results[4].status === "fulfilled" ? results[4].value.data : [];
       const productStatsData = results[5].status === "fulfilled" ? results[5].value.data : null;
+
+      // Sentry-backed technical alerts — direct answer to "if Flutterwave
+      // webhook stops working / Render crashes / Gemini fails / MongoDB
+      // disconnects, who knows?" Previously the only way to find out was
+      // a human happening to notice and check Render's logs manually.
+      if (results[6].status === "fulfilled") {
+        const sentryData = results[6].value.data;
+        setSentryConfigured(sentryData.configured);
+        setSentryIssues(sentryData.issues || []);
+        setSentryError(sentryData.error || null);
+      } else {
+        setSentryError("Could not reach the monitoring service.");
+      }
 
       const stores = (storesData as any)?.stores || (Array.isArray(storesData) ? storesData : []);
       const orders = Array.isArray(ordersData) ? ordersData : (ordersData as any)?.orders || [];
@@ -240,6 +277,68 @@ const MonitorAD: React.FC = () => {
                 <p className={`text-xs mt-1 ${s.subColor}`}>{s.sub}</p>
               </div>
             ))}
+          </div>
+
+          {/* Technical alerts — real crashes and exceptions from Sentry,
+              distinct from the business-data alerts below (which are
+              about orders, disputes, and stock, not server health).
+              Direct answer to "if the Flutterwave webhook stops working,
+              if Render crashes, if Gemini fails, if MongoDB
+              disconnects — who knows?" — now this page does, instead of
+              requiring admin to separately check Sentry's own dashboard. */}
+          <div className="bg-white rounded-xl border p-5 mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="font-semibold text-lg">
+                Technical alerts
+                {sentryIssues.filter(i => i.level === "error" || i.level === "fatal").length > 0 && (
+                  <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
+                    {sentryIssues.filter(i => i.level === "error" || i.level === "fatal").length} critical
+                  </span>
+                )}
+              </h2>
+              <span className="text-xs text-gray-400">Server crashes, payment webhook failures, AI errors, database issues</span>
+            </div>
+
+            {!sentryConfigured ? (
+              <div className="text-center py-8 bg-yellow-50 rounded-lg">
+                <p className="text-2xl mb-2">⚙️</p>
+                <p className="text-gray-600 font-medium">Monitoring not yet connected</p>
+                <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
+                  Add SENTRY_AUTH_TOKEN, SENTRY_ORG_SLUG, and SENTRY_PROJECT_SLUG to your server's environment
+                  variables to start seeing real crash and error alerts here.
+                </p>
+              </div>
+            ) : sentryError ? (
+              <p className="text-sm text-yellow-600 text-center py-4">{sentryError}</p>
+            ) : sentryIssues.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-2xl mb-2">✅</p>
+                <p className="text-gray-500 font-medium">No technical issues in the last 14 days</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {sentryIssues.map(issue => (
+                  <a
+                    key={issue.id}
+                    href={issue.permalink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`border rounded-xl p-4 flex gap-3 items-start block hover:opacity-90 ${LEVEL_COLOR[issue.level] || LEVEL_COLOR.error}`}
+                  >
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm">{issue.title}</p>
+                      {issue.culprit && <p className="text-xs mt-0.5 opacity-80 font-mono">{issue.culprit}</p>}
+                      <p className="text-xs mt-1 opacity-70">
+                        Happened {issue.count} time{issue.count !== "1" ? "s" : ""}
+                        {issue.userCount ? ` · affected ${issue.userCount} user${issue.userCount > 1 ? "s" : ""}` : ""}
+                        {" · "}last seen {new Date(issue.lastSeen).toLocaleString("en-GB")}
+                      </p>
+                    </div>
+                    <span className="text-xs underline opacity-70 flex-shrink-0">View in Sentry →</span>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Alerts */}

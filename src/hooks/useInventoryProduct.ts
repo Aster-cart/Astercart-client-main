@@ -2,6 +2,7 @@ import { toast } from "react-toastify";
 import { useState } from "react";
 import { useProductStore } from "../store/productStore";
 import { ProductForm } from "../types/product.types";
+import api from "../utils/api";
 
 
 export const useInventoryProduct = (
@@ -26,45 +27,69 @@ export const useInventoryProduct = (
     null,
     null,
     null,
-  ]); // Array of strings (URLs) or null
+  ]); // Array of strings (real Cloudinary URLs once uploaded) or null
   const [uploadProgress, setUploadProgress] = useState<number[]>([0, 0, 0, 0]);
 
-  const handleFileChange = (
+  const handleFileChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
     index: number
   ) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
+    if (!e.target.files || !e.target.files[0]) return;
+    const file = e.target.files[0];
 
-      const newImages = [...images];
-      newImages[index] = URL.createObjectURL(file);
-      setImages(newImages);
+    // Show a quick local preview immediately (still a blob URL, but ONLY
+    // ever used for the instant on-screen preview while uploading — it is
+    // NEVER sent to the server or saved anywhere). The moment the real
+    // upload finishes, this preview is replaced with the actual permanent
+    // Cloudinary URL.
+    const previewUrl = URL.createObjectURL(file);
+    setImages((prev) => {
+      const next = [...prev];
+      next[index] = previewUrl;
+      return next;
+    });
+    setUploadProgress((prev) => {
+      const next = [...prev];
+      next[index] = 10; // show some immediate progress feedback
+      return next;
+    });
 
-      // Add the file to `formData.images`
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        images: [...prevFormData.images, file],
-      }));
+    try {
+      const body = new FormData();
+      body.append("image", file);
+      const { data } = await api.post<{ url: string; publicId: string }>(
+        "/upload/product-image",
+        body,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
 
-      // Simulate upload progress
-      simulateUploadProgress(index);
-    }
-  };
-
-  const simulateUploadProgress = (index: number) => {
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10; // Simulate 10% increments
-      setUploadProgress((prevProgress) => {
-        const updatedProgress = [...prevProgress];
-        updatedProgress[index] = progress;
-        return updatedProgress;
+      // Replace the temporary blob preview with the REAL, permanent
+      // Cloudinary URL — this is what actually gets saved on the product
+      // and is what makes the image visible on every device, not just
+      // this browser tab.
+      setImages((prev) => {
+        const next = [...prev];
+        next[index] = data.url;
+        return next;
       });
-
-      if (progress >= 100) {
-        clearInterval(interval);
-      }
-    }, 500); // Adjust interval speed as needed
+      setUploadProgress((prev) => {
+        const next = [...prev];
+        next[index] = 100;
+        return next;
+      });
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Image upload failed. Please try again.");
+      setImages((prev) => {
+        const next = [...prev];
+        next[index] = null;
+        return next;
+      });
+      setUploadProgress((prev) => {
+        const next = [...prev];
+        next[index] = 0;
+        return next;
+      });
+    }
   };
 
   const addMoreSlots = () => {
@@ -88,6 +113,14 @@ export const useInventoryProduct = (
       return;
     }
 
+    // Block submission while any image is still mid-upload — otherwise a
+    // store could save the product with a temporary blob preview URL
+    // still in place if they submit before the real upload finishes.
+    if (uploadProgress.some((p, i) => images[i] && p < 100)) {
+      toast.error("Please wait for all images to finish uploading.");
+      return;
+    }
+
     // Build clean product object with correct field names the server expects
     const productPayload = {
       name: formData.name,
@@ -97,8 +130,10 @@ export const useInventoryProduct = (
       quantity: Number(formData.quantity),
       discount: Number(formData.discount) || 0,
       taxRate: Number(formData.taxRate) || 0,
-      // Only include image URLs (strings), not File objects
-      images: images.filter((img): img is string => typeof img === "string"),
+      // Only real, permanent Cloudinary URLs ever reach this point now —
+      // blob: URLs are filtered out as an extra safety net, in case a
+      // preview URL somehow slipped through.
+      images: images.filter((img): img is string => typeof img === "string" && !img.startsWith("blob:")),
     };
 
     try {
@@ -109,21 +144,6 @@ export const useInventoryProduct = (
       const msg = error?.response?.data?.message || error?.message || "Failed to save product.";
       toast.error(msg);
     }
-
-    // setFormData({
-    //   name: "",
-    //   description: "",
-    //   category: "",
-    //   price: "",
-    //   quantity: "",
-    //   discount: "",
-    //   taxRate: "",
-    //   images: [],
-    // });
-
-    // setImages([null, null, null, null]);
-    // setUploadProgress([0, 0, 0, 0]);
-    // setCurrentStep(1);
   };
 
 

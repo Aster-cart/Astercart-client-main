@@ -13,6 +13,7 @@ interface StoreRevenue {
   revenue: number;
   orders: number;
   platformFee: number;
+  markupRevenue: number;
   storePayout: number;
 }
 
@@ -31,7 +32,10 @@ const AnalyticsAD: React.FC = () => {
   const [totalPlatformFee, setTotalPlatformFee] = useState(0);
   const [totalStorePayout, setTotalStorePayout] = useState(0);
   const [totalDeliveryFee, setTotalDeliveryFee] = useState(0);
+  const [totalDeliveryCommission, setTotalDeliveryCommission] = useState(0);
+  const [totalRiderPayout, setTotalRiderPayout] = useState(0);
   const [totalServiceFee, setTotalServiceFee] = useState(0);
+  const [totalMarkupRevenue, setTotalMarkupRevenue] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -53,10 +57,11 @@ const AnalyticsAD: React.FC = () => {
         const storeMap: Record<string, StoreRevenue> = {};
         orders.forEach((o: any) => {
           const name = o.storeName || "Unknown";
-          if (!storeMap[name]) storeMap[name] = { storeName: name, revenue: 0, orders: 0, platformFee: 0, storePayout: 0 };
+          if (!storeMap[name]) storeMap[name] = { storeName: name, revenue: 0, orders: 0, platformFee: 0, markupRevenue: 0, storePayout: 0 };
           storeMap[name].revenue += o.totalAmount || 0;
           storeMap[name].orders += 1;
           storeMap[name].platformFee += o.platformCommission || 0;
+          storeMap[name].markupRevenue += o.markupRevenue || 0;
           storeMap[name].storePayout += o.storePayout != null ? o.storePayout : (o.totalAmount || 0);
         });
         const sortedStores = Object.values(storeMap).sort((a, b) => b.revenue - a.revenue);
@@ -68,12 +73,18 @@ const AnalyticsAD: React.FC = () => {
         const fee = payments.reduce((s: number, p: any) => s + (p.adminFee || 0), 0);
         const payout = payments.reduce((s: number, p: any) => s + (p.storePayout || 0), 0);
         const deliveryTotal = payments.reduce((s: number, p: any) => s + (p.deliveryFee || 0), 0);
+        const deliveryCommissionTotal = payments.reduce((s: number, p: any) => s + (p.deliveryCommission || 0), 0);
+        const riderPayoutTotal = payments.reduce((s: number, p: any) => s + (p.riderPayout || 0), 0);
         const serviceTotal = payments.reduce((s: number, p: any) => s + (p.serviceFee || 0), 0);
+        const markupTotal = payments.reduce((s: number, p: any) => s + (p.markupRevenue || 0), 0);
         setTotalRevenue(total);
         setTotalPlatformFee(fee);
         setTotalStorePayout(payout);
         setTotalDeliveryFee(deliveryTotal);
+        setTotalDeliveryCommission(deliveryCommissionTotal);
+        setTotalRiderPayout(riderPayoutTotal);
         setTotalServiceFee(serviceTotal);
+        setTotalMarkupRevenue(markupTotal);
 
         // Daily data - last 14 days
         const now = new Date();
@@ -103,31 +114,70 @@ const AnalyticsAD: React.FC = () => {
   return (
     <div className="font-inter space-y-6">
       {/* Platform totals */}
-      <div className="grid grid-cols-5 gap-4">
-        {[
-          { label: "Total product subtotal (all stores)", value: formatNaira(totalRevenue) },
-          { label: "Store payouts", value: formatNaira(totalStorePayout), color: "text-green-600" },
-          { label: "Platform commission", value: formatNaira(totalPlatformFee), color: "text-purple-600" },
-          { label: "Delivery fees collected", value: formatNaira(totalDeliveryFee), color: "text-blue-600" },
-          { label: "Service fees collected", value: formatNaira(totalServiceFee), color: "text-orange-600" },
-        ].map((s, i) => (
-          <div key={i} className="bg-white rounded-xl p-4 border">
-            <p className="text-sm text-gray-500">{s.label}</p>
-            <p className={`text-xl font-bold mt-1 ${(s as any).color || ""}`}>{s.value}</p>
-          </div>
-        ))}
+      <div className="grid grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl p-4 border">
+          <p className="text-sm text-gray-500">Store sale value (not Astercart revenue)</p>
+          <p className="text-xl font-bold mt-1">{formatNaira(totalRevenue)}</p>
+        </div>
+        <div className="bg-white rounded-xl p-4 border">
+          <p className="text-sm text-gray-500">Store payouts</p>
+          <p className="text-xl font-bold mt-1 text-green-600">{formatNaira(totalStorePayout)}</p>
+        </div>
+        <div className="bg-white rounded-xl p-4 border">
+          <p className="text-sm text-gray-500">Markup revenue</p>
+          <p className="text-xl font-bold mt-1 text-teal-600">{formatNaira(totalMarkupRevenue)}</p>
+        </div>
+        <div className="bg-white rounded-xl p-4 border">
+          <p className="text-sm text-gray-500">Service fees collected</p>
+          <p className="text-xl font-bold mt-1 text-orange-600">{formatNaira(totalServiceFee)}</p>
+        </div>
+        <div className="bg-white rounded-xl p-4 border">
+          <p className="text-sm text-gray-500">Platform commission</p>
+          <p className="text-xl font-bold mt-1 text-purple-600">{formatNaira(totalPlatformFee)}</p>
+        </div>
+        {/* Delivery fee is now split — riders earn the majority, Astercart
+            takes a cut (the Uber/Bolt model), so this needed two separate
+            tiles instead of one combined "delivery fees collected" figure
+            that didn't distinguish who actually keeps the money. */}
+        <div className="bg-white rounded-xl p-4 border">
+          <p className="text-sm text-gray-500">Total delivery fees (riders + Astercart)</p>
+          <p className="text-xl font-bold mt-1 text-blue-600">{formatNaira(totalDeliveryFee)}</p>
+        </div>
+        <div className="bg-white rounded-xl p-4 border">
+          <p className="text-sm text-gray-500">Rider payouts</p>
+          <p className="text-xl font-bold mt-1 text-blue-500">{formatNaira(totalRiderPayout)}</p>
+        </div>
+        <div className="bg-white rounded-xl p-4 border">
+          <p className="text-sm text-gray-500">Delivery commission (Astercart's cut)</p>
+          <p className="text-xl font-bold mt-1 text-pink-600">{formatNaira(totalDeliveryCommission)}</p>
+        </div>
+      </div>
+
+      {/* This is the one true platform-earnings figure — every other tile
+          above is a single revenue stream shown in isolation, but none of
+          them, on their own, represent what Astercart actually earns
+          across the platform. Now correctly includes delivery commission
+          as the fourth revenue stream — previously this total only summed
+          three of the four, silently undercounting real platform revenue
+          the moment distance-based delivery pricing was introduced. */}
+      <div className="bg-gray-900 rounded-xl p-5">
+        <p className="text-sm text-gray-300">Total Astercart Revenue (Markup + Service Fee + Commission + Delivery Commission)</p>
+        <p className="text-3xl font-bold text-white mt-1">
+          {formatNaira(totalMarkupRevenue + totalServiceFee + totalPlatformFee + totalDeliveryCommission)}
+        </p>
       </div>
 
       {/* Revenue trend chart */}
       <div className="bg-white rounded-xl border p-5">
-        <h2 className="font-semibold mb-4">Platform revenue — last 14 days</h2>
+        <h2 className="font-semibold mb-4">Platform sales volume — last 14 days</h2>
+        <p className="text-xs text-gray-400 mb-2">Total store sale value moving through the platform, not Astercart's own revenue.</p>
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={dailyData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="date" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₦${(v/1000).toFixed(0)}k`} />
             <Tooltip formatter={(v: number) => formatNaira(v)} />
-            <Line type="monotone" dataKey="revenue" stroke="#FE5B18" strokeWidth={2} dot={false} name="Revenue" />
+            <Line type="monotone" dataKey="revenue" stroke="#FE5B18" strokeWidth={2} dot={false} name="Sales volume" />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -149,6 +199,11 @@ const AnalyticsAD: React.FC = () => {
       {/* Revenue by store */}
       <div className="bg-white rounded-xl border p-5">
         <h2 className="font-semibold mb-4">Revenue by store</h2>
+        <p className="text-xs text-gray-400 mb-3">
+          "Astercart revenue" here excludes service fee and delivery commission, since both are
+          calculated per customer order/delivery, not attributable to a single store when a cart
+          spans multiple stores. See the total platform revenue card above for the full figure.
+        </p>
         {storeRevenue.length === 0 ? (
           <p className="text-gray-400 text-sm">No revenue data yet.</p>
         ) : (
@@ -168,8 +223,10 @@ const AnalyticsAD: React.FC = () => {
                 <tr>
                   <th className="py-2 text-left">Store</th>
                   <th className="text-right">Orders</th>
-                  <th className="text-right">Revenue</th>
-                  <th className="text-right">Platform fee</th>
+                  <th className="text-right">Store sale value</th>
+                  <th className="text-right">Markup</th>
+                  <th className="text-right">Commission</th>
+                  <th className="text-right">Astercart revenue (markup + commission)</th>
                   <th className="text-right">Store payout</th>
                 </tr>
               </thead>
@@ -179,7 +236,9 @@ const AnalyticsAD: React.FC = () => {
                     <td className="py-3 font-medium">{s.storeName}</td>
                     <td className="text-right">{s.orders}</td>
                     <td className="text-right">{formatNaira(s.revenue)}</td>
+                    <td className="text-right text-teal-600">{formatNaira(s.markupRevenue)}</td>
                     <td className="text-right text-purple-500">{formatNaira(s.platformFee)}</td>
+                    <td className="text-right font-bold text-gray-900">{formatNaira(s.markupRevenue + s.platformFee)}</td>
                     <td className="text-right text-green-600">{formatNaira(s.storePayout)}</td>
                   </tr>
                 ))}

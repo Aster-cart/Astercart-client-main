@@ -23,6 +23,7 @@ const DashboardLayout: React.FC = () => {
       "/analytics": "Analytics",
       "/earnings": "Earnings",
       "/disputes": "Disputes",
+      "/support": "Support",
       "/settings": "Settings",
     };
     setActiveMenu(map[location.pathname] || "Dashboard");

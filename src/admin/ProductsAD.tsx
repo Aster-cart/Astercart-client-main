@@ -37,11 +37,16 @@ const ProductsAD: React.FC = () => {
       );
       const list: Product[] = Array.isArray(data) ? data : (data as { products?: Product[] }).products || [];
 
-      // Group by store
+      // Group by store - storeId may be a populated object or a string
       const groups: Record<string, StoreGroup> = {};
       list.forEach((p) => {
-        const key = p.storeId || "unknown";
-        const name = p.storeName || "Unknown Store";
+        const storeObj = p.storeId as any;
+        const key = typeof storeObj === "object" && storeObj !== null
+          ? (storeObj._id?.toString() || "unknown")
+          : (storeObj?.toString() || "unknown");
+        const name = typeof storeObj === "object" && storeObj !== null
+          ? (storeObj.name || p.storeName || "Unknown Store")
+          : (p.storeName || "Unknown Store");
         if (!groups[key]) {
           groups[key] = { storeName: name, storeId: key, products: [], expanded: true };
         }
@@ -49,7 +54,16 @@ const ProductsAD: React.FC = () => {
       });
 
       setStoreGroups(Object.values(groups));
-    } catch {
+    } catch (error: any) {
+      console.error("[ProductsAD] Failed to load products:", error?.response?.status, error?.response?.data || error?.message);
+      const status = error?.response?.status;
+      if (status === 403) {
+        toast.error(error?.response?.data?.message || "Your admin role does not have permission to view products.");
+      } else if (status === 401) {
+        toast.error("Your session has expired. Please log in again.");
+      } else {
+        toast.error("Failed to load products. Check your connection and try again.");
+      }
       setStoreGroups([]);
     } finally {
       setLoading(false);

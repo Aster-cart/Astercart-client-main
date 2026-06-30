@@ -21,6 +21,7 @@ import RidersAD from "./RidersAD";
 import { useAdminAuthStore, canAccess } from "../store/adminAuthStore";
 import ProductsAD from "./ProductsAD";
 import PricingAD from "./PricingAD";
+import FinancialLedgerAD from "./FinancialLedgerAD";
 import api from "../utils/api";
 
 interface Notification {
@@ -150,6 +151,11 @@ const AdminAD: React.FC = () => {
     { label: "Orders", icon: orderm, activeIcon: ordm },
     { label: "Payment", icon: wallet, activeIcon: walet },
     { label: "Payouts", icon: wallet, activeIcon: walet },
+    // New tab: the three-ledger financial dashboard (Commercial / Cash /
+    // Profit views) — sits alongside Payment and Payouts rather than
+    // replacing either of them, since this is a different lens on the
+    // same underlying data, not a replacement page.
+    { label: "FinancialLedger", icon: wallet, activeIcon: walet },
     { label: "Products", icon: storem, activeIcon: stom },
     { label: "Pricing", icon: storem, activeIcon: stom },
     { label: "Settings", icon: setting, activeIcon: set },
@@ -176,6 +182,7 @@ const AdminAD: React.FC = () => {
     Orders: { title: "Orders", content: <OrdersAD /> },
     Payment: { title: "Payments", content: <PaymentAD /> },
     Payouts: { title: "Payouts & Settlement", content: <PayoutsAD /> },
+    FinancialLedger: { title: "Financial Ledger", content: <FinancialLedgerAD /> },
     Products: { title: "Product Management", content: <ProductsAD /> },
     Pricing: { title: "Pricing & Markup", content: <PricingAD /> },
     Settings: { title: "Settings", content: <SettingsAD /> },
@@ -205,7 +212,9 @@ const AdminAD: React.FC = () => {
                   className={`flex items-center w-full px-2 py-2 md:px-4 rounded hover:bg-fade transition-all ${activeMenu === item.label ? "bg-fade text-black" : "text-gray-500"}`}
                 >
                   <img src={activeMenu === item.label ? item.activeIcon : item.icon} alt={item.label} className="w-4 h-4 mr-2" />
-                  <span className="hidden md:inline">{item.label.replace("Management", " Mgmt")}</span>
+                  <span className="hidden md:inline">
+                    {item.label === "FinancialLedger" ? "Financial Ledger" : item.label.replace("Management", " Mgmt")}
+                  </span>
                 </button>
               </li>
             ))}

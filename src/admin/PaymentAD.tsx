@@ -10,7 +10,9 @@ interface PaymentRow {
   storePayout: number;     // amount - adminFee. What the store actually receives.
   adminFee: number;        // commission of store's OWN price (amount) — never includes markup
   serviceFee?: number;     // % of customerProductTotal (after markup), paid BY the customer, kept entirely by platform
-  deliveryFee?: number;    // flat delivery fee paid by customer — not store money, not commissioned
+  deliveryFee?: number;    // total delivery fee paid by customer — now split between rider and Astercart
+  deliveryCommission?: number; // Astercart's cut of deliveryFee — 4th revenue stream
+  riderPayout?: number;         // what the rider actually earned on this delivery
   markupRevenue?: number;  // platform's cut from per-product markup — revenue stream #1
   customerProductTotal?: number; // what customer actually paid for products, after markup
   grandTotal?: number;     // customerProductTotal + deliveryFee + serviceFee — the actual total the customer was charged
@@ -28,7 +30,7 @@ const PaymentAD: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     total: 0, totalRevenue: 0, totalStorePayout: 0, totalAdminFee: 0,
-    totalServiceFee: 0, totalDeliveryFee: 0, totalMarkupRevenue: 0, totalGrandTotal: 0, pendingPayouts: 0,
+    totalServiceFee: 0, totalDeliveryFee: 0, totalDeliveryCommission: 0, totalMarkupRevenue: 0, totalGrandTotal: 0, pendingPayouts: 0,
   });
   const [markingId, setMarkingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "pending_payout" | "paid_out">("all");
@@ -46,6 +48,7 @@ const PaymentAD: React.FC = () => {
         totalAdminFee: list.reduce((s, p) => s + (p.adminFee || 0), 0),
         totalServiceFee: list.reduce((s, p) => s + (p.serviceFee || 0), 0),
         totalDeliveryFee: list.reduce((s, p) => s + (p.deliveryFee || 0), 0),
+        totalDeliveryCommission: list.reduce((s, p) => s + (p.deliveryCommission || 0), 0),
         totalMarkupRevenue: list.reduce((s, p) => s + (p.markupRevenue || 0), 0),
         totalGrandTotal: list.reduce((s, p) => s + (p.grandTotal || p.amount || 0), 0),
         pendingPayouts: list.filter(
@@ -141,10 +144,10 @@ const PaymentAD: React.FC = () => {
 
             <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
               <div>
-                <p className="font-medium text-blue-800">→ Delivery / logistics</p>
-                <p className="text-xs text-blue-600">Flat fee per order — never commissioned, not store money, not platform revenue</p>
+                <p className="font-medium text-blue-800">→ Goes to riders</p>
+                <p className="text-xs text-blue-600">Distance-based delivery fee, minus Astercart's cut — the rider's actual take-home pay</p>
               </div>
-              <p className="font-bold text-blue-700">{formatNaira(stats.totalDeliveryFee)}</p>
+              <p className="font-bold text-blue-700">{formatNaira(stats.totalDeliveryFee - stats.totalDeliveryCommission)}</p>
             </div>
 
             <div className="flex items-center justify-between p-3 bg-teal-50 rounded-lg">
@@ -170,11 +173,19 @@ const PaymentAD: React.FC = () => {
               </div>
               <p className="font-bold text-purple-700">{formatNaira(stats.totalAdminFee)}</p>
             </div>
+
+            <div className="flex items-center justify-between p-3 bg-pink-50 rounded-lg">
+              <div>
+                <p className="font-medium text-pink-800">→ Platform keeps (Delivery Commission)</p>
+                <p className="text-xs text-pink-600">Astercart's cut of the delivery fee — the "Uber model" cut of the rider's fare</p>
+              </div>
+              <p className="font-bold text-pink-700">{formatNaira(stats.totalDeliveryCommission)}</p>
+            </div>
           </div>
 
           <div className="flex items-center justify-between p-3 bg-gray-900 rounded-lg mt-2">
-            <p className="font-medium text-white">Total platform revenue (Markup + Service Fee + Commission)</p>
-            <p className="font-bold text-lg text-white">{formatNaira(stats.totalMarkupRevenue + stats.totalServiceFee + stats.totalAdminFee)}</p>
+            <p className="font-medium text-white">Total platform revenue (Markup + Service Fee + Commission + Delivery Commission)</p>
+            <p className="font-bold text-lg text-white">{formatNaira(stats.totalMarkupRevenue + stats.totalServiceFee + stats.totalAdminFee + stats.totalDeliveryCommission)}</p>
           </div>
         </div>
       </div>
@@ -221,10 +232,12 @@ const PaymentAD: React.FC = () => {
                 <th>Subtotal (store price)</th>
                 <th>Markup</th>
                 <th>Delivery</th>
+                <th>Delivery Commission</th>
                 <th>Service Fee</th>
                 <th>Customer Paid</th>
                 <th>Store Gets</th>
                 <th>Commission</th>
+                <th>Astercart Revenue</th>
                 <th>Status</th>
                 <th>Payout</th>
                 <th>Date</th>
@@ -232,7 +245,14 @@ const PaymentAD: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((p) => (
+              {filtered.map((p) => {
+                // Per-row total of every revenue stream Astercart actually
+                // keeps from this specific order — previously this sum
+                // only existed as a platform-wide total at the top of the
+                // page, with no way to see it broken out per individual
+                // order in the table itself.
+                const astercartRevenue = (p.markupRevenue || 0) + (p.serviceFee || 0) + (p.adminFee || 0) + (p.deliveryCommission || 0);
+                return (
                 <tr key={p._id} className="border-b hover:bg-gray-50">
                   <td className="py-3 font-mono text-xs">
                     {/* Consistent with admin/client elsewhere: last 8 chars
@@ -245,10 +265,12 @@ const PaymentAD: React.FC = () => {
                   <td className="font-medium">{formatNaira(p.amount)}</td>
                   <td className="text-teal-600">{formatNaira(p.markupRevenue || 0)}</td>
                   <td className="text-blue-500">{formatNaira(p.deliveryFee || 0)}</td>
+                  <td className="text-pink-500">{formatNaira(p.deliveryCommission || 0)}</td>
                   <td className="text-orange-500">{formatNaira(p.serviceFee || 0)}</td>
                   <td className="font-bold">{formatNaira(p.grandTotal || p.amount)}</td>
                   <td className="text-green-600">{formatNaira(p.storePayout)}</td>
                   <td className="text-purple-600">{formatNaira(p.adminFee)}</td>
+                  <td className="font-bold text-gray-900">{formatNaira(astercartRevenue)}</td>
                   <td>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       p.status === "completed"
@@ -271,7 +293,8 @@ const PaymentAD: React.FC = () => {
                     {new Date(p.createdAt).toLocaleDateString("en-GB")}
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         )}
@@ -286,7 +309,7 @@ export default PaymentAD;
 const exportToCSV = (payments: any[]) => {
   const headers = [
     "Date", "Order ID", "Customer", "Store",
-    "Store Price Subtotal", "Markup Revenue", "Delivery Fee", "Service Fee", "Customer Paid (Total)",
+    "Store Price Subtotal", "Markup Revenue", "Delivery Fee", "Delivery Commission", "Service Fee", "Customer Paid (Total)",
     "Store Payout", "Platform Commission",
     "Status", "Payout Status",
   ];
@@ -298,6 +321,7 @@ const exportToCSV = (payments: any[]) => {
     p.amount || 0,
     p.markupRevenue || 0,
     p.deliveryFee || 0,
+    p.deliveryCommission || 0,
     p.serviceFee || 0,
     p.grandTotal || p.amount || 0,
     p.storePayout || 0,

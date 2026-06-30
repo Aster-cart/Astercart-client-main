@@ -13,6 +13,7 @@ const Inventory: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [dropdownIndex, setDropdownIndex] = useState<number | null>(null);
   const [selectedFilter, setSelectedFilter] = useState("All Products");
+  const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -43,11 +44,21 @@ const Inventory: React.FC = () => {
       selectedFilter === "All Products" ||
       (selectedFilter === "Low Stock Products" && qty < 10) ||
       (selectedFilter === "Out of Stock" && qty === 0);
+    const matchesCategory =
+      selectedCategory === "All Categories" || item.category === selectedCategory;
     const matchesSearch =
       searchQuery === "" ||
       Object.values(item).join(" ").toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesFilter && matchesSearch;
+    return matchesFilter && matchesCategory && matchesSearch;
   });
+
+  // Categories the store actually has products in — computed dynamically
+  // so the filter list always reflects this specific store's real
+  // inventory, never a hardcoded global category list that might not
+  // match what they actually sell.
+  const availableCategories = Array.from(
+    new Set((products || []).map((p) => p.category).filter(Boolean))
+  ).sort();
 
   const totalStock = (products || []).reduce(
     (sum, p) => sum + Number(p.quantity ?? p.qty ?? 0), 0
@@ -130,7 +141,7 @@ const Inventory: React.FC = () => {
       {/* Controls */}
       <div className="bg-white rounded-xl p-4 border mb-4">
         <div className="flex justify-between items-center mb-4">
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             {["All Products", "Low Stock Products", "Out of Stock"].map((f) => (
               <button
                 key={f}
@@ -144,6 +155,18 @@ const Inventory: React.FC = () => {
                 {f}
               </button>
             ))}
+            {availableCategories.length > 0 && (
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 focus:outline-none focus:border-pry ml-1"
+              >
+                <option value="All Categories">All Categories</option>
+                {availableCategories.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            )}
           </div>
           <div className="flex gap-2">
             <button

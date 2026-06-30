@@ -51,6 +51,12 @@ const Sidebar: React.FC<{
       path: "/disputes",
     },
     {
+      label: "Support",
+      icon: setting,
+      activeIcon: setting,
+      path: "/support",
+    },
+    {
       label: "Settings",
       icon: setting,
       activeIcon: set,

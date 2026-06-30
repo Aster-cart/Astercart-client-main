@@ -7,7 +7,12 @@ interface FeeConfig {
   platformCommission: number;
   storePayout: number;
   serviceFee: number;
-  deliveryFee: number;
+  deliveryFee: number; // flat fallback ONLY — used when a store/customer hasn't captured location yet
+  deliveryBaseFare: number;
+  deliveryRatePerKm: number;
+  deliveryFeeMinimum: number;
+  deliveryFeeMaximum: number;
+  deliveryCommissionRate: number; // Astercart's cut of the delivery fee — the "Uber model" cut
 }
 
 const SettingsAD: React.FC = () => {
@@ -21,6 +26,11 @@ const SettingsAD: React.FC = () => {
     storePayout: 90,
     serviceFee: 5,
     deliveryFee: 800,
+    deliveryBaseFare: 500,
+    deliveryRatePerKm: 100,
+    deliveryFeeMinimum: 300,
+    deliveryFeeMaximum: 5000,
+    deliveryCommissionRate: 10,
   });
   const [loadingFees, setLoadingFees] = useState(true);
   const [savingFees, setSavingFees] = useState(false);
@@ -129,7 +139,7 @@ const SettingsAD: React.FC = () => {
             { key: "platformCommission" as keyof FeeConfig, label: "Platform commission (%)", suffix: "%" },
             { key: "storePayout" as keyof FeeConfig, label: "Store payout (%)", suffix: "%" },
             { key: "serviceFee" as keyof FeeConfig, label: "Service fee (%)", suffix: "%" },
-            { key: "deliveryFee" as keyof FeeConfig, label: "Delivery fee (₦)", suffix: "₦" },
+            { key: "deliveryFee" as keyof FeeConfig, label: "Delivery fee fallback (₦)", suffix: "₦" },
           ].map((field) => (
             <div key={field.key}>
               <label className="text-xs text-gray-500 font-medium mb-1 block">{field.label}</label>
@@ -150,6 +160,49 @@ const SettingsAD: React.FC = () => {
           ))}
         </div>
         )}
+
+        {/* Distance-based delivery pricing — the Uber/Bolt model. Astercart
+            doesn't own delivery vehicles; riders are independent, and this
+            fee IS their fare. The "fallback" field above only applies when
+            a store or customer hasn't captured their location yet. */}
+        {!loadingFees && (
+        <div className="mt-6 pt-6 border-t">
+          <h3 className="text-sm font-semibold mb-1">Distance-based delivery pricing</h3>
+          <p className="text-xs text-gray-400 mb-4">
+            Calculated automatically from real distance between store and customer — like an
+            Uber/Bolt fare. Astercart takes a cut of this fee (below); the rest goes to the
+            rider. Rates below are a starting point modeled on current Lagos market pricing —
+            expect to revise these once you have real rider cost data.
+          </p>
+          <div className="grid grid-cols-2 gap-4 max-w-lg">
+            {[
+              { key: "deliveryBaseFare" as keyof FeeConfig, label: "Base fare (₦)", suffix: "₦" },
+              { key: "deliveryRatePerKm" as keyof FeeConfig, label: "Rate per km (₦)", suffix: "₦" },
+              { key: "deliveryFeeMinimum" as keyof FeeConfig, label: "Minimum fee (₦)", suffix: "₦" },
+              { key: "deliveryFeeMaximum" as keyof FeeConfig, label: "Maximum fee (₦)", suffix: "₦" },
+              { key: "deliveryCommissionRate" as keyof FeeConfig, label: "Astercart's cut of delivery fee (%)", suffix: "%" },
+            ].map((field) => (
+              <div key={field.key}>
+                <label className="text-xs text-gray-500 font-medium mb-1 block">{field.label}</label>
+                <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+                  <input
+                    type="number"
+                    value={feeConfig[field.key]}
+                    onChange={(e) => handleFeeChange(field.key, e.target.value)}
+                    className="flex-1 px-3 py-2 text-sm focus:outline-none"
+                    min={0}
+                    max={field.suffix === "%" ? 100 : 99999}
+                  />
+                  <span className="px-3 py-2 bg-gray-50 text-gray-500 text-sm border-l border-gray-200">
+                    {field.suffix}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        )}
+
         <button
           onClick={handleSaveFees}
           disabled={savingFees}

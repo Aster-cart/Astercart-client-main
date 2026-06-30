@@ -17,7 +17,10 @@ type Order = {
   // admin dashboard for the same order.
   totalAmount?: number;        // product subtotal only
   deliveryFee?: number;
-  serviceFee?: number;
+  // serviceFee deliberately NOT read here — the store dashboard's API
+  // response no longer includes it at all (see transactionFormatters.js).
+  // Service fee is Astercart's confidential revenue, not the store's
+  // business to see, even in raw component state.
   platformCommission?: number;
   storePayout?: number;
   grandTotal?: number;
@@ -45,7 +48,6 @@ type TableRow = {
   // consumer can do its own display formatting without losing precision,
   // while still only ever reading values the server already calculated.
   deliveryFee: number;
-  serviceFee: number;
   platformCommission: number;
   storePayout: number;
   grandTotal: number;
@@ -122,7 +124,6 @@ export const useDashboard = () => {
         // Pass through the real, already-correct numbers from the server —
         // never recomputed here.
         deliveryFee: o.deliveryFee || 0,
-        serviceFee: o.serviceFee || 0,
         platformCommission: o.platformCommission || 0,
         storePayout: o.storePayout != null ? o.storePayout : (o.totalAmount || 0),
         grandTotal: o.grandTotal || o.totalAmount || 0,

@@ -238,8 +238,14 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
             : p.storeId?.toString();
           return sid === storeId || !sid;
         }));
-      } catch {
-        toast.error("Failed to load products.");
+      } catch (error: any) {
+        console.error("[StoreDetailAD] Failed to load products:", error?.response?.status, error?.response?.data || error?.message);
+        const status = error?.response?.status;
+        if (status === 403) {
+          toast.error(error?.response?.data?.message || "Your admin role does not have permission to view products.");
+        } else {
+          toast.error("Failed to load products.");
+        }
       } finally {
         setLoadingProducts(false);
       }

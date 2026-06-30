@@ -48,13 +48,70 @@ const OrdersAD: React.FC = () => {
   const [storeFilter, setStoreFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
+  const [refunding, setRefunding] = useState(false);
+
+  const handleRefund = async (order: AdminOrder) => {
+    if (!window.confirm(`Issue a refund for order #${(order._id || "").slice(-8).toUpperCase()}? This will refund the customer via Flutterwave.`)) {
+      return;
+    }
+    setRefunding(true);
+    try {
+      const { data } = await api.post(`/payment/refund/${order._id}`, {
+        reason: "Refund issued by admin from Orders page",
+      });
+      toast.success(data?.message || "Refund processed.");
+      setSelectedOrder(null);
+      // Refresh the order list so the refunded order's status updates
+      // without needing a manual page reload.
+      const refreshed = await api.get<AdminOrder[]>("/adminOrder");
+      setOrders(Array.isArray(refreshed.data) ? refreshed.data : []);
+    } catch (error: any) {
+      // The refund endpoint can return a 409 specifically when this
+      // customer has had 3+ refunds in the last 14 days (the velocity
+      // check built earlier) — that response includes requiresOverride,
+      // letting admin explicitly confirm and proceed anyway rather than
+      // being silently blocked with no path forward.
+      if (error?.response?.status === 409 && error?.response?.data?.requiresOverride) {
+        const proceed = window.confirm(
+          `${error.response.data.message}\n\nProceed with the refund anyway?`
+        );
+        if (proceed) {
+          try {
+            const { data } = await api.post(`/payment/refund/${order._id}`, {
+              reason: "Refund issued by admin from Orders page (override)",
+              overrideFraudFlag: true,
+            });
+            toast.success(data?.message || "Refund processed.");
+            setSelectedOrder(null);
+            const refreshed = await api.get<AdminOrder[]>("/adminOrder");
+            setOrders(Array.isArray(refreshed.data) ? refreshed.data : []);
+          } catch {
+            toast.error("Refund failed even with override. Please check Flutterwave directly.");
+          }
+        }
+      } else {
+        toast.error(error?.response?.data?.message || "Failed to process refund.");
+      }
+    } finally {
+      setRefunding(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
       try {
         const { data } = await api.get<AdminOrder[]>("/adminOrder");
         setOrders(Array.isArray(data) ? data : []);
-      } catch {
+      } catch (error: any) {
+        console.error("[OrdersAD] Failed to load orders:", error?.response?.status, error?.response?.data || error?.message);
+        const status = error?.response?.status;
+        if (status === 403) {
+          toast.error(error?.response?.data?.message || "Your admin role does not have permission to view orders.");
+        } else if (status === 401) {
+          toast.error("Your session has expired. Please log in again.");
+        } else {
+          toast.error("Failed to load orders. Check your connection and try again.");
+        }
         setOrders([]);
       } finally {
         setLoading(false);
@@ -119,17 +176,19 @@ const OrdersAD: React.FC = () => {
           <div className="flex justify-between items-start mb-4">
             <div>
               <h2 className="text-lg font-bold">
-                Order #{selectedOrder._id.slice(-8).toUpperCase()}
+                Order #{(selectedOrder._id || "").slice(-8).toUpperCase() || "—"}
               </h2>
               <p className="text-sm text-gray-500">
-                {new Date(selectedOrder.createdAt).toLocaleDateString("en-GB", {
-                  weekday: "long", year: "numeric", month: "long", day: "numeric",
-                })}
+                {selectedOrder.createdAt
+                  ? new Date(selectedOrder.createdAt).toLocaleDateString("en-GB", {
+                      weekday: "long", year: "numeric", month: "long", day: "numeric",
+                    })
+                  : "—"}
               </p>
             </div>
             <div className="flex gap-2">
               <span className={`px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[selectedOrder.status] || "bg-gray-100 text-gray-600"}`}>
-                {selectedOrder.status.replace(/_/g, " ")}
+                {(selectedOrder.status || "unknown").replace(/_/g, " ")}
               </span>
               <span className={`px-3 py-1 rounded-full text-xs font-medium ${PAYMENT_COLORS[selectedOrder.paymentStatus] || "bg-gray-100"}`}>
                 {selectedOrder.paymentStatus}
@@ -202,7 +261,7 @@ const OrdersAD: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {selectedOrder.products.map((p, i) => (
+              {(selectedOrder.products || []).map((p, i) => (
                 <tr key={i} className="border-b">
                   <td className="py-3">{p.name}</td>
                   <td className="text-right">{p.quantity}</td>
