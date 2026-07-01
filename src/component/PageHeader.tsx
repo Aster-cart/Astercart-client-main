@@ -19,7 +19,17 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title }) => {
     formatToTodayTime,
     unreadCount,
     allRead,
+    requestNotificationPermission,
   } = useNotification();
+
+  const [notifPermission, setNotifPermission] = React.useState<NotificationPermission>(
+    typeof Notification !== "undefined" ? Notification.permission : "default"
+  );
+
+  const handleEnableNotifications = async () => {
+    const granted = await requestNotificationPermission();
+    setNotifPermission(granted ? "granted" : "denied");
+  };
 
   return (
     <div className="flex justify-between font-inter items-center py-2 w-full h-[50px] px-4 bg-white">
@@ -74,6 +84,21 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title }) => {
               </div>
             </div>
 
+            {notifPermission === "default" && (
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3">
+                <p className="text-xs text-gray-700 mb-2">
+                  Turn on browser notifications so you're alerted the instant a rider arrives for pickup —
+                  even if this tab isn't open.
+                </p>
+                <button
+                  onClick={handleEnableNotifications}
+                  className="text-xs bg-pry text-white rounded-lg px-3 py-1.5"
+                >
+                  Enable notifications
+                </button>
+              </div>
+            )}
+
             {notifications.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-4">
                 No notifications yet.
@@ -83,13 +108,20 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title }) => {
                 {notifications.map((notif) => (
                   <li
                     key={notif.id}
-                    className={`border-b border-gray-300 cursor-pointer pb-2 ${
-                      notif.read ? "text-gray-400" : "text-black"
-                    }`}
+                    className={`border-b cursor-pointer pb-2 ${
+                      notif.type === "pickup_otp"
+                        ? "border-orange-200 bg-orange-50 rounded-lg px-2 -mx-2"
+                        : "border-gray-300"
+                    } ${notif.read ? "text-gray-400" : "text-black"}`}
                     onClick={() => markAsRead(notif.id)}
                   >
                     <div className="flex flex-row gap-3">
                       <div className="flex flex-col gap-1 mx-2">
+                        {notif.type === "pickup_otp" && (
+                          <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wide">
+                            🛵 Rider at pickup
+                          </span>
+                        )}
                         <span className="text-sm leading-5">{notif.message}</span>
                         {!notif.read && (
                           <button className="text-xs text-left rounded-lg text-white bg-pry px-2 py-1 w-fit">

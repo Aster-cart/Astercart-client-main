@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import api from "../utils/api";
 
 export interface OrderData {
+  _id?: string;
   name: string;
   orderDate: string;
   orderTime: string;
@@ -15,6 +16,9 @@ export interface OrderData {
   transactionReference: string;
   transactionStatus: string;
   image: string;
+  status?: string;
+  pickupOTP?: string | null;
+  riderId?: string | null;
 }
 
 export interface OrderStats {
@@ -57,34 +61,51 @@ const useOrder = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [expandedRows, setExpandedRows] = useState<number[]>([]);
 
+  const fetchOrders = async () => {
+    try {
+      const [ordersRes, statsRes] = await Promise.all([
+        api.get<{ orders: OrderData[] }>("/store/orders"),
+        api.get<OrderStats & { allOrder?: string }>("/store/orders/stats"),
+      ]);
+      setOrderData(ordersRes.data?.orders || []);
+      const stats = statsRes.data;
+      setOrderStats({
+        totalOrdersSale: stats.totalOrdersSale || "₦0",
+        totalCompletedOrders: stats.totalCompletedOrders || "₦0",
+        totalPendingOrders: stats.totalPendingOrders || "₦0",
+        totalFailedOrders: stats.totalFailedOrders || "₦0",
+      });
+      setAllOrderCount(stats.allOrder || String(ordersRes.data?.orders?.length || 0));
+      setError(null);
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      setError(err?.response?.data?.message || "Failed to load orders");
+    }
+  };
+
   useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const [ordersRes, statsRes] = await Promise.all([
-          api.get<{ orders: OrderData[] }>("/store/orders"),
-          api.get<OrderStats & { allOrder?: string }>("/store/orders/stats"),
-        ]);
-        setOrderData(ordersRes.data?.orders || []);
-        const stats = statsRes.data;
-        setOrderStats({
-          totalOrdersSale: stats.totalOrdersSale || "₦0",
-          totalCompletedOrders: stats.totalCompletedOrders || "₦0",
-          totalPendingOrders: stats.totalPendingOrders || "₦0",
-          totalFailedOrders: stats.totalFailedOrders || "₦0",
-        });
-        setAllOrderCount(stats.allOrder || String(ordersRes.data?.orders?.length || 0));
-        setError(null);
-      } catch (e: unknown) {
-        const err = e as { response?: { data?: { message?: string } } };
-        setError(err?.response?.data?.message || "Failed to load orders");
-      } finally {
-        setLoading(false);
-      }
-    };
     const token = localStorage.getItem("token");
-    if (token) load();
-    else setLoading(false);
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    (async () => {
+      setLoading(true);
+      await fetchOrders();
+      setLoading(false);
+    })();
+
+    // Real polling — previously this effect ran ONCE on mount and never
+    // again, meaning a store had no way to discover a rider had accepted
+    // their order and was waiting at the counter with a pickup code,
+    // short of manually reloading the whole page. 20 seconds is frequent
+    // enough to feel responsive without hammering the server; this is a
+    // pragmatic interim step before a real websocket-based push system,
+    // which would be the more architecturally correct long-term answer
+    // but a meaningfully bigger change than this feature needs right now.
+    const interval = setInterval(fetchOrders, 20000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
