@@ -39,7 +39,7 @@ const StoresAD: React.FC = () => {
   const [actionId, setActionId] = useState<string | null>(null);
   const [pendingVerifications, setPendingVerifications] = useState<any[]>([]);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
-  const [reviewNote, setReviewNote] = useState("");
+  const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
   const [showVerificationTab, setShowVerificationTab] = useState(false);
 
   const load = async () => {
@@ -59,11 +59,16 @@ const StoresAD: React.FC = () => {
   };
 
   const reviewVerification = async (storeId: string, decision: "approved" | "rejected") => {
+    const note = reviewNotes[storeId] || "";
+    if (decision === "rejected" && !note.trim()) {
+      toast.error("Please add a note explaining what needs correcting before rejecting.");
+      return;
+    }
     setReviewingId(storeId);
     try {
-      await api.put(`/store/admin/verifications/${storeId}`, { decision, note: reviewNote });
+      await api.put(`/store/admin/verifications/${storeId}`, { decision, note });
       toast.success(`Store ${decision} successfully.`);
-      setReviewNote("");
+      setReviewNotes(prev => { const n = { ...prev }; delete n[storeId]; return n; });
       load();
     } catch {
       toast.error("Review action failed.");
@@ -184,8 +189,8 @@ const StoresAD: React.FC = () => {
 
               <input
                 placeholder="Rejection note (required if rejecting — explain what needs correcting)"
-                value={reviewingId === store._id ? reviewNote : ""}
-                onChange={e => { setReviewingId(store._id); setReviewNote(e.target.value); }}
+                value={reviewNotes[store._id] || ""}
+                onChange={e => setReviewNotes(prev => ({ ...prev, [store._id]: e.target.value }))}
                 className="w-full border rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:border-pry"
               />
 
@@ -195,14 +200,15 @@ const StoresAD: React.FC = () => {
                   disabled={reviewingId === store._id}
                   className="px-5 py-2 bg-green-600 text-white rounded-lg text-sm font-medium disabled:opacity-60"
                 >
-                  Approve
+                  {reviewingId === store._id ? "Processing..." : "Approve"}
                 </button>
                 <button
-                  onClick={() => { if (!reviewNote.trim()) { toast.error("Please add a note explaining what needs correcting before rejecting."); return; } reviewVerification(store._id, "rejected"); }}
+                  onClick={() => reviewVerification(store._id, "rejected")}
                   disabled={reviewingId === store._id}
                   className="px-5 py-2 bg-red-500 text-white rounded-lg text-sm font-medium disabled:opacity-60"
                 >
-                  Reject
+                  {reviewingId === store._id ? "Processing..." : "Reject"}
+                </button>
                 </button>
               </div>
             </div>

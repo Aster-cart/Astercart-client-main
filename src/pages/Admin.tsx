@@ -215,6 +215,18 @@ const PageHeader: React.FC<{ title: string }> = ({ title }) => {
 
 const Admin: React.FC = () => {
   const [activeMenu, setActiveMenu] = useState<string>("Dashboard");
+
+  // Listen for navigation events from child components — this works
+  // even when prop drilling fails, since it uses the browser's own
+  // event system instead of React's prop chain
+  React.useEffect(() => {
+    const handler = (e: Event) => {
+      const tab = (e as CustomEvent).detail;
+      if (tab) setActiveMenu(tab);
+    };
+    window.addEventListener("astercart:navigate", handler);
+    return () => window.removeEventListener("astercart:navigate", handler);
+  }, []);
   const menuItems = [
     { label: "Dashboard", icon: dashboard, activeIcon: dash },
     { label: "Orders", icon: orders, activeIcon: ord },

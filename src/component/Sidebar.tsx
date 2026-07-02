@@ -62,6 +62,12 @@ const Sidebar: React.FC<{
       activeIcon: set,
       path: "/settings",
     },
+    {
+      label: "Verification",
+      icon: setting,
+      activeIcon: set,
+      path: "/verification",
+    },
   ];
 
   return (

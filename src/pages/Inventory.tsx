@@ -6,6 +6,7 @@ import EditProductModal from "../component/EditProductModal";
 import { useProductStore } from "../store/productStore";
 import { Product } from "../types/product.types";
 import api from "../utils/api";
+import { useNavigate } from "react-router-dom";
 
 type VerifStatus = "unsubmitted" | "pending_review" | "approved" | "rejected" | null;
 
@@ -32,6 +33,7 @@ const VERIF_MESSAGE: Record<string, { title: string; body: string; cta: string }
 };
 
 const Inventory: React.FC<InventoryProps> = ({ onNavigate }) => {
+  const navigate = useNavigate();
   const [showImportModal, setShowImportModal] = useState(false);
   const [showProductForm, setShowProductForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -371,9 +373,8 @@ const Inventory: React.FC<InventoryProps> = ({ onNavigate }) => {
                 {vs !== "pending_review" && (
                   <button
                     onClick={() => {
-                      console.log("[Verification] onNavigate called, value:", onNavigate);
                       setShowVerifBlock(false);
-                      onNavigate?.("Verification");
+                      navigate("/verification");
                     }}
                     className="flex-1 px-4 py-2.5 bg-pry text-white rounded-xl text-sm font-medium"
                   >

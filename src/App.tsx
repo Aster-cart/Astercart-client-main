@@ -35,6 +35,8 @@ function StoreGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+import Verification from "./pages/Verification";
+
 function App() {
   return (
     <BrowserRouter>
@@ -57,6 +59,7 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="orders" element={<Order />} />
           <Route path="inventory" element={<Inventory />} />
+          <Route path="verification" element={<Verification />} />
           <Route path="settings" element={<Setting />} />
           <Route path="earnings" element={<Earnings />} />
           <Route path="analytics" element={<Analytics />} />

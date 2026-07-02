@@ -25,6 +25,7 @@ const DashboardLayout: React.FC = () => {
       "/disputes": "Disputes",
       "/support": "Support",
       "/settings": "Settings",
+      "/verification": "Verification",
     };
     setActiveMenu(map[location.pathname] || "Dashboard");
   }, [location.pathname, navigate, checkAuth]);

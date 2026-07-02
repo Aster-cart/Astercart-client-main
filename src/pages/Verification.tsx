@@ -79,6 +79,7 @@ const Verification: React.FC = () => {
 
   const uploadFile = async (file: File, field: string): Promise<string | null> => {
     setUploadingField(field);
+    setError(null); // clear any previous error when a new upload starts
     try {
       const formData = new FormData();
       formData.append("image", file);
