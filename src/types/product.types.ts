@@ -7,27 +7,30 @@ export interface ProductStore {
 }
 
 export interface Product {
-  productId: string;
+  _id?: string;
+  productId?: string;
   name: string;
   category: string;
   description: string;
   price: string | number;
   quantity: string | number;
-  supplier: string;
-  discount: string;
-  taxRate: string;
-  image: string;
-  [key: string]: string | number;
+  supplier?: string;
+  discount: string | number;
+  taxRate: string | number;
+  image?: string;
+  images?: string[] | string | number;
+  [key: string]: unknown;
 }
+
 export interface ProductForm {
   name: string;
   description: string;
   category: string;
-  price: string;
-  quantity: string;
-  discount: string;
-  taxRate: string;
-  images: File[]; // Ensure this matches your `Product` type definition
+  price: string | number;
+  quantity: string | number;
+  discount: string | number;
+  taxRate: string | number;
+  images?: File[] | string[];
 }
 
 

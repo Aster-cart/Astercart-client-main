@@ -18,7 +18,7 @@ import TeamAD from "./TeamAD";
 import PayoutsAD from "./PayoutsAD";
 import MonitorAD from "./MonitorAD";
 import RidersAD from "./RidersAD";
-import { useAdminAuthStore, canAccess } from "../store/adminAuthStore";
+import { useAdminAuthStore } from "../store/adminAuthStore";
 import ProductsAD from "./ProductsAD";
 import PricingAD from "./PricingAD";
 import FinancialLedgerAD from "./FinancialLedgerAD";
@@ -137,7 +137,7 @@ const AdminAD: React.FC = () => {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState("Dashboard");
 
-  const { admin, restoreSession } = useAdminAuthStore();
+  const { restoreSession } = useAdminAuthStore();
 
   useEffect(() => {
     restoreSession();

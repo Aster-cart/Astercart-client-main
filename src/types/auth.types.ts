@@ -28,13 +28,17 @@ export interface SignUpData {
   name: string;
   email: string;
   password: string;
+  cacNumber?: string;
+  phoneNumber?: string;
   storeDetails: {
     address: string;
     state: string;
     postalCode: string;
     lga: string;
+    latitude?: number | null;
+    longitude?: number | null;
   };
-    userType?: "Store";
+  userType?: "Store";
 }
 
 export interface StoreProfile {

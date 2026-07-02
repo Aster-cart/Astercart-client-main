@@ -54,8 +54,21 @@ const Verification: React.FC = () => {
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await api.get<StatusInfo>("/store/verification/status");
-        setStatusInfo(data);
+        const { data } = await api.get<{ 
+          verificationStatus?: VerificationStatus;
+          verificationNotes?: string | null;
+          submittedAt?: string | null;
+        }>("/store/verification/status");
+        // Guard against bad responses (e.g. server not yet deployed with
+        // this route — returns unexpected data like {"orders":[]}).
+        // data.verificationStatus could be undefined in that case.
+        const status = data?.verificationStatus;
+        const validStatuses: VerificationStatus[] = ["unsubmitted", "pending_review", "approved", "rejected"];
+        setStatusInfo({
+          verificationStatus: validStatuses.includes(status as VerificationStatus) ? status as VerificationStatus : "unsubmitted",
+          verificationNotes: data?.verificationNotes || null,
+          submittedAt: data?.submittedAt || null,
+        });
       } catch {
         setStatusInfo({ verificationStatus: "unsubmitted", verificationNotes: null, submittedAt: null });
       } finally {

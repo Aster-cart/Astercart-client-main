@@ -21,7 +21,7 @@ interface Category {
 
 interface ProductFormProps {
   onClose: () => void;
-  onAdd: (product: Product) => void;
+  onAdd?: (product: Product) => void;
 }
 
 const ProductForm: React.FC<ProductFormProps> = ({ onClose }) => {

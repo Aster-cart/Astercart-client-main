@@ -32,7 +32,6 @@ const PaymentAD: React.FC = () => {
     total: 0, totalRevenue: 0, totalStorePayout: 0, totalAdminFee: 0,
     totalServiceFee: 0, totalDeliveryFee: 0, totalDeliveryCommission: 0, totalMarkupRevenue: 0, totalGrandTotal: 0, pendingPayouts: 0,
   });
-  const [markingId, setMarkingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "pending_payout" | "paid_out">("all");
 
   const load = async () => {
@@ -63,19 +62,6 @@ const PaymentAD: React.FC = () => {
   };
 
   useEffect(() => { load(); }, []);
-
-  const markAsPaidOut = async (id: string) => {
-    setMarkingId(id);
-    try {
-      await api.put(`/payment/payout/${id}`);
-      toast.success("Store payout marked as paid");
-      load();
-    } catch {
-      toast.error("Failed to update payout status.");
-    } finally {
-      setMarkingId(null);
-    }
-  };
 
   const filtered = payments.filter((p) => {
     if (filter === "pending_payout")

@@ -1,7 +1,7 @@
 import React from "react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar,
-  PieChart, Pie, Cell, Legend,
+  PieChart, Pie, Cell,
 } from "recharts";
 import { useStoreAnalytics } from "../hooks/useStoreAnalytics";
 

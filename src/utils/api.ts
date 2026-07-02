@@ -8,7 +8,7 @@ const api = axios.create({
 
 // Interceptor to add Bearer token to requests
 api.interceptors.request.use((config) => {
-  const url = config.url || "";
+  
 
   // ── Why this changed ──────────────────────────────────────────────────
   // Previously this guessed "is this an admin request?" by checking if

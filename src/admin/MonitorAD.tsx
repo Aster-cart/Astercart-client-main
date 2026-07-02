@@ -116,7 +116,7 @@ const MonitorAD: React.FC = () => {
       const customers = Array.isArray(customersData) ? customersData : (customersData as any)?.customers || [];
 
       const today = new Date().toDateString();
-      const todayOrders = orders.filter(o => new Date(o.createdAt).toDateString() === today);
+      const todayOrders = orders.filter((o: any) => new Date(o.createdAt).toDateString() === today);
       const todayRevenue = todayOrders.reduce((s: number, o: any) => s + (o.totalAmount || 0), 0);
 
       const newStats: SystemStats = {

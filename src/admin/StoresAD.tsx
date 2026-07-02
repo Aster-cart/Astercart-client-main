@@ -72,6 +72,12 @@ const StoresAD: React.FC = () => {
     }
   };
 
+  // Missing useEffect — load() was only ever called after a block/unblock
+  // or verification review action, never on initial mount. So the page
+  // rendered with stores=[] and showed nothing until an action triggered
+  // a refresh.
+  useEffect(() => { load(); }, []);
+
   if (selectedStoreId) {
     return <StoreDetailAD storeId={selectedStoreId} onBack={() => setSelectedStoreId(null)} />;
   }

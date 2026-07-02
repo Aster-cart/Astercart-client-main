@@ -14,7 +14,7 @@ import { useAdminAuthStore } from "../store/adminAuthStore";
 const LoginAD = () => {
   const navigate = useNavigate();
   const login = useAdminAuthStore((s) => s.login);
-  const loading = useAdminAuthStore((s) => s.loading);
+  
   const [passwordVisible, setPasswordVisible] = useState<boolean>(false);
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");

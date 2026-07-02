@@ -5,8 +5,33 @@ import ImportModal from "../component/ImportModal";
 import EditProductModal from "../component/EditProductModal";
 import { useProductStore } from "../store/productStore";
 import { Product } from "../types/product.types";
+import api from "../utils/api";
 
-const Inventory: React.FC = () => {
+type VerifStatus = "unsubmitted" | "pending_review" | "approved" | "rejected" | null;
+
+interface InventoryProps {
+  onNavigate?: (tab: string) => void;
+}
+
+const VERIF_MESSAGE: Record<string, { title: string; body: string; cta: string }> = {
+  unsubmitted: {
+    title: "Verify your store first",
+    body: "You need to complete store verification before you can add products. This protects customers and keeps Astercart trustworthy. It only takes a few minutes.",
+    cta: "Go to Verification",
+  },
+  pending_review: {
+    title: "Verification under review",
+    body: "Your store documents have been submitted and are being reviewed by Astercart. You'll be notified by email once approved — usually within 1–2 business days. You cannot add products until then.",
+    cta: "Got it",
+  },
+  rejected: {
+    title: "Verification not approved",
+    body: "Your verification was not approved. Please review the feedback from admin in your Verification tab, make the necessary corrections, and resubmit.",
+    cta: "Go to Verification",
+  },
+};
+
+const Inventory: React.FC<InventoryProps> = ({ onNavigate }) => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showProductForm, setShowProductForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -16,10 +41,34 @@ const Inventory: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const [verifStatus, setVerifStatus] = useState<VerifStatus>(null);
+  const [showVerifBlock, setShowVerifBlock] = useState(false);
 
   const { products, fetchProducts, deleteProduct } = useProductStore();
 
   useEffect(() => { fetchProducts(); }, []);
+
+  // Fetch verification status on mount
+  useEffect(() => {
+    const validStatuses = ["unsubmitted", "pending_review", "approved", "rejected"];
+    api.get<{ verificationStatus?: VerifStatus }>("/store/verification/status")
+      .then(res => {
+        const s = res.data?.verificationStatus;
+        setVerifStatus(validStatuses.includes(s as string) ? s as VerifStatus : "unsubmitted");
+      })
+      .catch(() => setVerifStatus("unsubmitted"));
+  }, []);
+
+  // Intercept add/import — if not verified, show the clear popup instead
+  const guardedOpen = (open: () => void) => {
+    if (verifStatus === "approved") {
+      open();
+    } else {
+      // Show popup — if verifStatus is still null (API loading),
+      // the popup will display the "unsubmitted" message as a fallback
+      setShowVerifBlock(true);
+    }
+  };
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -82,7 +131,7 @@ const Inventory: React.FC = () => {
     await deleteProduct(id);
   };
 
-  const handleImport = (importedData: unknown[]) => {
+  const handleImport = (_importedData: unknown[]) => {
     fetchProducts(); // Refresh after bulk import
   };
 
@@ -170,13 +219,13 @@ const Inventory: React.FC = () => {
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => setShowImportModal(true)}
+              onClick={() => guardedOpen(() => setShowImportModal(true))}
               className="text-xs px-4 py-2 border border-pry text-pry rounded-lg font-medium"
             >
               Import CSV / Excel
             </button>
             <button
-              onClick={() => setShowProductForm(true)}
+              onClick={() => guardedOpen(() => setShowProductForm(true))}
               className="text-xs px-4 py-2 bg-pry text-white rounded-lg font-medium"
             >
               + Add product
@@ -232,18 +281,15 @@ const Inventory: React.FC = () => {
                     <tr key={item._id || index} className="border-b hover:bg-gray-50">
                       <td className="py-3 pr-4">
                         <div className="flex items-center gap-2">
-                          {item.images?.[0] ? (
-                            <img
-                              src={item.images[0]}
-                              alt=""
-                              className="w-8 h-8 rounded object-cover"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-gray-400 text-xs">
-                              No img
-                            </div>
-                          )}
-                          <span className="font-medium">{item.name || item.productName}</span>
+                          {(() => {
+                            const imgs = Array.isArray(item.images) ? item.images as string[] : [];
+                            return imgs[0] ? (
+                              <img src={imgs[0]} alt="" className="w-8 h-8 rounded object-cover" />
+                            ) : (
+                              <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-gray-400 text-xs">No img</div>
+                            );
+                          })()}
+                          <span className="font-medium">{item.name || (item as any).productName}</span>
                         </div>
                       </td>
                       <td className="pr-4 text-gray-500">{item.category}</td>
@@ -282,7 +328,7 @@ const Inventory: React.FC = () => {
                               Edit
                             </button>
                             <button
-                              onClick={() => handleDelete(item._id)}
+                              onClick={() => handleDelete(String(item._id))}
                               className="flex items-center gap-2 w-full px-4 py-2 text-xs text-red-500 hover:bg-red-50"
                             >
                               <img src={deleteIcon} alt="" className="w-3" />
@@ -300,6 +346,46 @@ const Inventory: React.FC = () => {
         </div>
       </div>
 
+      {/* Verification block popup */}
+      {showVerifBlock && (() => {
+        const vs = verifStatus || "unsubmitted";
+        const msg = VERIF_MESSAGE[vs];
+        if (!msg) return null;
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-xl">
+              <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center mb-4">
+                <span className="text-2xl">
+                  {vs === "pending_review" ? "⏳" : "⚠️"}
+                </span>
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">{msg.title}</h2>
+              <p className="text-sm text-gray-500 leading-relaxed mb-6">{msg.body}</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowVerifBlock(false)}
+                  className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-500 font-medium"
+                >
+                  Close
+                </button>
+                {vs !== "pending_review" && (
+                  <button
+                    onClick={() => {
+                      console.log("[Verification] onNavigate called, value:", onNavigate);
+                      setShowVerifBlock(false);
+                      onNavigate?.("Verification");
+                    }}
+                    className="flex-1 px-4 py-2.5 bg-pry text-white rounded-xl text-sm font-medium"
+                  >
+                    {msg.cta}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Modals */}
       {showProductForm && (
         <ProductForm
@@ -314,7 +400,7 @@ const Inventory: React.FC = () => {
       )}
       {showEditModal && editingProduct && (
         <EditProductModal
-          product={editingProduct}
+          product={editingProduct as any}
           onClose={() => { setShowEditModal(false); setEditingProduct(null); fetchProducts(); }}
         />
       )}

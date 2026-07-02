@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 interface PayoutRow {
   _id: string;
   store?: { name?: string; address?: string };
+  storeEmail?: string;
   amount: number;
   storePayout: number;
   adminFee: number;

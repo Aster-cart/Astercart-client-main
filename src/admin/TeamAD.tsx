@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../utils/api";
 import { toast } from "react-toastify";
-import { useAdminAuthStore, canAccess } from "../store/adminAuthStore";
+import { useAdminAuthStore } from "../store/adminAuthStore";
 
 interface SubAdmin {
   _id: string;

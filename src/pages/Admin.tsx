@@ -251,7 +251,7 @@ const Admin: React.FC = () => {
           <>
             <PageHeader title="Inventory" />
             <div className="flex flex-col h-[calc(100vh-50px)] bg-[#F9FAFB]">
-              <Inventory />
+              <Inventory onNavigate={setActiveMenu} />
             </div>
           </>
         );
