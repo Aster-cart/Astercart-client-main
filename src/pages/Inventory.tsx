@@ -32,7 +32,7 @@ const VERIF_MESSAGE: Record<string, { title: string; body: string; cta: string }
   },
 };
 
-const Inventory: React.FC<InventoryProps> = ({ onNavigate }) => {
+const Inventory: React.FC<InventoryProps> = ({ onNavigate: _onNavigate }) => {
   const navigate = useNavigate();
   const [showImportModal, setShowImportModal] = useState(false);
   const [showProductForm, setShowProductForm] = useState(false);
