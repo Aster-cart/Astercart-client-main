@@ -209,7 +209,6 @@ const StoresAD: React.FC = () => {
                 >
                   {reviewingId === store._id ? "Processing..." : "Reject"}
                 </button>
-                </button>
               </div>
             </div>
           ))}
