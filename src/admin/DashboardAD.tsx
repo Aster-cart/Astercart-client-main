@@ -20,6 +20,34 @@ interface TopProduct {
   image: string;
 }
 
+// Headline analytics from GET /dashboard/analytics.
+interface DashboardAnalytics {
+  revenue: { today: number; weekly: number; monthly: number };
+  ordersToday: number;
+  averageOrderValue: number;
+  averageDeliveryTimeMs: number | null;
+  cancelledOrders: number;
+  deliverySuccessRate: number | null;
+  topStores: { storeId: string; name: string; revenue: number; orders: number }[];
+  topRiders: { riderId: string; name?: string; deliveries: number; rating?: number | null }[];
+  liveOnlineRiders: number;
+  storesOpenNow: number;
+  totalActiveStores: number;
+}
+
+const nairaShort = (n: number): string => {
+  if (n >= 1000000) return `₦${(n / 1000000).toFixed(1)}M`;
+  if (n >= 1000) return `₦${(n / 1000).toFixed(1)}K`;
+  return `₦${(n || 0).toLocaleString()}`;
+};
+
+const durationShort = (ms: number | null): string => {
+  if (ms == null || ms < 0) return "—";
+  const mins = Math.round(ms / 60000);
+  if (mins < 60) return `${mins} min`;
+  return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+};
+
 const calculatePercentageChange = (current: number, previous: number): number => {
   if (previous === 0) return 0;
   return ((current - previous) / previous) * 100;
@@ -64,6 +92,20 @@ const DashboardAD = () => {
   >([]);
   const [showAllProducts, setShowAllProducts] = useState(false);
   const [showAllStores, setShowAllStores] = useState(false);
+  const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await api.get<DashboardAnalytics>("/dashboard/analytics");
+        setAnalytics(data);
+      } catch {
+        // Non-fatal — the rest of the dashboard still renders without the
+        // headline analytics panel.
+        setAnalytics(null);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -201,6 +243,79 @@ const DashboardAD = () => {
 
   return (
     <div className="pb-8">
+      {/* ── Headline analytics panel ── */}
+      {analytics && (
+        <>
+          {/* Revenue + core KPIs */}
+          <section className="grid grid-cols-4 gap-4 mb-4">
+            {[
+              { label: "Today's Revenue", value: nairaShort(analytics.revenue.today) },
+              { label: "Weekly Revenue", value: nairaShort(analytics.revenue.weekly) },
+              { label: "Monthly Revenue", value: nairaShort(analytics.revenue.monthly) },
+              { label: "Orders Today", value: analytics.ordersToday.toLocaleString() },
+              { label: "Avg Order Value", value: nairaShort(analytics.averageOrderValue) },
+              { label: "Avg Delivery Time", value: durationShort(analytics.averageDeliveryTimeMs) },
+              {
+                label: "Delivery Success",
+                value: analytics.deliverySuccessRate != null ? `${analytics.deliverySuccessRate}%` : "—",
+              },
+              { label: "Cancelled Orders", value: analytics.cancelledOrders.toLocaleString() },
+            ].map((k, i) => (
+              <div key={i} className="p-4 border rounded-2xl bg-white">
+                <p className="text-xs text-[#667085]">{k.label}</p>
+                <p className="text-2xl font-bold mt-1">{k.value}</p>
+              </div>
+            ))}
+          </section>
+
+          {/* Live operational state */}
+          <section className="grid grid-cols-2 gap-4 mb-6">
+            <div className="p-4 border rounded-2xl bg-white flex items-center justify-between">
+              <div>
+                <p className="text-xs text-[#667085]">Live Online Riders</p>
+                <p className="text-2xl font-bold mt-1 text-[#027A48]">{analytics.liveOnlineRiders}</p>
+              </div>
+              <span className="w-3 h-3 rounded-full bg-[#32D583] animate-pulse" />
+            </div>
+            <div className="p-4 border rounded-2xl bg-white">
+              <p className="text-xs text-[#667085]">Stores Open Now</p>
+              <p className="text-2xl font-bold mt-1">
+                {analytics.storesOpenNow}
+                <span className="text-sm text-[#667085] font-normal"> / {analytics.totalActiveStores} active</span>
+              </p>
+            </div>
+          </section>
+
+          {/* Top stores + top riders (by revenue / deliveries, last 30 days) */}
+          <div className="flex gap-4 mb-6">
+            <div className="bg-white p-4 rounded-2xl border w-1/2">
+              <h2 className="font-bold text-[#667085] mb-3">Top Stores <span className="text-xs font-normal">(30 days, by revenue)</span></h2>
+              <div className="border-b mb-3" />
+              {analytics.topStores.length === 0 ? (
+                <p className="text-sm text-gray-400">No paid orders yet.</p>
+              ) : analytics.topStores.map((s, i) => (
+                <div key={s.storeId} className="flex justify-between items-center py-2 text-sm">
+                  <span className="text-[#667085]">{i + 1}. {s.name}</span>
+                  <span className="font-medium">{nairaShort(s.revenue)} <span className="text-xs text-gray-400">· {s.orders} orders</span></span>
+                </div>
+              ))}
+            </div>
+            <div className="bg-white p-4 rounded-2xl border w-1/2">
+              <h2 className="font-bold text-[#667085] mb-3">Top Riders <span className="text-xs font-normal">(30 days, by deliveries)</span></h2>
+              <div className="border-b mb-3" />
+              {analytics.topRiders.length === 0 ? (
+                <p className="text-sm text-gray-400">No deliveries yet.</p>
+              ) : analytics.topRiders.map((r, i) => (
+                <div key={r.riderId} className="flex justify-between items-center py-2 text-sm">
+                  <span className="text-[#667085]">{i + 1}. {r.name || "Rider"}</span>
+                  <span className="font-medium">{r.deliveries} deliveries {r.rating != null ? <span className="text-xs text-gray-400">· ⭐ {r.rating.toFixed(1)}</span> : null}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
       {/* ── Stats row ── */}
       <section className="grid grid-cols-4 gap-6 mb-6">
         {stats.map((stat, index) => {

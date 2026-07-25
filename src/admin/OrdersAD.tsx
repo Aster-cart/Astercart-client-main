@@ -39,6 +39,43 @@ const PAYMENT_COLORS: Record<string, string> = {
 const formatNaira = (n: number) =>
   new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(n || 0);
 
+// Rich single-order detail returned by GET /adminOrder/:id/detail — used for
+// the dispute-resolution view (rider, timeline, distance, route, payment).
+type OrderDetail = {
+  order: { _id: string; status: string; paymentStatus: string; createdAt: string; deliveredAt: string | null; estimatedDelivery: string | null; deliveryLocationFlagged: boolean };
+  customer: { name: string; email: string; phoneNumber: string };
+  store: { name: string; phoneNumber: string; email: string };
+  rider: null | {
+    name: string; phoneNumber: string; email: string; rating?: number; totalDeliveries?: number;
+    verificationStatus: string;
+    vehicle: { vehicleType: string | null; vehicleModel: string | null; numberPlate: string | null };
+  };
+  products: { name: string; quantity: number; price: number; total?: number }[];
+  delivery: { address: string; state: string; lga: string; distanceKm: number | null; durationMs: number | null; pickupVerifiedAt: string | null; deliveryVerifiedAt: string | null };
+  route: {
+    store: { latitude: number; longitude: number } | null;
+    delivery: { latitude: number; longitude: number } | null;
+    riderLastKnown: { latitude: number; longitude: number; updatedAt?: string } | null;
+  };
+  payment: {
+    flutterwaveTxId: string | null; customerProductTotal: number; deliveryFee: number; serviceFee: number;
+    grandTotal: number; storePayout: number; riderPayout: number; platformCommission: number;
+    settlementStatus: string; settlementDate: string | null; refundAmount: number; refundedAt: string | null; refundReason: string | null;
+  };
+  timeline: { at: string; label: string; meta?: string }[];
+};
+
+const fmtDateTime = (s?: string | null) =>
+  s ? new Date(s).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
+
+const fmtDuration = (ms: number | null) => {
+  if (ms == null || ms < 0) return "—";
+  const mins = Math.round(ms / 60000);
+  if (mins < 60) return `${mins} min`;
+  const h = Math.floor(mins / 60);
+  return `${h}h ${mins % 60}m`;
+};
+
 const OrdersAD: React.FC = () => {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,7 +85,25 @@ const OrdersAD: React.FC = () => {
   const [storeFilter, setStoreFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
+  const [detail, setDetail] = useState<OrderDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [refunding, setRefunding] = useState(false);
+
+  const openOrder = async (order: AdminOrder) => {
+    setSelectedOrder(order);
+    setDetail(null);
+    setDetailLoading(true);
+    try {
+      const { data } = await api.get<OrderDetail>(`/adminOrder/${order._id}/detail`);
+      setDetail(data);
+    } catch (error: any) {
+      // Non-fatal — the basic view (from the list row) still renders even if
+      // the rich detail endpoint fails, so the admin is never left stranded.
+      console.error("[OrdersAD] detail fetch failed:", error?.response?.status, error?.response?.data || error?.message);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
 
   const handleRefund = async (order: AdminOrder) => {
     if (!window.confirm(`Issue a refund for order #${(order._id || "").slice(-8).toUpperCase()}? This will refund the customer via Flutterwave.`)) {
@@ -156,7 +211,7 @@ const OrdersAD: React.FC = () => {
       <div className="font-inter">
         <div className="flex justify-between items-center mb-4">
           <button
-            onClick={() => setSelectedOrder(null)}
+            onClick={() => { setSelectedOrder(null); setDetail(null); }}
             className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800"
           >
             ← Back to orders
@@ -248,6 +303,138 @@ const OrdersAD: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {detailLoading && (
+          <div className="bg-white rounded-xl p-6 border mb-4 text-sm text-gray-400">
+            Loading full order detail…
+          </div>
+        )}
+
+        {detail && (
+          <div className="bg-white rounded-xl p-6 border mb-4">
+            <h3 className="font-semibold mb-4">Dispute resolution detail</h3>
+
+            {detail.order.deliveryLocationFlagged && (
+              <div className="mb-4 px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                ⚠ This delivery was flagged — the rider confirmed delivery more than 5km from the delivery address.
+              </div>
+            )}
+
+            {/* Customer → Store → Rider */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="border rounded-lg p-3">
+                <p className="text-xs text-gray-400 mb-1">Customer</p>
+                <p className="font-medium text-sm">{detail.customer.name}</p>
+                <p className="text-xs text-gray-500">{detail.customer.phoneNumber || "No phone"}</p>
+                <p className="text-xs text-gray-500">{detail.customer.email}</p>
+              </div>
+              <div className="border rounded-lg p-3">
+                <p className="text-xs text-gray-400 mb-1">Store</p>
+                <p className="font-medium text-sm">{detail.store.name}</p>
+                <p className="text-xs text-gray-500">{detail.store.phoneNumber || "No phone"}</p>
+                <p className="text-xs text-gray-500">{detail.store.email || ""}</p>
+              </div>
+              <div className="border rounded-lg p-3">
+                <p className="text-xs text-gray-400 mb-1">Assigned rider</p>
+                {detail.rider ? (
+                  <>
+                    <p className="font-medium text-sm">{detail.rider.name}</p>
+                    <p className="text-xs text-gray-500">{detail.rider.phoneNumber || "No phone"}</p>
+                    <p className="text-xs text-gray-500">
+                      {detail.rider.vehicle.vehicleType || "—"}
+                      {detail.rider.vehicle.numberPlate ? ` · ${detail.rider.vehicle.numberPlate}` : ""}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      ⭐ {detail.rider.rating?.toFixed?.(1) ?? "—"} · {detail.rider.totalDeliveries ?? 0} deliveries · {detail.rider.verificationStatus}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-400">No rider assigned yet</p>
+                )}
+              </div>
+            </div>
+
+            {/* Pickup / delivery / distance / duration */}
+            <div className="grid grid-cols-4 gap-4 mb-6">
+              <div>
+                <p className="text-xs text-gray-400 mb-1">Pickup verified</p>
+                <p className="text-sm font-medium">{fmtDateTime(detail.delivery.pickupVerifiedAt)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 mb-1">Delivered</p>
+                <p className="text-sm font-medium">{fmtDateTime(detail.order.deliveredAt)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 mb-1">Distance at delivery</p>
+                <p className="text-sm font-medium">{detail.delivery.distanceKm != null ? `${detail.delivery.distanceKm} km` : "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 mb-1">Delivery duration</p>
+                <p className="text-sm font-medium">{fmtDuration(detail.delivery.durationMs)}</p>
+              </div>
+            </div>
+
+            {/* Route */}
+            <div className="mb-6">
+              <p className="text-xs text-gray-400 mb-2">Route</p>
+              <div className="grid grid-cols-3 gap-4 text-xs">
+                {([
+                  ["Store", detail.route.store],
+                  ["Delivery address", detail.route.delivery],
+                  ["Rider last known", detail.route.riderLastKnown],
+                ] as const).map(([label, pt]) => (
+                  <div key={label} className="border rounded-lg p-3">
+                    <p className="text-gray-400 mb-1">{label}</p>
+                    {pt ? (
+                      <a
+                        className="text-pry underline"
+                        href={`https://www.google.com/maps?q=${pt.latitude},${pt.longitude}`}
+                        target="_blank" rel="noreferrer"
+                      >
+                        {pt.latitude.toFixed(5)}, {pt.longitude.toFixed(5)}
+                      </a>
+                    ) : (
+                      <span className="text-gray-400">Not captured</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Payment */}
+            <div className="mb-6">
+              <p className="text-xs text-gray-400 mb-2">Payment</p>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
+                <div className="flex justify-between"><span className="text-gray-500">Payment reference</span><span className="font-mono text-xs">{detail.payment.flutterwaveTxId || "—"}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">Settlement</span><span>{detail.payment.settlementStatus}{detail.payment.settlementDate ? ` · ${fmtDateTime(detail.payment.settlementDate)}` : ""}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">Rider payout</span><span>{formatNaira(detail.payment.riderPayout)}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">Store payout</span><span>{formatNaira(detail.payment.storePayout)}</span></div>
+                {detail.payment.refundedAt && (
+                  <div className="flex justify-between text-red-600 col-span-2">
+                    <span>Refunded {formatNaira(detail.payment.refundAmount)} on {fmtDateTime(detail.payment.refundedAt)}</span>
+                    <span className="text-xs">{detail.payment.refundReason || ""}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Timeline */}
+            <div>
+              <p className="text-xs text-gray-400 mb-2">Timeline</p>
+              <ol className="border-l-2 border-gray-100 ml-2">
+                {detail.timeline.length === 0 ? (
+                  <li className="ml-4 text-sm text-gray-400">No events recorded.</li>
+                ) : detail.timeline.map((ev, i) => (
+                  <li key={i} className="ml-4 mb-3 relative">
+                    <span className="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-pry border-2 border-white" />
+                    <p className="text-sm font-medium">{ev.label}{ev.meta ? <span className="text-gray-400 font-normal"> — {ev.meta}</span> : null}</p>
+                    <p className="text-xs text-gray-400">{fmtDateTime(ev.at)}</p>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white rounded-xl p-6 border">
           <h3 className="font-semibold mb-4">Order items</h3>
@@ -404,7 +591,7 @@ const OrdersAD: React.FC = () => {
                   </td>
                   <td className="px-4">
                     <button
-                      onClick={() => setSelectedOrder(o)}
+                      onClick={() => openOrder(o)}
                       className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
                     >
                       View
