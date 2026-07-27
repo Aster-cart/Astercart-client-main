@@ -3,6 +3,7 @@ import { lashes, settingbg } from "../assets/res";
 import { FaEye } from "react-icons/fa";
 import { useSetting } from "../hooks/useSetting";
 import { NotificationPreferences } from "../types/setting.types";
+import { IoTimeOutline } from "react-icons/io5";
 
 const Setting: React.FC = () => {
   const {
@@ -282,7 +283,7 @@ const Setting: React.FC = () => {
 
 
                   </div>
-                   <div className="flex-1">
+                  <div className="flex-1">
     <label
       htmlFor="description"
       className="block text-sm font-medium text-input"
@@ -294,18 +295,109 @@ const Setting: React.FC = () => {
       value={formData.description}
       onChange={handleChange}
       readOnly={!isEditable}
-      placeholder="Write a short description about your business"
+      placeholder="Write a short description about your business — this will be visible to customers on the mobile app"
       className={`mt-1 block text-sm w-full px-4 py-2 h-[100px] border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${
         isEditable ? "bg-fade" : "bg-bginput"
       }`}
     />
+    <p className="text-xs text-muted mt-1">Shown on your store page to customers.</p>
   </div>
+
+                  {/* Operating Hours */}
+                  <div className="border-t border-border mt-6 pt-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <IoTimeOutline className="text-pry text-lg" />
+                      <h3 className="font-bold text-base text-ink">Operating Hours</h3>
+                    </div>
+                    <p className="text-xs text-muted mb-4">
+                      Set when your store is open. Customers will see this on your store page, and orders placed outside these hours will be noted.
+                    </p>
+
+                    {/* Enable toggle */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <button
+                        type="button"
+                        onClick={() => handleOperatingHoursChange("enabled", !formData.operatingHours.enabled)}
+                        disabled={!isEditable}
+                        className={`relative w-10 h-5 rounded-full transition-colors duration-300 focus:outline-none ${
+                          formData.operatingHours.enabled ? "bg-pry" : "bg-border"
+                        } ${!isEditable ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
+                      >
+                        <div
+                          className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-300 ${
+                            formData.operatingHours.enabled ? "translate-x-5" : ""
+                          }`}
+                        ></div>
+                      </button>
+                      <span className="text-sm text-body font-medium">
+                        {formData.operatingHours.enabled ? "Hours are shown to customers" : "Hours hidden"}
+                      </span>
+                    </div>
+
+                    {formData.operatingHours.enabled && (
+                      <>
+                        {/* Days of week */}
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-body mb-2">Days Open</label>
+                          <div className="flex gap-2 flex-wrap">
+                            {dayLabels.map((label, index) => {
+                              const isSelected = formData.operatingHours.daysOpen.includes(index);
+                              return (
+                                <button
+                                  key={label}
+                                  type="button"
+                                  disabled={!isEditable}
+                                  onClick={() => toggleDay(index)}
+                                  className={`w-10 h-10 rounded-full text-xs font-medium transition-all ${
+                                    isSelected
+                                      ? "bg-pry text-white"
+                                      : "bg-off-white text-body border border-border"
+                                  } ${!isEditable ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:bg-pry-mid"}`}
+                                >
+                                  {label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Open / Close time */}
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <label className="block text-sm font-medium text-body mb-1">Opens</label>
+                            <input
+                              type="time"
+                              value={formData.operatingHours.openTime}
+                              onChange={(e) => handleOperatingHoursChange("openTime", e.target.value)}
+                              readOnly={!isEditable}
+                              className={`mt-1 block text-sm h-[40px] w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                                isEditable ? "bg-fade" : "bg-bginput"
+                              }`}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-body mb-1">Closes</label>
+                            <input
+                              type="time"
+                              value={formData.operatingHours.closeTime}
+                              onChange={(e) => handleOperatingHoursChange("closeTime", e.target.value)}
+                              readOnly={!isEditable}
+                              className={`mt-1 block text-sm h-[40px] w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                                isEditable ? "bg-fade" : "bg-bginput"
+                              }`}
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
                   <div className="flex justify-end gap-5 mt-6">
                     {!isEditable ? (
                       <button
                         type="button"
                         onClick={handleEdit}
-                        className="px-4 py-2 bg-orange-300 hover:bg-pry text-white rounded-md shadow-sm"
+                        className="px-4 py-2 bg-pry hover:bg-orange-600 text-white rounded-md shadow-sm"
                       >
                         Edit Profile
                       </button>
@@ -314,14 +406,14 @@ const Setting: React.FC = () => {
                         <button
                           type="button"
                           onClick={handleEdit}
-                          className={`px-4 py-2 text-orange-300  border-pry border ${isEditable} rounded-md shadow-sm cursor-pointer`}
+                          className={`px-4 py-2 text-pry  border-pry border ${isEditable} rounded-md shadow-sm cursor-pointer`}
                         >
                           Cancel
                         </button>
                         <button
                           type="button"
                           onClick={handleSave}
-                          className={`px-4 py-2 text-orange-300  border-pry border ${isEditable} ${
+                          className={`px-4 py-2 text-pry  border-pry border ${isEditable} ${
                             !isModified
                               ? "cursor-not-allowed"
                               : "cursor-pointer"
@@ -520,7 +612,7 @@ const Setting: React.FC = () => {
                   <button
                     type="button"
                     onClick={toggleEditPassword}
-                    className="px-4 py-2 bg-orange-300 hover:bg-pry text-white rounded-md shadow-sm"
+                    className="px-4 py-2 bg-pry hover:bg-orange-600 text-white rounded-md shadow-sm"
                   >
                     Change Password
                   </button>
@@ -528,7 +620,7 @@ const Setting: React.FC = () => {
                   <button
                     type="button"
                     onClick={handlePasswordChange}
-                    className={`px-4 py-2 text-orange-300 border-pry border rounded-md shadow-sm ${
+                    className={`px-4 py-2 text-pry border-pry border rounded-md shadow-sm ${
                       oldPassword &&
                       newPassword &&
                       confirmPassword === newPassword
@@ -574,7 +666,7 @@ const Setting: React.FC = () => {
               { notificationIsModified && <button
                 type="button"
                 onClick={updateNotifications}
-                className="px-4 py-2 bg-orange-300 hover:bg-pry text-white rounded-md shadow-sm"
+                className="px-4 py-2 bg-pry hover:bg-orange-600 text-white rounded-md shadow-sm"
               >
                 {loading?"Saving...":"Save"}
               </button>}

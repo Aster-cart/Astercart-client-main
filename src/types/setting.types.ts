@@ -11,6 +11,12 @@ export interface BusinessFormProps {
     newPassword?: string;
     profilePhoto?: string;
     description?: string;
+    operatingHours: {
+      enabled: boolean;
+      daysOpen: number[];
+      openTime: string;
+      closeTime: string;
+    };
   }
   export interface NotificationPreferences {
     newOrder: boolean;

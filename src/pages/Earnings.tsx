@@ -26,11 +26,11 @@ const Earnings: React.FC = () => {
         {[
           { label: "Total earned (gross — your product sales)", value: mockDashboardData.amountMade, color: "" },
           { label: "Your payout", value: mockDashboardData.totalFeesCharged, color: "text-green-600" },
-          { label: "Platform commission", value: (mockDashboardData as any).platformFee || "₦0", color: "text-orange-500" },
+          { label: "Platform commission", value: (mockDashboardData as any).platformFee || "₦0", color: "text-pry" },
           { label: "Pending payout", value: `${pendingPayout.length} orders`, color: "text-yellow-600" },
         ].map((s, i) => (
           <div key={i} className="bg-white rounded-xl p-4 border">
-            <p className="text-sm text-gray-500 mb-1">{s.label}</p>
+            <p className="text-sm text-muted mb-1">{s.label}</p>
             <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
           </div>
         ))}
@@ -96,7 +96,7 @@ const Earnings: React.FC = () => {
                         dashboard for the exact same order. */}
                     <td className="px-2 font-medium">{formatNaira(row.amount ? Number(String(row.amount).replace(/[^0-9.]/g, "")) : 0)}</td>
                     <td className="px-2 text-green-600 font-medium">{formatNaira(row.storePayout)}</td>
-                    <td className="px-2 text-orange-500">{formatNaira(row.platformCommission)}</td>
+                    <td className="px-2 text-pry">{formatNaira(row.platformCommission)}</td>
                     <td className="px-2">
                       <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">
                         {row.status}

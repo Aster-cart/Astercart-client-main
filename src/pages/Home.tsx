@@ -83,7 +83,7 @@ const Products: React.FC = () => (
 
 </section>
 
-<section className="bg-[#FF6B00] my-10 w-[90%] md:w-[85%] mx-auto rounded-3xl p-5 text-white text-center">
+<section className="bg-pry my-10 w-[90%] md:w-[85%] mx-auto rounded-3xl p-5 text-white text-center">
   <div className="grid grid-cols-1 pt-3 gap-3 max-w-5xl mx-auto">
     <h3 className="text-lg md:text-xl font-bold text-center">
       Why Shop With Us?
@@ -106,7 +106,7 @@ const Products: React.FC = () => (
     </Carousel>
   </div>
 
-  <button className="bg-white text-[#FF6B00] shadow-2xl py-2 px-4 mt-4 rounded-lg font-bold hover:bg-gray-900">
+  <button className="bg-white text-pry shadow-2xl py-2 px-4 mt-4 rounded-lg font-bold hover:bg-gray-900">
     Shop Now
   </button>
 </section>
@@ -205,8 +205,8 @@ const Products: React.FC = () => (
   <h2 className="text-2xl font-bold mb-3">Join the Astercart Network</h2>
     <p className="max-w-md mx-auto mb-8">Partner with us as a supermarket or join as a rider for exciting opportunities.</p>
     <div className="space-x-4">
-      <a href="#" className="inline-block bg-white text-orange-500 shadow-2xl px-4 py-2 rounded-lg font-semibold hover:bg-gray-900">Partner with Us</a>
-      <a href="#" className="inline-block bg-white text-orange-500 shadow-2xl px-4 py-2 rounded-lg font-semibold hover:bg-gray-900">Join as a Rider</a>
+      <a href="#" className="inline-block bg-white text-pry shadow-2xl px-4 py-2 rounded-lg font-semibold hover:bg-gray-900">Partner with Us</a>
+      <a href="#" className="inline-block bg-white text-pry shadow-2xl px-4 py-2 rounded-lg font-semibold hover:bg-gray-900">Join as a Rider</a>
     </div>
     </div>
   </section>
@@ -228,16 +228,16 @@ const Products: React.FC = () => (
   </div>
 </footer> */}
  {/* <!-- Join the Network --> */}
-<section className=" bg-orange text-white py-16 px-4 text-center">
+<section className="bg-pry text-white py-16 px-4 text-center">
   <h2 className="text-3xl font-bold mb-6">Join the Astercart Network</h2>
   <p className="max-w-md mx-auto mb-8">
     Partner with us as a supermarket or join as a rider for exciting opportunities.
   </p>
   <div className="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
-    <a href="#" className="inline-block bg-white text-orange px-6 py-3 rounded-lg font-semibold hover:bg-gray-900">
+    <a href="#" className="inline-block bg-white text-pry px-6 py-3 rounded-lg font-semibold hover:bg-gray-900">
       Partner with Us
     </a>
-    <a href="#" className="inline-block bg-white text-orange px-6 py-3 rounded-lg font-semibold hover:bg-gray-900">
+    <a href="#" className="inline-block bg-white text-pry px-6 py-3 rounded-lg font-semibold hover:bg-gray-900">
       Join as a Rider
     </a>
   </div>

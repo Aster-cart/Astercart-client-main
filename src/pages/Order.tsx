@@ -113,7 +113,7 @@ const Order: React.FC = () => {
                     Confirm this code matches what's on the rider's screen before handing over the order.
                   </p>
                 </div>
-                <p className="text-4xl font-bold text-orange-500 tracking-widest flex-shrink-0">{o.pickupOTP}</p>
+                <p className="text-4xl font-bold text-pry tracking-widest flex-shrink-0">{o.pickupOTP}</p>
               </div>
             ))}
         </div>

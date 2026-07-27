@@ -32,7 +32,13 @@ export const useSetting = () => {
     state: storeProfile?.storeDetails?.state || "",
     lga: storeProfile?.storeDetails?.lga || "",
     profilePhoto: storeProfile?.picture || "https://via.placeholder.com/150",
-  description: (storeProfile?.storeDetails as any)?.description || "", 
+    description: storeProfile?.description || "",
+    operatingHours: {
+      enabled: (storeProfile as any)?.operatingHours?.enabled ?? false,
+      daysOpen: (storeProfile as any)?.operatingHours?.daysOpen ?? [1,2,3,4,5,6],
+      openTime: (storeProfile as any)?.operatingHours?.openTime ?? "08:00",
+      closeTime: (storeProfile as any)?.operatingHours?.closeTime ?? "22:00",
+    },
   };
 
   const [formData, setFormData] = useState<BusinessFormProps>(initialState);
@@ -112,6 +118,23 @@ export const useSetting = () => {
   e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
 ) => {
   setFormData((prev) => ({ ...prev, [e.target.id]: e.target.value }));
+};
+
+const handleOperatingHoursChange = (field: string, value: any) => {
+  setFormData((prev) => ({
+    ...prev,
+    operatingHours: { ...prev.operatingHours, [field]: value },
+  }));
+};
+
+const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const toggleDay = (dayIndex: number) => {
+  const current = formData.operatingHours.daysOpen;
+  const updated = current.includes(dayIndex)
+    ? current.filter((d) => d !== dayIndex)
+    : [...current, dayIndex];
+  handleOperatingHoursChange("daysOpen", updated.sort());
 };
 
 
@@ -260,6 +283,9 @@ export const useSetting = () => {
     notificationPreferences,
     handleCheckboxChange,
     notificationOptions,
-    notificationError
+    notificationError,
+    handleOperatingHoursChange,
+    toggleDay,
+    dayLabels,
   };
 };
