@@ -139,19 +139,19 @@ const PricingAD: React.FC = () => {
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-xl p-4 border">
-          <p className="text-sm text-gray-500">Total markup revenue (estimate)</p>
+          <p className="text-sm text-muted">Total markup revenue (estimate)</p>
           <p className="text-2xl font-bold text-green-600 mt-1">{formatNaira(totalMarkupRevenue)}</p>
         </div>
         <div className="bg-white rounded-xl p-4 border">
-          <p className="text-sm text-gray-500">Products marked up</p>
+          <p className="text-sm text-muted">Products marked up</p>
           <p className="text-2xl font-bold mt-1">{markedUpCount}</p>
         </div>
         <div className="bg-white rounded-xl p-4 border">
-          <p className="text-sm text-gray-500">Products on markdown</p>
-          <p className="text-2xl font-bold text-orange-500 mt-1">{markedDownCount}</p>
+          <p className="text-sm text-muted">Products on markdown</p>
+          <p className="text-2xl font-bold text-pry mt-1">{markedDownCount}</p>
         </div>
         <div className="bg-white rounded-xl p-4 border">
-          <p className="text-sm text-gray-500">Total products</p>
+          <p className="text-sm text-muted">Total products</p>
           <p className="text-2xl font-bold mt-1">{allProducts.length}</p>
         </div>
       </div>
@@ -163,12 +163,12 @@ const PricingAD: React.FC = () => {
           placeholder="Search products or stores..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border border-gray-200 rounded-lg px-4 py-2 text-sm w-72 focus:outline-none focus:border-pry"
+          className="border border-border rounded-lg px-4 py-2 text-sm w-72 focus:outline-none focus:border-pry"
         />
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-pry"
+          className="border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-pry"
         >
           {categories.map((c) => (
             <option key={c} value={c}>{c === "All" ? "All categories" : c}</option>
@@ -185,7 +185,7 @@ const PricingAD: React.FC = () => {
         {selectedIds.size > 0 && (
           <button
             onClick={() => setSelectedIds(new Set())}
-            className="text-sm px-3 py-2 text-gray-500"
+            className="text-sm px-3 py-2 text-muted"
           >
             Clear selection
           </button>
@@ -195,16 +195,16 @@ const PricingAD: React.FC = () => {
       {/* Store groups */}
       <div className="space-y-4">
         {loading ? (
-          <p className="bg-white rounded-xl border p-8 text-center text-gray-400">Loading...</p>
+          <p className="bg-white rounded-xl border p-8 text-center text-muted">Loading...</p>
         ) : storeGroups.length === 0 ? (
-          <p className="bg-white rounded-xl border p-8 text-center text-gray-400">No products found.</p>
+          <p className="bg-white rounded-xl border p-8 text-center text-muted">No products found.</p>
         ) : (
           storeGroups.map((group) => (
             <div key={group.storeId} className="bg-white rounded-xl border overflow-hidden">
               {/* Store header */}
               <button
                 onClick={() => toggleStore(group.storeId)}
-                className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50"
+                className="w-full flex items-center justify-between px-5 py-4 hover:bg-off-white"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-pry flex items-center justify-center text-white font-bold">
@@ -212,16 +212,16 @@ const PricingAD: React.FC = () => {
                   </div>
                   <div className="text-left">
                     <p className="font-semibold text-sm">{group.storeName}</p>
-                    <p className="text-xs text-gray-400">{group.products.length} products</p>
+                    <p className="text-xs text-muted">{group.products.length} products</p>
                   </div>
                 </div>
-                <span className="text-gray-400 text-lg">{group.expanded ? "▲" : "▼"}</span>
+                <span className="text-muted text-lg">{group.expanded ? "▲" : "▼"}</span>
               </button>
 
               {group.expanded && (
                 <div>
-                  <div className="px-5 py-2 border-t bg-gray-50 flex justify-between items-center">
-                    <label className="flex items-center gap-2 text-xs text-gray-500">
+                  <div className="px-5 py-2 border-t bg-off-white flex justify-between items-center">
+                    <label className="flex items-center gap-2 text-xs text-muted">
                       <input
                         type="checkbox"
                         checked={group.products.every((p) => selectedIds.has(p._id))}
@@ -231,7 +231,7 @@ const PricingAD: React.FC = () => {
                     </label>
                   </div>
                   <table className="w-full text-sm text-left">
-                    <thead className="text-gray-400 border-t text-xs bg-gray-50">
+                    <thead className="text-muted border-t text-xs bg-off-white">
                       <tr>
                         <th className="py-2 px-4"></th>
                         <th className="px-4">Product</th>
@@ -246,7 +246,7 @@ const PricingAD: React.FC = () => {
                     </thead>
                     <tbody>
                       {group.products.map((p) => (
-                        <tr key={p._id} className="border-b hover:bg-gray-50">
+                        <tr key={p._id} className="border-b hover:bg-off-white">
                           <td className="py-3 px-4">
                             <input type="checkbox" checked={selectedIds.has(p._id)} onChange={() => toggleSelect(p._id)} />
                           </td>
@@ -259,11 +259,11 @@ const PricingAD: React.FC = () => {
                               <span className="font-medium">{p.name}</span>
                             </div>
                           </td>
-                          <td className="px-4 text-gray-500 text-xs">{p.category}</td>
+                          <td className="px-4 text-muted text-xs">{p.category}</td>
                           <td className="px-4">{formatNaira(p.storePrice)}</td>
                           <td className="px-4">
                             {p.markupType === "none" ? (
-                              <span className="text-gray-400 text-xs">None</span>
+                              <span className="text-muted text-xs">None</span>
                             ) : (
                               <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
                                 +{p.markupValue}{p.markupType === "percent" ? "%" : " ₦"}
@@ -272,7 +272,7 @@ const PricingAD: React.FC = () => {
                           </td>
                           <td className="px-4">
                             {p.markdownType === "none" ? (
-                              <span className="text-gray-400 text-xs">{p.markdownExpired ? "Expired" : "None"}</span>
+                              <span className="text-muted text-xs">{p.markdownExpired ? "Expired" : "None"}</span>
                             ) : (
                               <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
                                 -{p.markdownValue}{p.markdownType === "percent" ? "%" : " ₦"}
@@ -284,7 +284,7 @@ const PricingAD: React.FC = () => {
                           <td className="px-4">
                             <button
                               onClick={() => setEditingProduct(p)}
-                              className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
+                              className="text-xs px-3 py-1.5 bg-gray-100 text-body rounded-lg font-medium hover:bg-gray-200"
                             >
                               Edit
                             </button>
@@ -358,15 +358,15 @@ const PricingEditModal: React.FC<{
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl p-6 max-w-md w-full">
         <h3 className="font-semibold text-lg mb-1">{product.name}</h3>
-        <p className="text-sm text-gray-400 mb-4">Store price: {formatNaira(product.storePrice)}</p>
+        <p className="text-sm text-muted mb-4">Store price: {formatNaira(product.storePrice)}</p>
 
         <div className="space-y-4">
           <div>
-            <label className="text-xs text-gray-500 font-medium block mb-1">Markup type</label>
+            <label className="text-xs text-muted font-medium block mb-1">Markup type</label>
             <select
               value={markupType}
               onChange={(e) => setMarkupType(e.target.value as any)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
+              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
             >
               <option value="none">No markup</option>
               <option value="percent">Percentage (%)</option>
@@ -375,24 +375,24 @@ const PricingEditModal: React.FC<{
           </div>
           {markupType !== "none" && (
             <div>
-              <label className="text-xs text-gray-500 font-medium block mb-1">
+              <label className="text-xs text-muted font-medium block mb-1">
                 Markup value {markupType === "percent" ? "(%)" : "(₦)"}
               </label>
               <input
                 type="number" min={0}
                 value={markupValue}
                 onChange={(e) => setMarkupValue(Number(e.target.value))}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
+                className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
               />
             </div>
           )}
 
           <div className="border-t pt-4">
-            <label className="text-xs text-gray-500 font-medium block mb-1">Markdown type (bonanza/sale)</label>
+            <label className="text-xs text-muted font-medium block mb-1">Markdown type (bonanza/sale)</label>
             <select
               value={markdownType}
               onChange={(e) => setMarkdownType(e.target.value as any)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
+              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
             >
               <option value="none">No markdown</option>
               <option value="percent">Percentage (%)</option>
@@ -402,32 +402,32 @@ const PricingEditModal: React.FC<{
           {markdownType !== "none" && (
             <>
               <div>
-                <label className="text-xs text-gray-500 font-medium block mb-1">
+                <label className="text-xs text-muted font-medium block mb-1">
                   Markdown value {markdownType === "percent" ? "(%)" : "(₦)"}
                 </label>
                 <input
                   type="number" min={0}
                   value={markdownValue}
                   onChange={(e) => setMarkdownValue(Number(e.target.value))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500 font-medium block mb-1">Expires on (optional)</label>
+                <label className="text-xs text-muted font-medium block mb-1">Expires on (optional)</label>
                 <input
                   type="date"
                   value={markdownExpiresAt}
                   onChange={(e) => setMarkdownExpiresAt(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
                 />
-                <p className="text-xs text-gray-400 mt-1">After this date, the markdown stops applying automatically.</p>
+                <p className="text-xs text-muted mt-1">After this date, the markdown stops applying automatically.</p>
               </div>
             </>
           )}
         </div>
 
         <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="flex-1 px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium">
+          <button onClick={onClose} className="flex-1 px-4 py-2 bg-gray-100 text-body rounded-lg text-sm font-medium">
             Cancel
           </button>
           <button onClick={handleSave} disabled={saving} className="flex-1 px-4 py-2 bg-pry text-white rounded-lg text-sm font-medium disabled:opacity-60">
@@ -478,7 +478,7 @@ const BatchPricingModal: React.FC<{
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl p-6 max-w-md w-full">
         <h3 className="font-semibold text-lg mb-1">Batch update {count} products</h3>
-        <p className="text-sm text-gray-400 mb-4">
+        <p className="text-sm text-muted mb-4">
           This applies the same rate to every selected product right now — it's a one-time
           bulk edit, not a live rule. Each product can still be individually adjusted afterward.
         </p>
@@ -487,24 +487,24 @@ const BatchPricingModal: React.FC<{
           <div className="flex gap-2">
             <button
               onClick={() => setMode("markup")}
-              className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium ${mode === "markup" ? "bg-pry text-white" : "bg-gray-100 text-gray-600"}`}
+              className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium ${mode === "markup" ? "bg-pry text-white" : "bg-gray-100 text-body"}`}
             >
               Markup
             </button>
             <button
               onClick={() => setMode("markdown")}
-              className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium ${mode === "markdown" ? "bg-pry text-white" : "bg-gray-100 text-gray-600"}`}
+              className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium ${mode === "markdown" ? "bg-pry text-white" : "bg-gray-100 text-body"}`}
             >
               Markdown (sale)
             </button>
           </div>
 
           <div>
-            <label className="text-xs text-gray-500 font-medium block mb-1">Type</label>
+            <label className="text-xs text-muted font-medium block mb-1">Type</label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value as any)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
+              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
             >
               <option value="percent">Percentage (%)</option>
               <option value="flat">Flat amount (₦)</option>
@@ -512,32 +512,32 @@ const BatchPricingModal: React.FC<{
           </div>
 
           <div>
-            <label className="text-xs text-gray-500 font-medium block mb-1">
+            <label className="text-xs text-muted font-medium block mb-1">
               Value {type === "percent" ? "(%)" : "(₦)"}
             </label>
             <input
               type="number" min={0}
               value={value}
               onChange={(e) => setValue(Number(e.target.value))}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
+              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
             />
           </div>
 
           {mode === "markdown" && (
             <div>
-              <label className="text-xs text-gray-500 font-medium block mb-1">Expires on (optional)</label>
+              <label className="text-xs text-muted font-medium block mb-1">Expires on (optional)</label>
               <input
                 type="date"
                 value={expiresAt}
                 onChange={(e) => setExpiresAt(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
+                className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
               />
             </div>
           )}
         </div>
 
         <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="flex-1 px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium">
+          <button onClick={onClose} className="flex-1 px-4 py-2 bg-gray-100 text-body rounded-lg text-sm font-medium">
             Cancel
           </button>
           <button onClick={handleApply} disabled={saving} className="flex-1 px-4 py-2 bg-pry text-white rounded-lg text-sm font-medium disabled:opacity-60">

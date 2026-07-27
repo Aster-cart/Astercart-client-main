@@ -20,7 +20,7 @@ const PIE_COLORS = ["#FE5B18", "#3B82F6", "#22C55E", "#A855F7", "#F59E0B", "#EF4
 // "₦45,000 this week" tells a store nothing about whether that's good or
 // bad without something to compare it against.
 const TrendBadge: React.FC<{ percent: number | null }> = ({ percent }) => {
-  if (percent === null) return <span className="text-xs text-gray-400">No prior data to compare</span>;
+  if (percent === null) return <span className="text-xs text-muted">No prior data to compare</span>;
   const isUp = percent >= 0;
   return (
     <span className={`text-xs font-medium ${isUp ? "text-green-600" : "text-red-500"}`}>
@@ -32,8 +32,8 @@ const TrendBadge: React.FC<{ percent: number | null }> = ({ percent }) => {
 const Analytics: React.FC = () => {
   const { analytics, loading } = useStoreAnalytics();
 
-  if (loading) return <div className="p-8 text-gray-400">Loading analytics...</div>;
-  if (!analytics) return <div className="p-8 text-gray-400">No data yet. Analytics will appear once you have orders.</div>;
+  if (loading) return <div className="p-8 text-muted">Loading analytics...</div>;
+  if (!analytics) return <div className="p-8 text-muted">No data yet. Analytics will appear once you have orders.</div>;
 
   return (
     <div className="font-inter space-y-6 pb-8">
@@ -42,12 +42,12 @@ const Analytics: React.FC = () => {
           week?" */}
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-white rounded-xl p-5 border">
-          <p className="text-sm text-gray-500 mb-1">Revenue this week</p>
+          <p className="text-sm text-muted mb-1">Revenue this week</p>
           <p className="text-2xl font-bold">{formatNaira(analytics.thisWeekRevenue)}</p>
           <div className="mt-1"><TrendBadge percent={analytics.revenueChangePercent} /></div>
         </div>
         <div className="bg-white rounded-xl p-5 border">
-          <p className="text-sm text-gray-500 mb-1">Orders this week</p>
+          <p className="text-sm text-muted mb-1">Orders this week</p>
           <p className="text-2xl font-bold">{analytics.thisWeekOrders}</p>
           <div className="mt-1"><TrendBadge percent={analytics.ordersChangePercent} /></div>
         </div>
@@ -62,7 +62,7 @@ const Analytics: React.FC = () => {
           { label: "Avg order value", value: formatNaira(analytics.avgOrderValue) },
         ].map((s, i) => (
           <div key={i} className="bg-white rounded-xl p-4 border">
-            <p className="text-sm text-gray-500">{s.label}</p>
+            <p className="text-sm text-muted">{s.label}</p>
             <p className={`text-2xl font-bold mt-1 ${(s as any).color || ""}`}>{s.value}</p>
           </div>
         ))}
@@ -72,7 +72,7 @@ const Analytics: React.FC = () => {
       <div className="bg-white rounded-xl border p-5">
         <h2 className="font-semibold mb-4">Revenue — last 7 days</h2>
         {analytics.dailyRevenue.every(d => d.revenue === 0) ? (
-          <p className="text-gray-400 text-sm py-8 text-center">No revenue data yet.</p>
+          <p className="text-muted text-sm py-8 text-center">No revenue data yet.</p>
         ) : (
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={analytics.dailyRevenue}>
@@ -90,7 +90,7 @@ const Analytics: React.FC = () => {
         <div className="bg-white rounded-xl border p-5">
           <h2 className="font-semibold mb-4">Orders per day — last 7 days</h2>
           {analytics.dailyRevenue.every(d => d.orders === 0) ? (
-            <p className="text-gray-400 text-sm py-8 text-center">No order data yet.</p>
+            <p className="text-muted text-sm py-8 text-center">No order data yet.</p>
           ) : (
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={analytics.dailyRevenue}>
@@ -109,7 +109,7 @@ const Analytics: React.FC = () => {
         <div className="bg-white rounded-xl border p-5">
           <h2 className="font-semibold mb-4">Orders by status</h2>
           {analytics.statusBreakdown.length === 0 ? (
-            <p className="text-gray-400 text-sm py-8 text-center">No orders yet.</p>
+            <p className="text-muted text-sm py-8 text-center">No orders yet.</p>
           ) : (
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
@@ -155,10 +155,10 @@ const Analytics: React.FC = () => {
       <div className="bg-white rounded-xl border p-5">
         <h2 className="font-semibold mb-4">Best selling products</h2>
         {analytics.bestSellers.length === 0 ? (
-          <p className="text-gray-400 text-sm">No sales data yet.</p>
+          <p className="text-muted text-sm">No sales data yet.</p>
         ) : (
           <table className="w-full text-sm">
-            <thead className="text-gray-400 border-b text-xs">
+            <thead className="text-muted border-b text-xs">
               <tr>
                 <th className="py-2 text-left">Product</th>
                 <th className="text-right">Units sold</th>
@@ -167,7 +167,7 @@ const Analytics: React.FC = () => {
             </thead>
             <tbody>
               {analytics.bestSellers.map((p, i) => (
-                <tr key={i} className="border-b hover:bg-gray-50">
+                <tr key={i} className="border-b hover:bg-off-white">
                   <td className="py-3">
                     <div className="flex items-center gap-2">
                       <span className="w-6 h-6 rounded-full bg-pry text-white text-xs flex items-center justify-center font-bold">

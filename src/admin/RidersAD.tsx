@@ -18,7 +18,7 @@ interface Rider {
 const STATUS_COLOR = {
   available: "bg-green-100 text-green-700",
   busy: "bg-yellow-100 text-yellow-700",
-  offline: "bg-gray-100 text-gray-500",
+  offline: "bg-gray-100 text-muted",
 };
 
 const RidersAD: React.FC = () => {
@@ -56,27 +56,27 @@ const RidersAD: React.FC = () => {
     offline: riders.filter(r => r.riderStatus === "offline").length,
   };
 
-  if (loading) return <p className="p-8 text-gray-400">Loading riders...</p>;
+  if (loading) return <p className="p-8 text-muted">Loading riders...</p>;
 
   return (
     <div className="font-inter">
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-xl p-4 border">
-          <p className="text-sm text-gray-500">Total riders</p>
+          <p className="text-sm text-muted">Total riders</p>
           <p className="text-2xl font-bold mt-1">{riders.length}</p>
         </div>
         <div className="bg-white rounded-xl p-4 border">
-          <p className="text-sm text-gray-500">Available now</p>
+          <p className="text-sm text-muted">Available now</p>
           <p className="text-2xl font-bold text-green-600 mt-1">{counts.available}</p>
         </div>
         <div className="bg-white rounded-xl p-4 border">
-          <p className="text-sm text-gray-500">On delivery</p>
+          <p className="text-sm text-muted">On delivery</p>
           <p className="text-2xl font-bold text-yellow-600 mt-1">{counts.busy}</p>
         </div>
         <div className="bg-white rounded-xl p-4 border">
-          <p className="text-sm text-gray-500">Offline</p>
-          <p className="text-2xl font-bold text-gray-400 mt-1">{counts.offline}</p>
+          <p className="text-sm text-muted">Offline</p>
+          <p className="text-2xl font-bold text-muted mt-1">{counts.offline}</p>
         </div>
       </div>
 
@@ -93,7 +93,7 @@ const RidersAD: React.FC = () => {
       <div className="flex gap-2 mb-4">
         {(["all", "available", "busy", "offline"] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-full text-xs font-medium border ${filter === f ? "bg-pry text-white border-pry" : "text-gray-500 border-gray-200"}`}>
+            className={`px-4 py-2 rounded-full text-xs font-medium border ${filter === f ? "bg-pry text-white border-pry" : "text-muted border-border"}`}>
             {f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
         ))}
@@ -102,7 +102,7 @@ const RidersAD: React.FC = () => {
       {/* Table */}
       <div className="bg-white rounded-xl border overflow-x-auto">
         <table className="w-full text-sm text-left">
-          <thead className="text-gray-400 border-b text-xs bg-gray-50">
+          <thead className="text-muted border-b text-xs bg-off-white">
             <tr>
               <th className="py-3 px-4">Name</th>
               <th className="px-4">Contact</th>
@@ -116,11 +116,11 @@ const RidersAD: React.FC = () => {
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={8} className="text-center py-8 text-gray-400">No riders found.</td></tr>
+              <tr><td colSpan={8} className="text-center py-8 text-muted">No riders found.</td></tr>
             ) : filtered.map(r => (
-              <tr key={r._id} className="border-b hover:bg-gray-50">
+              <tr key={r._id} className="border-b hover:bg-off-white">
                 <td className="py-3 px-4 font-medium">{r.name}</td>
-                <td className="px-4 text-gray-500 text-xs">
+                <td className="px-4 text-muted text-xs">
                   {r.email}<br/>{r.phoneNumber || "—"}
                 </td>
                 <td className="px-4">{r.riderDetails?.vehicleType || "—"}</td>
@@ -131,7 +131,7 @@ const RidersAD: React.FC = () => {
                 </td>
                 <td className="px-4 font-medium">{r.totalDeliveries}</td>
                 <td className="px-4">⭐ {r.rating?.toFixed(1) || "5.0"}</td>
-                <td className="px-4 text-gray-400 text-xs">
+                <td className="px-4 text-muted text-xs">
                   {new Date(r.createdAt).toLocaleDateString("en-GB")}
                 </td>
                 <td className="px-4">

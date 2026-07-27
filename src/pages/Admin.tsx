@@ -158,8 +158,8 @@ const PageHeader: React.FC<{ title: string }> = ({ title }) => {
               {notifications.map((notif) => (
                 <li
                   key={notif.id}
-                  className={`border-b border-gray-300 cursor-pointer ${
-                    notif.read ? "text-gray-400" : "text-black"
+                  className={`border-b border-border cursor-pointer ${
+                    notif.read ? "text-muted" : "text-black"
                   }`}
                   onClick={() => markAsRead(notif.id)}
                 >
@@ -181,7 +181,7 @@ const PageHeader: React.FC<{ title: string }> = ({ title }) => {
                           View
                         </button>
                       )}
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted">
                         {formatToTodayTime(notif.timestamp)}
                       </span>
                     </div>
@@ -198,7 +198,7 @@ const PageHeader: React.FC<{ title: string }> = ({ title }) => {
           </div>
         )}
 
-        <div className="flex items-center  font-inter border border-gray-300 rounded-3xl bg-[#F9FAFB] px-2 md:px-3">
+        <div className="flex items-center  font-inter border border-border rounded-3xl bg-[#F9FAFB] px-2 md:px-3">
           <div className="bg-fade p-1 rounded-full">
             <img src={map} alt="Map Icon" className="w-4 md:w-5 h-4 md:h-5" />
           </div>
@@ -310,7 +310,7 @@ const Admin: React.FC = () => {
         </div>
         {/* Main Menu */}
         <nav>
-          <h2 className="text-xs font-medium mb-4 hidden md:block text-gray-500">
+          <h2 className="text-xs font-medium mb-4 hidden md:block text-muted">
             Main Menu
           </h2>
           <ul className="space-y-2">
@@ -321,7 +321,7 @@ const Admin: React.FC = () => {
                   className={`flex items-center w-full px-2 py-2 md:px-4 rounded hover:bg-fade transition-all ${
                     activeMenu === item.label
                       ? "bg-fade text-black"
-                      : "text-gray-500"
+                      : "text-muted"
                   }`}
                 >
                   <img

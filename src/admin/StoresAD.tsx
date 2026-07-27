@@ -121,13 +121,13 @@ const StoresAD: React.FC = () => {
       <div className="flex gap-2 mb-6 border-b">
         <button
           onClick={() => setShowVerificationTab(false)}
-          className={`px-4 py-3 text-sm font-medium border-b-2 transition ${!showVerificationTab ? "border-pry text-pry" : "border-transparent text-gray-400"}`}
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition ${!showVerificationTab ? "border-pry text-pry" : "border-transparent text-muted"}`}
         >
           All Stores
         </button>
         <button
           onClick={() => setShowVerificationTab(true)}
-          className={`px-4 py-3 text-sm font-medium border-b-2 transition flex items-center gap-2 ${showVerificationTab ? "border-pry text-pry" : "border-transparent text-gray-400"}`}
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition flex items-center gap-2 ${showVerificationTab ? "border-pry text-pry" : "border-transparent text-muted"}`}
         >
           Verification Queue
           {pendingVerifications.length > 0 && (
@@ -138,31 +138,31 @@ const StoresAD: React.FC = () => {
 
       {showVerificationTab ? (
         <div>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-muted mb-4">
             These stores have submitted their documents and are waiting for your review before they can add products.
           </p>
           {pendingVerifications.length === 0 ? (
-            <p className="text-center text-gray-400 py-12">No pending verifications right now.</p>
+            <p className="text-center text-muted py-12">No pending verifications right now.</p>
           ) : pendingVerifications.map((store: any) => (
             <div key={store._id} className="bg-white rounded-xl border p-5 mb-4">
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <p className="font-semibold">{store.name}</p>
-                  <p className="text-xs text-gray-400">{store.email}</p>
+                  <p className="text-xs text-muted">{store.email}</p>
                   {store.verificationDocuments?.submittedAt && (
-                    <p className="text-xs text-gray-400">Submitted: {new Date(store.verificationDocuments.submittedAt).toLocaleDateString("en-GB")}</p>
+                    <p className="text-xs text-muted">Submitted: {new Date(store.verificationDocuments.submittedAt).toLocaleDateString("en-GB")}</p>
                   )}
                 </div>
               </div>
 
               {store.verificationDocuments && (
-                <div className="grid grid-cols-2 gap-3 text-xs mb-4 bg-gray-50 rounded-lg p-3">
-                  <div><span className="text-gray-400">CAC Number: </span>{store.verificationDocuments.cacNumber}</div>
-                  <div><span className="text-gray-400">Business Email: </span>{store.verificationDocuments.businessEmail}</div>
-                  <div><span className="text-gray-400">Phone: </span>{store.verificationDocuments.businessPhone}</div>
-                  <div><span className="text-gray-400">Address: </span>{store.verificationDocuments.exactAddress}</div>
+                <div className="grid grid-cols-2 gap-3 text-xs mb-4 bg-off-white rounded-lg p-3">
+                  <div><span className="text-muted">CAC Number: </span>{store.verificationDocuments.cacNumber}</div>
+                  <div><span className="text-muted">Business Email: </span>{store.verificationDocuments.businessEmail}</div>
+                  <div><span className="text-muted">Phone: </span>{store.verificationDocuments.businessPhone}</div>
+                  <div><span className="text-muted">Address: </span>{store.verificationDocuments.exactAddress}</div>
                   {store.verificationDocuments.landmark && (
-                    <div><span className="text-gray-400">Landmark: </span>{store.verificationDocuments.landmark}</div>
+                    <div><span className="text-muted">Landmark: </span>{store.verificationDocuments.landmark}</div>
                   )}
                   {store.verificationDocuments.cacCertificate && (
                     <div>
@@ -178,7 +178,7 @@ const StoresAD: React.FC = () => {
                   )}
                   {store.verificationDocuments.storePhotos?.length > 0 && (
                     <div className="col-span-2">
-                      <span className="text-gray-400">Store Photos: </span>
+                      <span className="text-muted">Store Photos: </span>
                       {store.verificationDocuments.storePhotos.map((url: string, i: number) => (
                         <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-pry underline mr-2">Photo {i + 1}</a>
                       ))}
@@ -218,19 +218,19 @@ const StoresAD: React.FC = () => {
       {/* Summary tiles */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-xl p-4 border">
-          <p className="text-sm text-gray-500">Pending approval</p>
+          <p className="text-sm text-muted">Pending approval</p>
           <p className="text-2xl font-bold text-yellow-600 mt-1">{counts.pending}</p>
-          <p className="text-xs text-gray-400 mt-1">Awaiting your review</p>
+          <p className="text-xs text-muted mt-1">Awaiting your review</p>
         </div>
         <div className="bg-white rounded-xl p-4 border">
-          <p className="text-sm text-gray-500">Active stores</p>
+          <p className="text-sm text-muted">Active stores</p>
           <p className="text-2xl font-bold text-green-600 mt-1">{counts.active}</p>
-          <p className="text-xs text-gray-400 mt-1">Live on the platform</p>
+          <p className="text-xs text-muted mt-1">Live on the platform</p>
         </div>
         <div className="bg-white rounded-xl p-4 border">
-          <p className="text-sm text-gray-500">Blocked stores</p>
+          <p className="text-sm text-muted">Blocked stores</p>
           <p className="text-2xl font-bold text-red-500 mt-1">{counts.inactive}</p>
-          <p className="text-xs text-gray-400 mt-1">Currently suspended</p>
+          <p className="text-xs text-muted mt-1">Currently suspended</p>
         </div>
       </div>
 
@@ -241,7 +241,7 @@ const StoresAD: React.FC = () => {
           placeholder="Search by name, email or state..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border border-gray-200 rounded-lg px-4 py-2 text-sm w-72 focus:outline-none focus:border-pry"
+          className="border border-border rounded-lg px-4 py-2 text-sm w-72 focus:outline-none focus:border-pry"
         />
         <div className="flex gap-2">
           {(["all", "pending", "active", "inactive"] as FilterTab[]).map((f) => (
@@ -249,7 +249,7 @@ const StoresAD: React.FC = () => {
               key={f}
               onClick={() => setFilter(f)}
               className={`px-4 py-2 rounded-full text-xs border font-medium ${
-                filter === f ? "bg-pry text-white border-pry" : "text-gray-500 border-gray-200"
+                filter === f ? "bg-pry text-white border-pry" : "text-muted border-border"
               }`}
             >
               {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -266,12 +266,12 @@ const StoresAD: React.FC = () => {
       {/* Store table */}
       <div className="bg-white rounded-xl border overflow-x-auto">
         {loading ? (
-          <p className="p-8 text-center text-gray-400 text-sm">Loading stores…</p>
+          <p className="p-8 text-center text-muted text-sm">Loading stores…</p>
         ) : filtered.length === 0 ? (
-          <p className="p-8 text-center text-gray-400 text-sm">No stores found.</p>
+          <p className="p-8 text-center text-muted text-sm">No stores found.</p>
         ) : (
           <table className="w-full text-sm text-left">
-            <thead className="text-gray-400 border-b text-xs bg-gray-50">
+            <thead className="text-muted border-b text-xs bg-off-white">
               <tr>
                 <th className="py-3 px-4">Store name</th>
                 <th className="px-4">Email</th>
@@ -286,7 +286,7 @@ const StoresAD: React.FC = () => {
             </thead>
             <tbody>
               {filtered.map((s) => (
-                <tr key={s.storeId} className="border-b hover:bg-gray-50">
+                <tr key={s.storeId} className="border-b hover:bg-off-white">
                   {/* Clickable store name */}
                   <td className="py-3 px-4">
                     <button
@@ -296,15 +296,15 @@ const StoresAD: React.FC = () => {
                       {s.name}
                     </button>
                   </td>
-                  <td className="px-4 text-gray-500 text-xs">{s.email}</td>
-                  <td className="px-4 text-gray-500">{s.state || "—"}</td>
+                  <td className="px-4 text-muted text-xs">{s.email}</td>
+                  <td className="px-4 text-muted">{s.state || "—"}</td>
                   <td className="px-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_BADGE[s.status] || "bg-gray-100 text-gray-500"}`}>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_BADGE[s.status] || "bg-gray-100 text-muted"}`}>
                       {s.status}
                     </span>
                   </td>
                   <td className="px-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${s.hasCustomCommission ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-500"}`}>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${s.hasCustomCommission ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-muted"}`}>
                       {s.effectiveCommissionPercent ?? "—"}%
                     </span>
                     {s.hasCustomCommission && (
@@ -315,14 +315,14 @@ const StoresAD: React.FC = () => {
                   <td className="px-4 text-green-600 font-medium">
                     {s.revenue ? formatNaira(s.revenue) : "—"}
                   </td>
-                  <td className="px-4 text-gray-400 text-xs">
+                  <td className="px-4 text-muted text-xs">
                     {new Date(s.createdAt).toLocaleDateString("en-GB")}
                   </td>
                   <td className="px-4">
                     <div className="flex gap-2">
                       <button
                         onClick={() => setSelectedStoreId(s.storeId)}
-                        className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg font-medium"
+                        className="text-xs px-3 py-1.5 bg-gray-100 text-body rounded-lg font-medium"
                       >
                         View
                       </button>

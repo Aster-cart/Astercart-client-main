@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Aster, dashboard, logout as logoutIcon, setting, dash, log, set,
-  down, outline, storem, userm, orderm, wallet, stom, usem, ordm, walet,
+  down, storem, userm, orderm, wallet, stom, usem, ordm, walet,
 } from "../assets/res";
 import { IoNotificationsOutline } from "react-icons/io5";
 import DashboardAD from "./DashboardAD";
@@ -72,8 +72,8 @@ const AdminHeader: React.FC<{ title: string }> = ({ title }) => {
   };
 
   return (
-    <div className="flex justify-between font-inter items-center py-2 w-full h-[50px] px-4 bg-white">
-      <h1 className="text-lg font-semibold">{title}</h1>
+    <div className="flex justify-between font-inter items-center py-2 w-full h-[56px] px-4 md:px-6 bg-white border-b border-border">
+      <h1 className="text-lg font-semibold text-ink">{title}</h1>
       <div className="flex space-x-4 items-center">
         {/* Bell */}
         <button onClick={() => setShowModal((p) => !p)} className="relative bg-pry rounded-full p-2">
@@ -87,32 +87,29 @@ const AdminHeader: React.FC<{ title: string }> = ({ title }) => {
 
         {/* Dropdown */}
         {showModal && (
-          <div className="absolute top-12 right-20 z-50 bg-white shadow-lg rounded-lg p-4 w-[380px]">
+          <div className="absolute top-14 right-4 z-50 bg-white shadow-xl rounded-xl p-4 w-[380px] border border-border">
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold">Notifications</h3>
-                <p className="text-sm text-[#9EA0AA]">{allRead ? "Read" : "Unread"}</p>
+                <h3 className="text-sm font-space font-bold text-ink">Notifications</h3>
+                <p className="text-sm text-muted">{allRead ? "Read" : "Unread"}</p>
                 <img src={down} alt="" />
               </div>
-              <div className="flex items-center gap-2">
-                <p onClick={markAllAsRead} className="text-sm cursor-pointer">Mark all as read</p>
-                <img onClick={markAllAsRead} src={outline} alt="" className="cursor-pointer" />
-              </div>
+              <button onClick={markAllAsRead} className="text-xs text-pry font-medium hover:underline">Mark all as read</button>
             </div>
             {notifications.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">No notifications.</p>
+              <p className="text-sm text-muted text-center py-4">No notifications.</p>
             ) : (
               <ul className="flex flex-col gap-2 max-h-64 overflow-y-auto">
                 {notifications.map((n) => (
-                  <li key={n.id} onClick={() => markAsRead(n.id)} className={`border-b pb-2 cursor-pointer ${n.read ? "text-gray-400" : "text-black"}`}>
-                    <p className="text-sm">{n.message}</p>
-                    {!n.read && <button className="text-xs text-white bg-pry px-2 py-1 rounded mt-1">View</button>}
-                    <p className="text-xs text-gray-400 mt-1">{formatTime(n.timestamp)}</p>
+                  <li key={n.id} onClick={() => markAsRead(n.id)} className={`border-b border-border pb-2 cursor-pointer ${n.read ? "opacity-60" : ""}`}>
+                    <p className="text-sm text-body">{n.message}</p>
+                    {!n.read && <button className="text-xs text-white bg-pry hover:bg-orange-600 transition-colors px-2 py-1 rounded mt-1">View</button>}
+                    <p className="text-xs text-muted mt-1">{formatTime(n.timestamp)}</p>
                   </li>
                 ))}
               </ul>
             )}
-            <button onClick={() => setShowModal(false)} className="text-xs mt-3 text-red-500">Close</button>
+            <button onClick={() => setShowModal(false)} className="text-xs mt-3 text-pry font-medium hover:underline">Close</button>
           </div>
         )}
 
@@ -122,8 +119,8 @@ const AdminHeader: React.FC<{ title: string }> = ({ title }) => {
             {(admin?.email || "A").charAt(0).toUpperCase()}
           </div>
           <div>
-            <p className="text-sm font-semibold">{admin?.email?.split("@")[0] || "Admin"}</p>
-            <p className="text-xs text-gray-500">{admin?.email || ""}</p>
+            <p className="text-sm font-semibold text-ink">{admin?.email?.split("@")[0] || "Admin"}</p>
+            <p className="text-xs text-muted">{admin?.email || ""}</p>
           </div>
         </div>
       </div>
@@ -197,22 +194,22 @@ const AdminAD: React.FC = () => {
 
   return (
     <div className="flex h-screen font-inter">
-      <aside className="w-[70px] md:w-[250px] flex-shrink-0 bg-white p-2 md:p-4 border-r fixed h-full overflow-y-auto">
-        <div className="flex items-center border-b mb-6 pb-4 px-2 md:px-4">
-          <img src={Aster} alt="Logo" className="w-6 h-6 md:w-8 md:h-8 mr-2" />
-          <h1 className="hidden md:block text-lg font-bold text-pry">Aster<span className="text-blue">Cart</span></h1>
+      <aside className="w-[70px] md:w-[250px] flex-shrink-0 bg-ink p-2 md:p-4 fixed h-full overflow-y-auto z-20">
+        <div className="flex items-center border-b border-white/10 mb-6 pb-4 px-2 md:px-4">
+          <img src={Aster} alt="Logo" className="w-6 h-6 md:w-8 md:h-8 mr-2 brightness-0 invert" />
+          <h1 className="hidden md:block text-lg font-bold text-white">Aster<span className="text-pry">Cart</span></h1>
         </div>
         <nav>
-          <h2 className="text-xs font-medium mb-4 hidden md:block text-gray-500">Main Menu</h2>
-          <ul className="space-y-2">
+          <h2 className="text-xs font-medium mb-4 hidden md:block text-white/40 uppercase tracking-wider">Main Menu</h2>
+          <ul className="space-y-1">
             {menuItems.map((item) => (
               <li key={item.label}>
                 <button
                   onClick={() => handleMenuClick(item.label)}
-                  className={`flex items-center w-full px-2 py-2 md:px-4 rounded hover:bg-fade transition-all ${activeMenu === item.label ? "bg-fade text-black" : "text-gray-500"}`}
+                  className={`flex items-center w-full px-2 py-2.5 md:px-4 rounded-lg transition-all ${activeMenu === item.label ? "bg-pry text-white" : "text-white/60 hover:text-white hover:bg-white/10"}`}
                 >
-                  <img src={activeMenu === item.label ? item.activeIcon : item.icon} alt={item.label} className="w-4 h-4 mr-2" />
-                  <span className="hidden md:inline">
+                  <img src={activeMenu === item.label ? item.activeIcon : item.icon} alt={item.label} className="w-4 h-4 mr-2 brightness-0 invert opacity-60" />
+                  <span className="hidden md:inline text-sm font-medium">
                     {item.label === "FinancialLedger" ? "Financial Ledger" : item.label.replace("Management", " Mgmt")}
                   </span>
                 </button>
@@ -222,7 +219,7 @@ const AdminAD: React.FC = () => {
         </nav>
       </aside>
 
-      <main className="ml-[70px] md:ml-[250px] w-full h-full pb-4 overflow-y-auto">
+      <main className="ml-[70px] md:ml-[250px] w-full h-full pb-4 overflow-y-auto bg-off-white">
         <AdminHeader title={current.title} />
         <div className="flex flex-col px-5 pt-4">
           {current.content}

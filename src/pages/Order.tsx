@@ -37,7 +37,7 @@ const STATUS_COLOR: Record<string, string> = {
   out_for_delivery: "bg-purple-100 text-purple-700",
   delivered: "bg-green-100 text-green-700",
   completed: "bg-green-100 text-green-700",
-  canceled: "bg-gray-100 text-gray-500",
+  canceled: "bg-gray-100 text-muted",
   failed: "bg-red-100 text-red-600",
 };
 
@@ -106,10 +106,10 @@ const Order: React.FC = () => {
             .map((o) => (
               <div key={o._id || o.orderNo} className="bg-gray-900 rounded-xl p-4 flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs text-gray-400 mb-0.5">
+                  <p className="text-xs text-muted mb-0.5">
                     Rider waiting for order {o.orderNo ? `#${o.orderNo.slice(0, 8).toUpperCase()}` : ""} — {o.name}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted">
                     Confirm this code matches what's on the rider's screen before handing over the order.
                   </p>
                 </div>
@@ -120,7 +120,7 @@ const Order: React.FC = () => {
       )}
 
       {error && <p className="mx-2 mt-2 text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>}
-      {loading && <p className="mx-2 mt-2 text-sm text-gray-500">Loading orders...</p>}
+      {loading && <p className="mx-2 mt-2 text-sm text-muted">Loading orders...</p>}
 
       {/* Stats */}
       <div className="flex flex-col sm:flex-row w-full justify-between py-2 gap-2 mb-2">
@@ -131,8 +131,8 @@ const Order: React.FC = () => {
           { label: "Total Failed", value: mockOrderData.totalFailedOrders },
         ].map((s, i) => (
           <div key={i} className="flex flex-col justify-between p-3 border bg-white border-gray-100 rounded-lg h-[70px] flex-1 mx-1">
-            <span className="text-sm leading-4 text-gray-600">{s.label}</span>
-            <span className="font-medium text-xl leading-7 text-gray-900">{s.value}</span>
+            <span className="text-sm leading-4 text-body">{s.label}</span>
+            <span className="font-medium text-xl leading-7 text-ink">{s.value}</span>
           </div>
         ))}
       </div>
@@ -144,12 +144,12 @@ const Order: React.FC = () => {
           placeholder="Search by customer or order no..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border border-gray-200 rounded-lg px-4 py-2 text-sm w-72 focus:outline-none focus:border-pry"
+          className="border border-border rounded-lg px-4 py-2 text-sm w-72 focus:outline-none focus:border-pry"
         />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
+          className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
         >
           <option value="all">All statuses</option>
           {Object.entries(STATUS_LABEL).map(([val, label]) => (
@@ -159,7 +159,7 @@ const Order: React.FC = () => {
         <select
           value={dateFilter}
           onChange={(e) => setDateFilter(e.target.value)}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
+          className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
         >
           <option value="all">All time</option>
           <option value="today">Today</option>
@@ -176,12 +176,12 @@ const Order: React.FC = () => {
             <h2 className="text-base font-semibold">My Orders</h2>
             <span className="bg-pry rounded text-white px-2 text-xs">{mockAllOrderData.allOrder}</span>
           </div>
-          <p className="text-xs text-gray-400">{filtered.length} showing</p>
+          <p className="text-xs text-muted">{filtered.length} showing</p>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-gray-400 border-b text-xs">
+            <thead className="text-muted border-b text-xs">
               <tr>
                 <th className="py-3 px-2">Customer</th>
                 <th className="px-2">Order No</th>
@@ -202,7 +202,7 @@ const Order: React.FC = () => {
                 return (
                   <React.Fragment key={orderId || index}>
                     <tr
-                      className={`border-b hover:bg-gray-50 cursor-pointer ${isExpanded ? "bg-orange-50" : ""}`}
+                      className={`border-b hover:bg-off-white cursor-pointer ${isExpanded ? "bg-orange-50" : ""}`}
                       onClick={() => toggleRow(index)}
                     >
                       <td className="py-3 px-2 font-medium">{order.name || "—"}</td>
@@ -215,7 +215,7 @@ const Order: React.FC = () => {
                           : `₦${Number(order.subTotal || 0).toLocaleString()}`}
                       </td>
                       <td className="px-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLOR[status] || "bg-gray-100 text-gray-500"}`}>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLOR[status] || "bg-gray-100 text-muted"}`}>
                           {STATUS_LABEL[status] || status}
                         </span>
                       </td>
@@ -228,7 +228,7 @@ const Order: React.FC = () => {
                           {order.paymentStatus || "unpaid"}
                         </span>
                       </td>
-                      <td className="px-2 text-gray-400 text-xs">
+                      <td className="px-2 text-muted text-xs">
                         <div>{order.orderDate ? formatDate(order.orderDate) : "—"}</div>
                         {order.orderTime && <div className="text-gray-300">{order.orderTime}</div>}
                       </td>
@@ -245,7 +245,7 @@ const Order: React.FC = () => {
                           )}
                           <button
                             onClick={() => handleViewReceipt(order)}
-                            className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded"
+                            className="text-xs px-2 py-1 bg-gray-100 text-body rounded"
                           >
                             View
                           </button>
@@ -269,11 +269,11 @@ const Order: React.FC = () => {
                                     <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 ${
                                       isCurrent ? "bg-pry text-white border-pry" :
                                       done ? "bg-pry text-white border-pry" :
-                                      "bg-white border-gray-200 text-gray-300"
+                                      "bg-white border-border text-gray-300"
                                     }`}>
                                       {done ? "✓" : si + 1}
                                     </div>
-                                    <span className={`mt-1 text-center text-xs whitespace-nowrap ${done ? "text-pry font-medium" : "text-gray-400"}`}>
+                                    <span className={`mt-1 text-center text-xs whitespace-nowrap ${done ? "text-pry font-medium" : "text-muted"}`}>
                                       {STATUS_LABEL[step]}
                                     </span>
                                   </div>
@@ -301,7 +301,7 @@ const Order: React.FC = () => {
 
                           {/* Delivery address */}
                           {order.deliveryAddress && (
-                            <p className="mt-2 text-xs text-gray-500">
+                            <p className="mt-2 text-xs text-muted">
                               <span className="font-medium">Deliver to: </span>
                               {order.deliveryAddress.address}, {order.deliveryAddress.lga}, {order.deliveryAddress.state}
                             </p>
@@ -309,7 +309,7 @@ const Order: React.FC = () => {
 
                           {/* Items summary */}
                           {order.items && order.items.length > 0 && (
-                            <div className="mt-2 text-xs text-gray-500">
+                            <div className="mt-2 text-xs text-muted">
                               <span className="font-medium">Items: </span>
                               {order.items.map((item: any, i: number) => (
                                 <span key={i}>{item.itemName} ×{item.qty}{i < order.items.length - 1 ? ", " : ""}</span>
@@ -325,7 +325,7 @@ const Order: React.FC = () => {
             </tbody>
           </table>
           {filtered.length === 0 && !loading && (
-            <p className="text-center text-gray-400 py-8 text-sm">
+            <p className="text-center text-muted py-8 text-sm">
               {search ? "No orders match your search." : "No orders yet."}
             </p>
           )}

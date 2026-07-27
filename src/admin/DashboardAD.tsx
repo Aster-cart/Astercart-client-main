@@ -292,11 +292,11 @@ const DashboardAD = () => {
               <h2 className="font-bold text-[#667085] mb-3">Top Stores <span className="text-xs font-normal">(30 days, by revenue)</span></h2>
               <div className="border-b mb-3" />
               {analytics.topStores.length === 0 ? (
-                <p className="text-sm text-gray-400">No paid orders yet.</p>
+                <p className="text-sm text-muted">No paid orders yet.</p>
               ) : analytics.topStores.map((s, i) => (
                 <div key={s.storeId} className="flex justify-between items-center py-2 text-sm">
                   <span className="text-[#667085]">{i + 1}. {s.name}</span>
-                  <span className="font-medium">{nairaShort(s.revenue)} <span className="text-xs text-gray-400">· {s.orders} orders</span></span>
+                  <span className="font-medium">{nairaShort(s.revenue)} <span className="text-xs text-muted">· {s.orders} orders</span></span>
                 </div>
               ))}
             </div>
@@ -304,11 +304,11 @@ const DashboardAD = () => {
               <h2 className="font-bold text-[#667085] mb-3">Top Riders <span className="text-xs font-normal">(30 days, by deliveries)</span></h2>
               <div className="border-b mb-3" />
               {analytics.topRiders.length === 0 ? (
-                <p className="text-sm text-gray-400">No deliveries yet.</p>
+                <p className="text-sm text-muted">No deliveries yet.</p>
               ) : analytics.topRiders.map((r, i) => (
                 <div key={r.riderId} className="flex justify-between items-center py-2 text-sm">
                   <span className="text-[#667085]">{i + 1}. {r.name || "Rider"}</span>
-                  <span className="font-medium">{r.deliveries} deliveries {r.rating != null ? <span className="text-xs text-gray-400">· ⭐ {r.rating.toFixed(1)}</span> : null}</span>
+                  <span className="font-medium">{r.deliveries} deliveries {r.rating != null ? <span className="text-xs text-muted">· ⭐ {r.rating.toFixed(1)}</span> : null}</span>
                 </div>
               ))}
             </div>
@@ -354,7 +354,7 @@ const DashboardAD = () => {
           <h2 className="font-bold text-[#667085] mb-4">Top Sales Products</h2>
           <div className="border-b mb-4"></div>
           {topProducts.length === 0 ? (
-            <p className="text-sm text-gray-400">No order data yet.</p>
+            <p className="text-sm text-muted">No order data yet.</p>
           ) : (
             displayedProducts.map((product, index) => {
               const percentage = (product.sold / product.total) * 100;
@@ -390,7 +390,7 @@ const DashboardAD = () => {
           <h2 className="font-bold mb-4 text-[#667085]">Top Visited Stores</h2>
           <div className="border-b mb-4"></div>
           {topVisitedStores.length === 0 ? (
-            <p className="text-sm text-gray-400">No store data yet.</p>
+            <p className="text-sm text-muted">No store data yet.</p>
           ) : (
             displayedStores.map((store, index) => {
               const maxVisits = Math.max(...topVisitedStores.map((s) => s.visits), 1);
@@ -437,7 +437,7 @@ const DashboardAD = () => {
         </div>
 
         {categories.length === 0 ? (
-          <p className="text-sm text-gray-400 py-4">No category data yet.</p>
+          <p className="text-sm text-muted py-4">No category data yet.</p>
         ) : (
           <div className="border-t w-[70%] flex p-4">
             <div className="w-full justify-around flex px-10">
@@ -466,7 +466,7 @@ const DashboardAD = () => {
                 })}
                 <div className="absolute inset-12 bg-white rounded-full flex items-center justify-center">
                   <div>
-                    <p className="text-gray-500 text-sm">Total</p>
+                    <p className="text-muted text-sm">Total</p>
                     <p className="text-black text-2xl font-bold">{formatNumber(totalSales)}</p>
                   </div>
                 </div>

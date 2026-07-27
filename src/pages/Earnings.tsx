@@ -38,9 +38,9 @@ const Earnings: React.FC = () => {
 
       {/* Your actual rate */}
       {feeInfo && (
-        <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-6">
-          <h3 className="font-semibold text-purple-800 mb-1">Your current rate</h3>
-          <p className="text-sm text-purple-700">
+        <div className="bg-pry-light border border-pry-mid rounded-xl p-4 mb-6">
+          <h3 className="font-semibold text-pry mb-1">Your current rate</h3>
+          <p className="text-sm text-pry">
             Astercart takes <strong>{feeInfo.effectiveCommissionPercent}%</strong> commission on your product subtotal
             {feeInfo.hasCustomCommission ? " (your custom agreed rate)" : " (platform standard rate)"}.
             Delivery fee for your orders is <strong>₦{feeInfo.effectiveDeliveryFee}</strong>
@@ -66,7 +66,7 @@ const Earnings: React.FC = () => {
         <h2 className="font-semibold mb-4">Earnings history</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-gray-400 border-b text-xs">
+            <thead className="text-muted border-b text-xs">
               <tr>
                 <th className="py-3 px-2">Order</th>
                 <th className="px-2">Customer</th>
@@ -80,13 +80,13 @@ const Earnings: React.FC = () => {
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-8 text-gray-400">
+                  <td colSpan={7} className="text-center py-8 text-muted">
                     No orders yet.
                   </td>
                 </tr>
               ) : (
                 rows.map((row) => (
-                  <tr key={row.id} className="border-b hover:bg-gray-50">
+                  <tr key={row.id} className="border-b hover:bg-off-white">
                     <td className="py-3 px-2 font-mono text-xs">{row.orderNo}</td>
                     <td className="px-2">{row.user}</td>
                     {/* Every figure below is read directly from what the

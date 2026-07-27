@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { lashes, settingbg } from "../assets/res";
+import { lashes } from "../assets/res";
 import { FaEye } from "react-icons/fa";
 import { useSetting } from "../hooks/useSetting";
 import { NotificationPreferences } from "../types/setting.types";
@@ -62,12 +62,8 @@ const Setting: React.FC = () => {
 
   return (
     <div className="font-inter">
-      <div className="relative">
-        <img src={settingbg} alt="Background" className="w-full" />
-      </div>
-
       {/* Steps Navigation */}
-      <div className="flex gap-10 ustify-between pb-4 mx-10 mt-16 ">
+      <div className="flex gap-10 border-b border-border pb-4 mx-6 mt-2">
         <button
           onClick={() => handleStepChange("business")}
           className={`relative text-base  pb-2 ${
@@ -78,7 +74,7 @@ const Setting: React.FC = () => {
           {activeStep === "business" ? (
             <span className="absolute bottom-0 mt-2 left-0 w-full h-1 bg-pry"></span>
           ) : (
-            <span className="absolute bottom-0 mt-2 left-0 w-full h-1 bg-white"></span>
+            <span className="absolute bottom-0 mt-2 left-0 w-full h-1 bg-transparent"></span>
           )}
         </button>
         <button
@@ -91,7 +87,7 @@ const Setting: React.FC = () => {
           {activeStep === "notification" ? (
             <span className="absolute bottom-0 mt-2 left-0 w-full h-1 bg-pry"></span>
           ) : (
-            <span className="absolute bottom-0 mt-2 left-0 w-full h-1 bg-white"></span>
+            <span className="absolute bottom-0 mt-2 left-0 w-full h-1 bg-transparent"></span>
           )}
         </button>
         {/* <button
@@ -400,7 +396,7 @@ const Setting: React.FC = () => {
                       <button
                         type="button"
                         onClick={handleEdit}
-                        className="px-4 py-2 bg-pry hover:bg-orange-600 text-white rounded-md shadow-sm"
+                        className="px-4 py-2 bg-pry hover:bg-pry text-white rounded-md shadow-sm"
                       >
                         Edit Profile
                       </button>
@@ -507,7 +503,7 @@ const Setting: React.FC = () => {
                         <button
                           type="button"
                           onClick={togglePasswordVisibility}
-                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-600"
+                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-body"
                         >
                           {passwordVisible ? (
                             <FaEye size={20} />
@@ -548,7 +544,7 @@ const Setting: React.FC = () => {
                           <button
                             type="button"
                             onClick={toggleNewPasswordVisibility}
-                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-600"
+                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-body"
                           >
                             {newPasswordVisible ? (
                               <FaEye size={20} />
@@ -588,7 +584,7 @@ const Setting: React.FC = () => {
                           <button
                             type="button"
                             onClick={toggleConfirmPasswordVisible}
-                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-600"
+                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-body"
                           >
                             {confirmPasswordVisible ? (
                               <FaEye size={20} />
@@ -615,7 +611,7 @@ const Setting: React.FC = () => {
                   <button
                     type="button"
                     onClick={toggleEditPassword}
-                    className="px-4 py-2 bg-pry hover:bg-orange-600 text-white rounded-md shadow-sm"
+                    className="px-4 py-2 bg-pry hover:bg-pry text-white rounded-md shadow-sm"
                   >
                     Change Password
                   </button>
@@ -669,7 +665,7 @@ const Setting: React.FC = () => {
               { notificationIsModified && <button
                 type="button"
                 onClick={updateNotifications}
-                className="px-4 py-2 bg-pry hover:bg-orange-600 text-white rounded-md shadow-sm"
+                className="px-4 py-2 bg-pry hover:bg-pry text-white rounded-md shadow-sm"
               >
                 {loading?"Saving...":"Save"}
               </button>}
@@ -683,7 +679,7 @@ const Setting: React.FC = () => {
                   onClick={toggleTransactionEmail}
                   className={`flex items-center justify-center w-4 h-4 rounded-full border-2 transition-all duration-300 focus:outline-none ${
                     isTransactionEmailChecked
-                      ? "bg-orange-500 border-orange-500"
+                      ? "bg-pry border-orange-500"
                       : "bg-white border-gray-400"
                   }`}
                   aria-pressed={isTransactionEmailChecked} // For accessibility
@@ -704,7 +700,7 @@ const Setting: React.FC = () => {
                   onClick={toggleCustomerReceipt}
                   className={`flex items-center justify-center w-4 h-4 rounded-full border-2 transition-all duration-300 focus:outline-none ${
                     isCustomerReceiptChecked
-                      ? "bg-orange-500 border-orange-500"
+                      ? "bg-pry border-orange-500"
                       : "bg-white border-gray-400"
                   }`}
                   aria-pressed={isCustomerReceiptChecked} // For accessibility
@@ -729,7 +725,7 @@ const Setting: React.FC = () => {
                 <button
                   className={`flex items-center justify-center w-4 h-4 rounded-full border-2 transition-all duration-300 focus:outline-none ${
                     isCashierNotificationChecked
-                      ? "bg-orange-500 border-orange-500"
+                      ? "bg-pry border-orange-500"
                       : "bg-white border-gray-400"
                   }`}
                   aria-pressed={isCashierNotificationChecked} // For accessibility
@@ -754,7 +750,7 @@ const Setting: React.FC = () => {
                 <button
                   className={`flex items-center justify-center w-4 h-4 rounded-full border-2 transition-all duration-300 focus:outline-none ${
                     notificationPreferences[key as keyof NotificationPreferences]
-                      ? "bg-orange-500 border-orange-500"
+                      ? "bg-pry border-orange-500"
                       : "bg-white border-gray-400"
                   }`}
                   aria-pressed={isCashierNotificationChecked} // For accessibility
@@ -779,8 +775,8 @@ const Setting: React.FC = () => {
           //   />
           //   <div>
               
-          //     <label className="font-semibold text-gray-800">{label}</label>
-          //     <p className="text-gray-600 text-sm">{description}</p>
+          //     <label className="font-semibold text-ink">{label}</label>
+          //     <p className="text-body text-sm">{description}</p>
           //   </div>
           // </div>
         ))}

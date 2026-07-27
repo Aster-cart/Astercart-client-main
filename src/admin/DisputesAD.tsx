@@ -19,7 +19,7 @@ const STATUS_COLOR = {
   open: "bg-red-100 text-red-600",
   under_review: "bg-yellow-100 text-yellow-700",
   resolved: "bg-green-100 text-green-700",
-  rejected: "bg-gray-100 text-gray-500",
+  rejected: "bg-gray-100 text-muted",
 };
 
 const DisputesAD: React.FC = () => {
@@ -56,27 +56,27 @@ const DisputesAD: React.FC = () => {
     resolved: disputes.filter(d => d.status === "resolved").length,
   };
 
-  if (loading) return <p className="p-4 text-gray-500">Loading disputes...</p>;
+  if (loading) return <p className="p-4 text-muted">Loading disputes...</p>;
 
   if (selected) {
     return (
       <div className="font-inter">
-        <button onClick={() => setSelected(null)} className="text-sm text-gray-500 mb-4">← Back</button>
+        <button onClick={() => setSelected(null)} className="text-sm text-muted mb-4">← Back</button>
         <div className="bg-white rounded-xl p-6 border mb-4">
           <div className="flex justify-between items-start mb-4">
             <div>
               <h2 className="text-lg font-bold">{selected.issueType}</h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted">
                 {selected.customerName} · {selected.storeName} · Order #{selected.orderId?.slice(-8).toUpperCase()}
               </p>
-              <p className="text-xs text-gray-400">{new Date(selected.createdAt).toLocaleDateString("en-GB")}</p>
+              <p className="text-xs text-muted">{new Date(selected.createdAt).toLocaleDateString("en-GB")}</p>
             </div>
             <span className={`px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLOR[selected.status]}`}>
               {selected.status.replace("_", " ")}
             </span>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4 mb-4">
-            <p className="text-sm text-gray-700">{selected.description}</p>
+          <div className="bg-off-white rounded-lg p-4 mb-4">
+            <p className="text-sm text-body">{selected.description}</p>
           </div>
           {selected.adminNote && (
             <div className="bg-blue-50 rounded-lg p-4 mb-4">
@@ -85,11 +85,11 @@ const DisputesAD: React.FC = () => {
             </div>
           )}
           <div className="mb-4">
-            <label className="text-xs text-gray-500 font-medium block mb-1">Admin note (optional)</label>
+            <label className="text-xs text-muted font-medium block mb-1">Admin note (optional)</label>
             <textarea
               value={adminNote}
               onChange={(e) => setAdminNote(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:border-pry"
+              className="w-full border border-border rounded-lg p-3 text-sm focus:outline-none focus:border-pry"
               rows={3}
               placeholder="Add a note visible to the customer..."
             />
@@ -104,7 +104,7 @@ const DisputesAD: React.FC = () => {
               Mark resolved
             </button>
             <button onClick={() => updateStatus(selected._id, "rejected")} disabled={updating}
-              className="px-4 py-2 text-sm bg-gray-100 text-gray-600 rounded-lg font-medium">
+              className="px-4 py-2 text-sm bg-gray-100 text-body rounded-lg font-medium">
               Reject dispute
             </button>
           </div>
@@ -122,7 +122,7 @@ const DisputesAD: React.FC = () => {
           { label: "Resolved", value: stats.resolved, color: "text-green-600" },
         ].map((s, i) => (
           <div key={i} className="bg-white rounded-xl p-4 border">
-            <p className="text-sm text-gray-500">{s.label}</p>
+            <p className="text-sm text-muted">{s.label}</p>
             <p className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value}</p>
           </div>
         ))}
@@ -131,12 +131,12 @@ const DisputesAD: React.FC = () => {
       <div className="bg-white rounded-xl border overflow-x-auto">
         {disputes.length === 0 ? (
           <div className="p-8 text-center">
-            <p className="text-gray-400">No disputes raised yet.</p>
-            <p className="text-xs text-gray-400 mt-2">Disputes submitted through the customer support form will appear here.</p>
+            <p className="text-muted">No disputes raised yet.</p>
+            <p className="text-xs text-muted mt-2">Disputes submitted through the customer support form will appear here.</p>
           </div>
         ) : (
           <table className="w-full text-sm text-left">
-            <thead className="text-gray-400 border-b text-xs">
+            <thead className="text-muted border-b text-xs">
               <tr>
                 <th className="py-3 px-4">Customer</th>
                 <th className="px-4">Store</th>
@@ -148,21 +148,21 @@ const DisputesAD: React.FC = () => {
             </thead>
             <tbody>
               {disputes.map((d) => (
-                <tr key={d._id} className="border-b hover:bg-gray-50">
+                <tr key={d._id} className="border-b hover:bg-off-white">
                   <td className="py-3 px-4 font-medium">{d.customerName}</td>
-                  <td className="px-4 text-gray-500">{d.storeName || "—"}</td>
+                  <td className="px-4 text-muted">{d.storeName || "—"}</td>
                   <td className="px-4">{d.issueType}</td>
                   <td className="px-4">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLOR[d.status]}`}>
                       {d.status.replace("_", " ")}
                     </span>
                   </td>
-                  <td className="px-4 text-gray-400 text-xs">
+                  <td className="px-4 text-muted text-xs">
                     {new Date(d.createdAt).toLocaleDateString("en-GB")}
                   </td>
                   <td className="px-4">
                     <button onClick={() => { setSelected(d); setAdminNote(d.adminNote || ""); }}
-                      className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg">
+                      className="text-xs px-3 py-1.5 bg-gray-100 text-body rounded-lg">
                       Review
                     </button>
                   </td>

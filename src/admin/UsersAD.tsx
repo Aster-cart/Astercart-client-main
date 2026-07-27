@@ -89,7 +89,7 @@ const UsersAD: React.FC = () => {
   const active = customers.filter((c) => c.customerStatus !== "rejected").length;
   const blocked = customers.filter((c) => c.customerStatus === "rejected").length;
 
-  if (loading) return <p className="p-4 text-gray-500">Loading customers...</p>;
+  if (loading) return <p className="p-4 text-muted">Loading customers...</p>;
 
   // Customer detail view
   if (view === "detail" && selectedCustomer) {
@@ -99,7 +99,7 @@ const UsersAD: React.FC = () => {
       <div className="font-inter">
         <button
           onClick={() => setView("list")}
-          className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 mb-4"
+          className="flex items-center gap-2 text-sm text-muted hover:text-ink mb-4"
         >
           ← Back to customers
         </button>
@@ -116,9 +116,9 @@ const UsersAD: React.FC = () => {
                 {isBlocked ? "Blocked" : "Active"}
               </span>
             </div>
-            <p className="text-sm text-gray-500">{selectedCustomer.email}</p>
-            {selectedCustomer.phoneNumber && <p className="text-sm text-gray-400">{selectedCustomer.phoneNumber}</p>}
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-sm text-muted">{selectedCustomer.email}</p>
+            {selectedCustomer.phoneNumber && <p className="text-sm text-muted">{selectedCustomer.phoneNumber}</p>}
+            <p className="text-xs text-muted mt-1">
               Joined {selectedCustomer.createdAt ? new Date(selectedCustomer.createdAt).toLocaleDateString("en-GB") : "—"}
             </p>
             <div className="flex gap-2 mt-3">
@@ -138,12 +138,12 @@ const UsersAD: React.FC = () => {
             <h3 className="font-semibold">Order history ({customerOrders.length})</h3>
           </div>
           {loadingOrders ? (
-            <p className="p-4 text-gray-400 text-sm">Loading orders...</p>
+            <p className="p-4 text-muted text-sm">Loading orders...</p>
           ) : customerOrders.length === 0 ? (
-            <p className="p-4 text-gray-400 text-sm">No orders yet.</p>
+            <p className="p-4 text-muted text-sm">No orders yet.</p>
           ) : (
             <table className="w-full text-sm text-left">
-              <thead className="text-gray-400 border-b text-xs">
+              <thead className="text-muted border-b text-xs">
                 <tr>
                   <th className="py-3 px-4">Order ID</th>
                   <th className="px-4">Store</th>
@@ -155,7 +155,7 @@ const UsersAD: React.FC = () => {
               </thead>
               <tbody>
                 {customerOrders.map((o) => (
-                  <tr key={o._id} className="border-b hover:bg-gray-50">
+                  <tr key={o._id} className="border-b hover:bg-off-white">
                     <td className="py-3 px-4 font-mono text-xs">#{o._id.slice(-8).toUpperCase()}</td>
                     <td className="px-4">{o.storeName || "—"}</td>
                     <td className="px-4 font-medium">₦{o.totalAmount?.toLocaleString()}</td>
@@ -169,7 +169,7 @@ const UsersAD: React.FC = () => {
                         {o.paymentStatus}
                       </span>
                     </td>
-                    <td className="px-4 text-gray-400 text-xs">
+                    <td className="px-4 text-muted text-xs">
                       {new Date(o.createdAt).toLocaleDateString("en-GB")}
                     </td>
                   </tr>
@@ -192,7 +192,7 @@ const UsersAD: React.FC = () => {
           { label: "Blocked", value: blocked, color: "text-red-500" },
         ].map((s, i) => (
           <div key={i} className="bg-white rounded-xl p-4 border">
-            <p className="text-sm text-gray-500">{s.label}</p>
+            <p className="text-sm text-muted">{s.label}</p>
             <p className={`text-2xl font-bold mt-1 ${(s as any).color || ""}`}>{s.value}</p>
           </div>
         ))}
@@ -205,16 +205,16 @@ const UsersAD: React.FC = () => {
           placeholder="Search by name or email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border border-gray-200 rounded-lg px-4 py-2 text-sm w-72 focus:outline-none focus:border-pry"
+          className="border border-border rounded-lg px-4 py-2 text-sm w-72 focus:outline-none focus:border-pry"
         />
       </div>
 
       <div className="bg-white rounded-xl border overflow-x-auto">
         {filtered.length === 0 ? (
-          <p className="p-8 text-center text-gray-400 text-sm">No customers found.</p>
+          <p className="p-8 text-center text-muted text-sm">No customers found.</p>
         ) : (
           <table className="w-full text-sm text-left">
-            <thead className="text-gray-400 border-b text-xs">
+            <thead className="text-muted border-b text-xs">
               <tr>
                 <th className="py-3 px-4">Name</th>
                 <th className="px-4">Email</th>
@@ -228,22 +228,22 @@ const UsersAD: React.FC = () => {
                 const id = c._id || c.id || "";
                 const isBlocked = c.customerStatus === "rejected";
                 return (
-                  <tr key={id} className="border-b hover:bg-gray-50">
+                  <tr key={id} className="border-b hover:bg-off-white">
                     <td className="py-3 px-4 font-medium">{c.name || "—"}</td>
-                    <td className="px-4 text-gray-500">{c.email}</td>
+                    <td className="px-4 text-muted">{c.email}</td>
                     <td className="px-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${isBlocked ? "bg-red-100 text-red-600" : "bg-green-100 text-green-700"}`}>
                         {isBlocked ? "Blocked" : "Active"}
                       </span>
                     </td>
-                    <td className="px-4 text-gray-400 text-xs">
+                    <td className="px-4 text-muted text-xs">
                       {c.createdAt ? new Date(c.createdAt).toLocaleDateString("en-GB") : "—"}
                     </td>
                     <td className="px-4">
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleViewCustomer(c)}
-                          className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg font-medium"
+                          className="text-xs px-3 py-1.5 bg-gray-100 text-body rounded-lg font-medium"
                         >
                           View
                         </button>

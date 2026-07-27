@@ -183,7 +183,7 @@ const Inventory: React.FC<InventoryProps> = ({ onNavigate: _onNavigate }) => {
           { label: "Out of stock", value: outOfStock },
         ].map((s, i) => (
           <div key={i} className="bg-white rounded-xl p-4 border">
-            <p className="text-sm text-gray-500">{s.label}</p>
+            <p className="text-sm text-muted">{s.label}</p>
             <p className="text-2xl font-bold mt-1">{formatWithCommas(s.value)}</p>
           </div>
         ))}
@@ -200,7 +200,7 @@ const Inventory: React.FC<InventoryProps> = ({ onNavigate: _onNavigate }) => {
                 className={`text-xs px-3 py-1.5 rounded-full border ${
                   selectedFilter === f
                     ? "bg-pry text-white border-pry"
-                    : "text-gray-500 border-gray-200"
+                    : "text-muted border-border"
                 }`}
               >
                 {f}
@@ -210,7 +210,7 @@ const Inventory: React.FC<InventoryProps> = ({ onNavigate: _onNavigate }) => {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 focus:outline-none focus:border-pry ml-1"
+                className="text-xs px-3 py-1.5 rounded-full border border-border text-body focus:outline-none focus:border-pry ml-1"
               >
                 <option value="All Categories">All Categories</option>
                 {availableCategories.map((c) => (
@@ -236,7 +236,7 @@ const Inventory: React.FC<InventoryProps> = ({ onNavigate: _onNavigate }) => {
         </div>
 
         {/* Search */}
-        <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 w-64 mb-4">
+        <div className="flex items-center gap-2 border border-border rounded-lg px-3 py-2 w-64 mb-4">
           <img src={search} alt="" className="w-4 h-4" />
           <input
             type="text"
@@ -250,7 +250,7 @@ const Inventory: React.FC<InventoryProps> = ({ onNavigate: _onNavigate }) => {
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
-            <thead className="text-gray-400 border-b">
+            <thead className="text-muted border-b">
               <tr>
                 <th className="py-3 pr-4">Product</th>
                 <th className="pr-4">Category</th>
@@ -264,7 +264,7 @@ const Inventory: React.FC<InventoryProps> = ({ onNavigate: _onNavigate }) => {
             <tbody>
               {filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-8 text-gray-400">
+                  <td colSpan={7} className="text-center py-8 text-muted">
                     No products yet. Add one manually or import a CSV/Excel file.
                   </td>
                 </tr>
@@ -280,7 +280,7 @@ const Inventory: React.FC<InventoryProps> = ({ onNavigate: _onNavigate }) => {
                       ? "text-yellow-600 bg-yellow-50"
                       : "text-green-600 bg-green-50";
                   return (
-                    <tr key={item._id || index} className="border-b hover:bg-gray-50">
+                    <tr key={item._id || index} className="border-b hover:bg-off-white">
                       <td className="py-3 pr-4">
                         <div className="flex items-center gap-2">
                           {(() => {
@@ -288,13 +288,13 @@ const Inventory: React.FC<InventoryProps> = ({ onNavigate: _onNavigate }) => {
                             return imgs[0] ? (
                               <img src={imgs[0]} alt="" className="w-8 h-8 rounded object-cover" />
                             ) : (
-                              <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-gray-400 text-xs">No img</div>
+                              <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-muted text-xs">No img</div>
                             );
                           })()}
                           <span className="font-medium">{item.name || (item as any).productName}</span>
                         </div>
                       </td>
-                      <td className="pr-4 text-gray-500">{item.category}</td>
+                      <td className="pr-4 text-muted">{item.category}</td>
                       <td className="pr-4 font-medium">
                         {/* Stores see ONLY their own raw price — never the
                             platform's marked-up customer-facing price. The
@@ -303,7 +303,7 @@ const Inventory: React.FC<InventoryProps> = ({ onNavigate: _onNavigate }) => {
                         ₦{formatWithCommas(item.price ?? 0)}
                       </td>
                       <td className="pr-4">{formatWithCommas(qty)}</td>
-                      <td className="pr-4 text-gray-500">{item.discount || 0}%</td>
+                      <td className="pr-4 text-muted">{item.discount || 0}%</td>
                       <td className="pr-4">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor}`}>
                           {status}
@@ -324,7 +324,7 @@ const Inventory: React.FC<InventoryProps> = ({ onNavigate: _onNavigate }) => {
                           >
                             <button
                               onClick={() => handleEdit(item)}
-                              className="flex items-center gap-2 w-full px-4 py-2 text-xs hover:bg-gray-50"
+                              className="flex items-center gap-2 w-full px-4 py-2 text-xs hover:bg-off-white"
                             >
                               <img src={edit} alt="" className="w-3" />
                               Edit
@@ -361,12 +361,12 @@ const Inventory: React.FC<InventoryProps> = ({ onNavigate: _onNavigate }) => {
                   {vs === "pending_review" ? "⏳" : "⚠️"}
                 </span>
               </div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">{msg.title}</h2>
-              <p className="text-sm text-gray-500 leading-relaxed mb-6">{msg.body}</p>
+              <h2 className="text-lg font-semibold text-ink mb-2">{msg.title}</h2>
+              <p className="text-sm text-muted leading-relaxed mb-6">{msg.body}</p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowVerifBlock(false)}
-                  className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-500 font-medium"
+                  className="flex-1 px-4 py-2.5 border border-border rounded-xl text-sm text-muted font-medium"
                 >
                   Close
                 </button>

@@ -85,18 +85,18 @@ const PayoutsAD: React.FC = () => {
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-xl p-4 border">
-          <p className="text-sm text-gray-500">Pending payouts</p>
+          <p className="text-sm text-muted">Pending payouts</p>
           <p className="text-2xl font-bold text-yellow-600 mt-1">{formatNaira(totalDue)}</p>
-          <p className="text-xs text-gray-400 mt-1">Owed to stores</p>
+          <p className="text-xs text-muted mt-1">Owed to stores</p>
         </div>
         <div className="bg-white rounded-xl p-4 border">
-          <p className="text-sm text-gray-500">Total paid out</p>
+          <p className="text-sm text-muted">Total paid out</p>
           <p className="text-2xl font-bold text-green-600 mt-1">{formatNaira(totalPaid)}</p>
         </div>
         <div className="bg-white rounded-xl p-4 border">
-          <p className="text-sm text-gray-500">Platform earnings</p>
+          <p className="text-sm text-muted">Platform earnings</p>
           <p className="text-2xl font-bold text-pry mt-1">{formatNaira(totalPlatformEarned)}</p>
-          <p className="text-xs text-gray-400 mt-1">Commission only — excludes delivery and service fee</p>
+          <p className="text-xs text-muted mt-1">Commission only — excludes delivery and service fee</p>
         </div>
       </div>
 
@@ -105,21 +105,21 @@ const PayoutsAD: React.FC = () => {
         <div className="flex gap-2">
           {(["all", "pending", "paid"] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-full text-xs font-medium border ${filter === f ? "bg-pry text-white border-pry" : "text-gray-500 border-gray-200"}`}>
+              className={`px-4 py-2 rounded-full text-xs font-medium border ${filter === f ? "bg-pry text-white border-pry" : "text-muted border-border"}`}>
               {f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
           ))}
         </div>
-        <button onClick={exportCSV} className="ml-auto text-sm px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium">
+        <button onClick={exportCSV} className="ml-auto text-sm px-4 py-2 bg-gray-100 text-body rounded-lg font-medium">
           📥 Export CSV
         </button>
       </div>
 
       {/* Table */}
       <div className="bg-white rounded-xl border overflow-x-auto">
-        {loading ? <p className="p-8 text-center text-gray-400">Loading…</p> : (
+        {loading ? <p className="p-8 text-center text-muted">Loading…</p> : (
           <table className="w-full text-sm text-left">
-            <thead className="text-gray-400 border-b text-xs bg-gray-50">
+            <thead className="text-muted border-b text-xs bg-off-white">
               <tr>
                 <th className="py-3 px-4">Store</th>
                 <th className="px-4">Order amount</th>
@@ -132,17 +132,17 @@ const PayoutsAD: React.FC = () => {
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-8 text-gray-400">No payouts found.</td></tr>
+                <tr><td colSpan={7} className="text-center py-8 text-muted">No payouts found.</td></tr>
               ) : filtered.map(r => (
-                <tr key={r._id} className="border-b hover:bg-gray-50">
+                <tr key={r._id} className="border-b hover:bg-off-white">
                   <td className="py-3 px-4">
                     <p className="font-medium">{r.store?.name || "—"}</p>
-                    <p className="text-xs text-gray-400">{r.storeEmail || ""}</p>
+                    <p className="text-xs text-muted">{r.storeEmail || ""}</p>
                   </td>
                   <td className="px-4">{formatNaira(r.amount)}</td>
                   <td className="px-4 text-green-600 font-medium">{formatNaira(r.storePayout)}</td>
-                  <td className="px-4 text-orange-500">{formatNaira(r.adminFee)}</td>
-                  <td className="px-4 text-gray-400 text-xs">{new Date(r.createdAt).toLocaleDateString("en-GB")}</td>
+                  <td className="px-4 text-pry">{formatNaira(r.adminFee)}</td>
+                  <td className="px-4 text-muted text-xs">{new Date(r.createdAt).toLocaleDateString("en-GB")}</td>
                   <td className="px-4">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${r.payoutStatus === "paid_out" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
                       {r.payoutStatus === "paid_out" ? "Paid out" : "Pending"}

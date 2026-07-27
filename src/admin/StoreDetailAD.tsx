@@ -133,17 +133,17 @@ const PerStoreFeeOverride: React.FC<{ storeId: string; storeName: string }> = ({
   return (
     <div className="bg-white rounded-xl p-5 border">
       <h3 className="font-semibold mb-1">Custom fee override for this store</h3>
-      <p className="text-xs text-gray-400 mb-2">
+      <p className="text-xs text-muted mb-2">
         Leave blank to use global platform defaults. Set a value to override for this store only.
       </p>
       {!loading && (
         <p className="text-xs font-medium mb-4">
-          <span className={commission !== "" ? "text-purple-600" : "text-gray-500"}>
+          <span className={commission !== "" ? "text-purple-600" : "text-muted"}>
             Currently paying: {effectiveCommission ?? "—"}% commission
             {commission === "" && " (platform default)"}
           </span>
           {" · "}
-          <span className={deliveryFee !== "" ? "text-purple-600" : "text-gray-500"}>
+          <span className={deliveryFee !== "" ? "text-purple-600" : "text-muted"}>
             ₦{effectiveDelivery ?? "—"} delivery fee
             {deliveryFee === "" && " (platform default)"}
           </span>
@@ -151,27 +151,27 @@ const PerStoreFeeOverride: React.FC<{ storeId: string; storeName: string }> = ({
       )}
       <div className="flex gap-4 items-end flex-wrap">
         <div>
-          <label className="text-xs text-gray-500 font-medium block mb-1">Platform commission (%)</label>
-          <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+          <label className="text-xs text-muted font-medium block mb-1">Platform commission (%)</label>
+          <div className="flex items-center border border-border rounded-lg overflow-hidden">
             <input
               type="number" min={0} max={100} placeholder="e.g. 8"
               value={commission}
               onChange={(e) => setCommission(e.target.value === "" ? "" : Number(e.target.value))}
               className="px-3 py-2 text-sm focus:outline-none w-28"
             />
-            <span className="px-3 py-2 bg-gray-50 text-gray-500 text-sm border-l">%</span>
+            <span className="px-3 py-2 bg-off-white text-muted text-sm border-l">%</span>
           </div>
         </div>
         <div>
-          <label className="text-xs text-gray-500 font-medium block mb-1">Delivery fee (₦)</label>
-          <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+          <label className="text-xs text-muted font-medium block mb-1">Delivery fee (₦)</label>
+          <div className="flex items-center border border-border rounded-lg overflow-hidden">
             <input
               type="number" min={0} placeholder="e.g. 500"
               value={deliveryFee}
               onChange={(e) => setDeliveryFee(e.target.value === "" ? "" : Number(e.target.value))}
               className="px-3 py-2 text-sm focus:outline-none w-28"
             />
-            <span className="px-3 py-2 bg-gray-50 text-gray-500 text-sm border-l">₦</span>
+            <span className="px-3 py-2 bg-off-white text-muted text-sm border-l">₦</span>
           </div>
         </div>
         <button
@@ -269,7 +269,7 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
     })();
   }, [tab, storeId]);
 
-  if (loading) return <p className="p-8 text-gray-500">Loading store…</p>;
+  if (loading) return <p className="p-8 text-muted">Loading store…</p>;
   if (!detail) return <p className="p-8 text-red-500">Store not found.</p>;
 
   const { store, stats } = detail;
@@ -285,7 +285,7 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
       {/* Back */}
       <button
         onClick={onBack}
-        className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 mb-4"
+        className="flex items-center gap-2 text-sm text-muted hover:text-ink mb-4"
       >
         ← Back to stores
       </button>
@@ -306,21 +306,21 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
               {store.status}
             </span>
           </div>
-          <p className="text-sm text-gray-500">{store.email}</p>
+          <p className="text-sm text-muted">{store.email}</p>
           {store.storeDetails?.address && (
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-muted mt-1">
               {store.storeDetails.address}, {store.storeDetails.lga}, {store.storeDetails.state}
             </p>
           )}
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-muted mt-1">
             Joined {new Date(store.createdAt).toLocaleDateString("en-GB")}
           </p>
           {/* Verification documents */}
-          <div className="mt-3 w-full bg-gray-50 rounded-lg p-3 text-left">
-            <p className="text-xs font-semibold text-gray-500 mb-2">Verification documents</p>
+          <div className="mt-3 w-full bg-off-white rounded-lg p-3 text-left">
+            <p className="text-xs font-semibold text-muted mb-2">Verification documents</p>
             <div className="flex gap-4 text-sm">
               <div>
-                <p className="text-xs text-gray-400">CAC Number</p>
+                <p className="text-xs text-muted">CAC Number</p>
                 {store.cacNumber ? (
                   <p className="font-medium text-green-600">✓ {store.cacNumber}</p>
                 ) : (
@@ -328,7 +328,7 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
                 )}
               </div>
               <div>
-                <p className="text-xs text-gray-400">Business Phone</p>
+                <p className="text-xs text-muted">Business Phone</p>
                 <p className="font-medium">{store.phoneNumber || store.supportingPhone || "—"}</p>
               </div>
             </div>
@@ -349,7 +349,7 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
           { label: "Low stock", value: stats.lowStock, color: "text-yellow-600" },
         ].map((s, i) => (
           <div key={i} className="bg-white rounded-xl p-4 border">
-            <p className="text-xs text-gray-500 mb-1">{s.label}</p>
+            <p className="text-xs text-muted mb-1">{s.label}</p>
             <p className={`text-lg font-bold ${(s as { color?: string }).color || ""}`}>
               {s.value}
             </p>
@@ -364,7 +364,7 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
             key={t}
             onClick={() => setTab(t)}
             className={`px-4 py-2 rounded-full text-sm font-medium border ${
-              tab === t ? "bg-pry text-white border-pry" : "text-gray-500 border-gray-200"
+              tab === t ? "bg-pry text-white border-pry" : "text-muted border-border"
             }`}
           >
             {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -384,24 +384,24 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
                 independently recalculated. */}
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Product subtotal (store's sales)</span>
+                <span className="text-muted">Product subtotal (store's sales)</span>
                 <span className="font-medium">{formatNaira(stats.totalRevenue)}</span>
               </div>
-              <div className="flex justify-between text-sm pl-4 border-l-2 border-gray-200">
-                <span className="text-gray-500">→ Store payout</span>
+              <div className="flex justify-between text-sm pl-4 border-l-2 border-border">
+                <span className="text-muted">→ Store payout</span>
                 <span className="font-medium text-green-600">{formatNaira(stats.totalStorePayout)}</span>
               </div>
-              <div className="flex justify-between text-sm pl-4 border-l-2 border-gray-200">
-                <span className="text-gray-500">→ Platform commission</span>
+              <div className="flex justify-between text-sm pl-4 border-l-2 border-border">
+                <span className="text-muted">→ Platform commission</span>
                 <span className="font-medium text-purple-600">{formatNaira(stats.platformFee)}</span>
               </div>
               <div className="flex justify-between text-sm border-t pt-3">
-                <span className="text-gray-500">Delivery fees collected (not store money)</span>
+                <span className="text-muted">Delivery fees collected (not store money)</span>
                 <span className="font-medium text-blue-600">{formatNaira(stats.totalDeliveryFee)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Service fees collected (platform keeps entirely)</span>
-                <span className="font-medium text-orange-600">{formatNaira(stats.totalServiceFee)}</span>
+                <span className="text-muted">Service fees collected (platform keeps entirely)</span>
+                <span className="font-medium text-pry">{formatNaira(stats.totalServiceFee)}</span>
               </div>
             </div>
           </div>
@@ -412,12 +412,12 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
       {tab === "products" && (
         <div className="bg-white rounded-xl border overflow-x-auto">
           {loadingProducts ? (
-            <p className="p-6 text-gray-500">Loading products…</p>
+            <p className="p-6 text-muted">Loading products…</p>
           ) : products.length === 0 ? (
-            <p className="p-6 text-gray-400">No products found for this store.</p>
+            <p className="p-6 text-muted">No products found for this store.</p>
           ) : (
             <table className="w-full text-sm text-left">
-              <thead className="text-gray-400 border-b text-xs">
+              <thead className="text-muted border-b text-xs">
                 <tr>
                   <th className="py-3 px-4">Product</th>
                   <th className="px-4">Category</th>
@@ -435,7 +435,7 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
                     qty < 10 ? "bg-yellow-100 text-yellow-700" :
                     "bg-green-100 text-green-700";
                   return (
-                    <tr key={p._id} className="border-b hover:bg-gray-50">
+                    <tr key={p._id} className="border-b hover:bg-off-white">
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           {p.images?.[0] ? (
@@ -446,7 +446,7 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
                           <span className="font-medium">{p.name}</span>
                         </div>
                       </td>
-                      <td className="px-4 text-gray-500">{p.category}</td>
+                      <td className="px-4 text-muted">{p.category}</td>
                       <td className="px-4">₦{new Intl.NumberFormat("en-NG").format(p.adminPrice || p.price)}</td>
                       <td className="px-4">{qty}</td>
                       <td className="px-4">
@@ -467,19 +467,19 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
       {tab === "orders" && (
         <div>
           {loadingOrders ? (
-            <p className="p-6 text-gray-500">Loading orders…</p>
+            <p className="p-6 text-muted">Loading orders…</p>
           ) : orders.length === 0 ? (
-            <p className="p-6 bg-white rounded-xl border text-gray-400">No orders for this store yet.</p>
+            <p className="p-6 bg-white rounded-xl border text-muted">No orders for this store yet.</p>
           ) : selectedOrder ? (
             /* ── Order detail view ── */
             <div className="bg-white rounded-xl border p-6">
-              <button onClick={() => setSelectedOrder(null)} className="text-sm text-gray-500 hover:text-gray-800 mb-4 flex items-center gap-1">
+              <button onClick={() => setSelectedOrder(null)} className="text-sm text-muted hover:text-ink mb-4 flex items-center gap-1">
                 ← Back to orders
               </button>
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="font-bold text-lg">Order #{selectedOrder._id.slice(-8).toUpperCase()}</h3>
-                  <p className="text-sm text-gray-500">{selectedOrder.customerName} · {new Date(selectedOrder.createdAt).toLocaleDateString("en-GB")}</p>
+                  <p className="text-sm text-muted">{selectedOrder.customerName} · {new Date(selectedOrder.createdAt).toLocaleDateString("en-GB")}</p>
                 </div>
                 <div className="flex gap-2 items-center">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${selectedOrder.paymentStatus === "paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
@@ -492,7 +492,7 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
               </div>
               {/* Products */}
               <table className="w-full text-sm mb-4">
-                <thead className="text-gray-400 border-b text-xs">
+                <thead className="text-muted border-b text-xs">
                   <tr>
                     <th className="py-2 text-left">Product</th>
                     <th className="text-right">Qty</th>
@@ -512,16 +512,16 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td colSpan={3} className="pt-3 text-right font-medium text-gray-500">Product subtotal</td>
+                    <td colSpan={3} className="pt-3 text-right font-medium text-muted">Product subtotal</td>
                     <td className="pt-3 text-right font-medium">{formatNaira(selectedOrder.totalAmount)}</td>
                   </tr>
                   <tr>
-                    <td colSpan={3} className="text-right text-gray-500">Delivery fee</td>
+                    <td colSpan={3} className="text-right text-muted">Delivery fee</td>
                     <td className="text-right text-blue-600">{formatNaira(selectedOrder.deliveryFee || 0)}</td>
                   </tr>
                   <tr>
-                    <td colSpan={3} className="text-right text-gray-500">Service fee</td>
-                    <td className="text-right text-orange-600">{formatNaira(selectedOrder.serviceFee || 0)}</td>
+                    <td colSpan={3} className="text-right text-muted">Service fee</td>
+                    <td className="text-right text-pry">{formatNaira(selectedOrder.serviceFee || 0)}</td>
                   </tr>
                   <tr>
                     <td colSpan={3} className="text-right font-bold border-t pt-1">Customer paid (total)</td>
@@ -552,7 +552,7 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
             /* ── Orders list ── */
             <div className="bg-white rounded-xl border overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="text-gray-400 border-b text-xs bg-gray-50">
+                <thead className="text-muted border-b text-xs bg-off-white">
                   <tr>
                     <th className="py-3 px-4">Order ID</th>
                     <th className="px-4">Customer</th>
@@ -567,10 +567,10 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
                 </thead>
                 <tbody>
                   {orders.map((o) => (
-                    <tr key={o._id} className="border-b hover:bg-gray-50">
+                    <tr key={o._id} className="border-b hover:bg-off-white">
                       <td className="py-3 px-4 font-mono text-xs">#{o._id.slice(-8).toUpperCase()}</td>
                       <td className="px-4 font-medium">{o.customerName}</td>
-                      <td className="px-4 text-gray-500 text-xs">
+                      <td className="px-4 text-muted text-xs">
                         {o.products.slice(0, 2).map((p) => p.name).join(", ")}
                         {o.products.length > 2 && ` +${o.products.length - 2} more`}
                       </td>
@@ -586,11 +586,11 @@ const StoreDetailAD: React.FC<Props> = ({ storeId, onBack }) => {
                           {o.paymentStatus}
                         </span>
                       </td>
-                      <td className="px-4 text-gray-400 text-xs">{new Date(o.createdAt).toLocaleDateString("en-GB")}</td>
+                      <td className="px-4 text-muted text-xs">{new Date(o.createdAt).toLocaleDateString("en-GB")}</td>
                       <td className="px-4">
                         <button
                           onClick={() => setSelectedOrder(o)}
-                          className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
+                          className="text-xs px-3 py-1.5 bg-gray-100 text-body rounded-lg font-medium hover:bg-gray-200"
                         >
                           View
                         </button>

@@ -119,7 +119,7 @@ const TeamAD: React.FC = () => {
                 {info.label}
               </span>
             </div>
-            <p className="text-xs text-gray-500">{info.access}</p>
+            <p className="text-xs text-muted">{info.access}</p>
           </div>
         ))}
       </div>
@@ -140,44 +140,44 @@ const TeamAD: React.FC = () => {
 
         {/* Create form */}
         {showCreate && isSuperAdmin && (
-          <div className="p-4 bg-gray-50 border-b space-y-3">
+          <div className="p-4 bg-off-white border-b space-y-3">
             <h3 className="font-medium text-sm">New admin account</h3>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-gray-500 block mb-1">Name</label>
+                <label className="text-xs text-muted block mb-1">Name</label>
                 <input
                   value={form.name}
                   onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="Full name"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500 block mb-1">Email *</label>
+                <label className="text-xs text-muted block mb-1">Email *</label>
                 <input
                   value={form.email}
                   onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))}
                   placeholder="admin@example.com"
                   type="email"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500 block mb-1">Password *</label>
+                <label className="text-xs text-muted block mb-1">Password *</label>
                 <input
                   value={form.password}
                   onChange={(e) => setForm(f => ({ ...f, password: e.target.value }))}
                   placeholder="Minimum 6 characters"
                   type="password"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500 block mb-1">Role *</label>
+                <label className="text-xs text-muted block mb-1">Role *</label>
                 <select
                   value={form.role}
                   onChange={(e) => setForm(f => ({ ...f, role: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
                 >
                   <option value="support">Support Admin</option>
                   <option value="finance">Finance Admin</option>
@@ -195,7 +195,7 @@ const TeamAD: React.FC = () => {
               </button>
               <button
                 onClick={() => setShowCreate(false)}
-                className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm"
+                className="px-4 py-2 bg-gray-100 text-body rounded-lg text-sm"
               >
                 Cancel
               </button>
@@ -205,10 +205,10 @@ const TeamAD: React.FC = () => {
 
         {/* Admin list */}
         {loading ? (
-          <p className="p-4 text-gray-500 text-sm">Loading...</p>
+          <p className="p-4 text-muted text-sm">Loading...</p>
         ) : (
           <table className="w-full text-sm text-left">
-            <thead className="text-gray-400 text-xs border-b">
+            <thead className="text-muted text-xs border-b">
               <tr>
                 <th className="py-3 px-4">Name</th>
                 <th className="px-4">Email</th>
@@ -223,16 +223,16 @@ const TeamAD: React.FC = () => {
                 const roleInfo = ROLE_INFO[a.adminRole as keyof typeof ROLE_INFO];
                 const isCurrentUser = a._id === admin?.id;
                 return (
-                  <tr key={a._id} className="border-b hover:bg-gray-50">
+                  <tr key={a._id} className="border-b hover:bg-off-white">
                     <td className="py-3 px-4 font-medium">
                       {a.name}
                       {isCurrentUser && (
-                        <span className="ml-2 text-xs text-gray-400">(you)</span>
+                        <span className="ml-2 text-xs text-muted">(you)</span>
                       )}
                     </td>
-                    <td className="px-4 text-gray-500">{a.email}</td>
+                    <td className="px-4 text-muted">{a.email}</td>
                     <td className="px-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${roleInfo?.color || "bg-gray-100 text-gray-600"}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${roleInfo?.color || "bg-gray-100 text-body"}`}>
                         {roleInfo?.label || a.adminRole}
                       </span>
                     </td>
@@ -245,7 +245,7 @@ const TeamAD: React.FC = () => {
                         {a.adminStatus === "inactive" ? "Inactive" : "Active"}
                       </span>
                     </td>
-                    <td className="px-4 text-gray-400 text-xs">
+                    <td className="px-4 text-muted text-xs">
                       {new Date(a.createdAt).toLocaleDateString("en-GB")}
                     </td>
                     {isSuperAdmin && (
@@ -256,7 +256,7 @@ const TeamAD: React.FC = () => {
                               value={a.adminRole}
                               onChange={(e) => handleRoleChange(a._id, e.target.value)}
                               disabled={updatingId === a._id}
-                              className="text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none"
+                              className="text-xs border border-border rounded px-2 py-1 focus:outline-none"
                             >
                               <option value="support">Support</option>
                               <option value="finance">Finance</option>

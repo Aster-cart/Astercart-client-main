@@ -236,7 +236,7 @@ const MonitorAD: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-xl font-bold">System Monitor</h1>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Last updated: {lastUpdated.toLocaleTimeString("en-GB")}
             {autoRefresh && " · Auto-refreshing every 60s"}
           </p>
@@ -244,13 +244,13 @@ const MonitorAD: React.FC = () => {
         <div className="flex gap-2">
           <button
             onClick={load}
-            className="text-sm px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
+            className="text-sm px-4 py-2 bg-gray-100 text-body rounded-lg font-medium hover:bg-gray-200"
           >
             🔄 Refresh
           </button>
           <button
             onClick={() => setAutoRefresh(v => !v)}
-            className={`text-sm px-4 py-2 rounded-lg font-medium ${autoRefresh ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}
+            className={`text-sm px-4 py-2 rounded-lg font-medium ${autoRefresh ? "bg-green-100 text-green-700" : "bg-gray-100 text-muted"}`}
           >
             {autoRefresh ? "⏸ Pause" : "▶ Auto-refresh"}
           </button>
@@ -258,21 +258,21 @@ const MonitorAD: React.FC = () => {
       </div>
 
       {loading ? (
-        <p className="text-gray-400 text-center py-12">Loading system data...</p>
+        <p className="text-muted text-center py-12">Loading system data...</p>
       ) : (
         <>
           {/* Live stats grid */}
           <div className="grid grid-cols-4 gap-4 mb-6">
             {[
-              { label: "Total stores", value: stats?.totalStores, sub: `${stats?.pendingStores} pending approval`, subColor: stats?.pendingStores ? "text-yellow-600" : "text-gray-400" },
+              { label: "Total stores", value: stats?.totalStores, sub: `${stats?.pendingStores} pending approval`, subColor: stats?.pendingStores ? "text-yellow-600" : "text-muted" },
               { label: "Total orders", value: stats?.totalOrders, sub: `${stats?.todayOrders} today`, subColor: "text-green-600" },
-              { label: "Today's revenue", value: formatNaira(stats?.todayRevenue || 0), sub: `${stats?.unpaidOrders} unpaid orders`, subColor: stats?.unpaidOrders ? "text-red-500" : "text-gray-400" },
-              { label: "Open disputes", value: stats?.openDisputes, sub: "Needs attention", subColor: stats?.openDisputes ? "text-red-500" : "text-gray-400" },
-              { label: "Total products", value: stats?.totalProducts, sub: `${stats?.outOfStockProducts} out of stock`, subColor: stats?.outOfStockProducts ? "text-yellow-600" : "text-gray-400" },
-              { label: "Total customers", value: stats?.totalCustomers, sub: "Registered accounts", subColor: "text-gray-400" },
+              { label: "Today's revenue", value: formatNaira(stats?.todayRevenue || 0), sub: `${stats?.unpaidOrders} unpaid orders`, subColor: stats?.unpaidOrders ? "text-red-500" : "text-muted" },
+              { label: "Open disputes", value: stats?.openDisputes, sub: "Needs attention", subColor: stats?.openDisputes ? "text-red-500" : "text-muted" },
+              { label: "Total products", value: stats?.totalProducts, sub: `${stats?.outOfStockProducts} out of stock`, subColor: stats?.outOfStockProducts ? "text-yellow-600" : "text-muted" },
+              { label: "Total customers", value: stats?.totalCustomers, sub: "Registered accounts", subColor: "text-muted" },
             ].map((s, i) => (
               <div key={i} className="bg-white rounded-xl p-4 border">
-                <p className="text-xs text-gray-500 mb-1">{s.label}</p>
+                <p className="text-xs text-muted mb-1">{s.label}</p>
                 <p className="text-2xl font-bold">{s.value ?? "—"}</p>
                 <p className={`text-xs mt-1 ${s.subColor}`}>{s.sub}</p>
               </div>
@@ -296,14 +296,14 @@ const MonitorAD: React.FC = () => {
                   </span>
                 )}
               </h2>
-              <span className="text-xs text-gray-400">Server crashes, payment webhook failures, AI errors, database issues</span>
+              <span className="text-xs text-muted">Server crashes, payment webhook failures, AI errors, database issues</span>
             </div>
 
             {!sentryConfigured ? (
               <div className="text-center py-8 bg-yellow-50 rounded-lg">
                 <p className="text-2xl mb-2">⚙️</p>
-                <p className="text-gray-600 font-medium">Monitoring not yet connected</p>
-                <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
+                <p className="text-body font-medium">Monitoring not yet connected</p>
+                <p className="text-xs text-muted mt-1 max-w-md mx-auto">
                   Add SENTRY_AUTH_TOKEN, SENTRY_ORG_SLUG, and SENTRY_PROJECT_SLUG to your server's environment
                   variables to start seeing real crash and error alerts here.
                 </p>
@@ -313,7 +313,7 @@ const MonitorAD: React.FC = () => {
             ) : sentryIssues.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-2xl mb-2">✅</p>
-                <p className="text-gray-500 font-medium">No technical issues in the last 14 days</p>
+                <p className="text-muted font-medium">No technical issues in the last 14 days</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -357,8 +357,8 @@ const MonitorAD: React.FC = () => {
             {alerts.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-2xl mb-2">✅</p>
-                <p className="text-gray-500 font-medium">All systems normal</p>
-                <p className="text-xs text-gray-400 mt-1">No issues detected across the platform</p>
+                <p className="text-muted font-medium">All systems normal</p>
+                <p className="text-xs text-muted mt-1">No issues detected across the platform</p>
               </div>
             ) : (
               <div className="space-y-3">

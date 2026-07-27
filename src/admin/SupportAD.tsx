@@ -25,7 +25,7 @@ const STATUS_COLOR: Record<string, string> = {
   open: "bg-yellow-100 text-yellow-700",
   in_progress: "bg-blue-100 text-blue-700",
   resolved: "bg-green-100 text-green-700",
-  closed: "bg-gray-100 text-gray-500",
+  closed: "bg-gray-100 text-muted",
 };
 
 const SupportAD: React.FC = () => {
@@ -64,7 +64,7 @@ const SupportAD: React.FC = () => {
             key={f}
             onClick={() => setFilter(f)}
             className={`text-xs px-3 py-1.5 rounded-full border ${
-              filter === f ? "bg-pry text-white border-pry" : "text-gray-500 border-gray-200"
+              filter === f ? "bg-pry text-white border-pry" : "text-muted border-border"
             }`}
           >
             {f === "all" ? "All" : f === "in_progress" ? "In progress" : f.charAt(0).toUpperCase() + f.slice(1)}
@@ -74,20 +74,20 @@ const SupportAD: React.FC = () => {
 
       <div className="bg-white rounded-xl border">
         {loading ? (
-          <p className="p-8 text-center text-gray-400">Loading...</p>
+          <p className="p-8 text-center text-muted">Loading...</p>
         ) : filtered.length === 0 ? (
-          <p className="p-8 text-center text-gray-400">No tickets here.</p>
+          <p className="p-8 text-center text-muted">No tickets here.</p>
         ) : (
           <div className="divide-y">
             {filtered.map((t) => (
               <button
                 key={t._id}
                 onClick={() => setSelectedTicket(t)}
-                className="w-full text-left p-4 hover:bg-gray-50 flex justify-between items-center"
+                className="w-full text-left p-4 hover:bg-off-white flex justify-between items-center"
               >
                 <div>
                   <p className="font-medium text-sm">{t.subject}</p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-muted mt-1">
                     {t.raisedByName} ({t.raisedByType}) · {t.category} ·{" "}
                     {new Date(t.createdAt).toLocaleDateString("en-GB")}
                   </p>
@@ -162,19 +162,19 @@ const AdminTicketModal: React.FC<{
         <div className="flex justify-between items-start mb-4">
           <div>
             <h3 className="font-semibold text-lg">{ticket.subject}</h3>
-            <p className="text-xs text-gray-400">{ticket.raisedByName} · {ticket.category}</p>
+            <p className="text-xs text-muted">{ticket.raisedByName} · {ticket.category}</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 text-xl leading-none">×</button>
+          <button onClick={onClose} className="text-muted text-xl leading-none">×</button>
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-3 mb-4">
-          <div className="bg-gray-50 rounded-lg p-3">
-            <p className="text-xs text-gray-400 mb-1">{ticket.raisedByName} · {new Date(ticket.createdAt).toLocaleString("en-GB")}</p>
+          <div className="bg-off-white rounded-lg p-3">
+            <p className="text-xs text-muted mb-1">{ticket.raisedByName} · {new Date(ticket.createdAt).toLocaleString("en-GB")}</p>
             <p className="text-sm">{ticket.message}</p>
           </div>
           {ticket.replies.map((r, i) => (
-            <div key={i} className={`rounded-lg p-3 ${r.senderType === "admin" ? "bg-orange-50 ml-4" : "bg-gray-50"}`}>
-              <p className="text-xs text-gray-400 mb-1">{r.senderName} · {new Date(r.createdAt).toLocaleString("en-GB")}</p>
+            <div key={i} className={`rounded-lg p-3 ${r.senderType === "admin" ? "bg-orange-50 ml-4" : "bg-off-white"}`}>
+              <p className="text-xs text-muted mb-1">{r.senderName} · {new Date(r.createdAt).toLocaleString("en-GB")}</p>
               <p className="text-sm">{r.message}</p>
             </div>
           ))}
@@ -184,7 +184,7 @@ const AdminTicketModal: React.FC<{
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as any)}
-            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
+            className="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
           >
             <option value="open">Open</option>
             <option value="in_progress">In progress</option>
@@ -206,7 +206,7 @@ const AdminTicketModal: React.FC<{
             value={reply}
             onChange={(e) => setReply(e.target.value)}
             placeholder="Type a reply..."
-            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
+            className="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry"
           />
           <button
             onClick={handleReply}

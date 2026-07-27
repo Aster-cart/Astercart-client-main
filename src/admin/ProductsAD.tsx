@@ -116,7 +116,7 @@ const ProductsAD: React.FC = () => {
       : g.products,
   })).filter(g => !search.trim() || g.products.length > 0);
 
-  if (loading) return <p className="p-4 text-gray-500">Loading products...</p>;
+  if (loading) return <p className="p-4 text-muted">Loading products...</p>;
 
   return (
     <div className="font-inter">
@@ -129,7 +129,7 @@ const ProductsAD: React.FC = () => {
           { label: "Out of stock", value: totalOutOfStock, color: "text-yellow-600" },
         ].map((s, i) => (
           <div key={i} className="bg-white rounded-xl p-4 border">
-            <p className="text-sm text-gray-500">{s.label}</p>
+            <p className="text-sm text-muted">{s.label}</p>
             <p className={`text-2xl font-bold mt-1 ${(s as any).color || ""}`}>{s.value}</p>
           </div>
         ))}
@@ -142,7 +142,7 @@ const ProductsAD: React.FC = () => {
           placeholder="Search products by name or category..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border border-gray-200 rounded-lg px-4 py-2 text-sm w-96 focus:outline-none focus:border-pry"
+          className="border border-border rounded-lg px-4 py-2 text-sm w-96 focus:outline-none focus:border-pry"
         />
       </div>
 
@@ -153,7 +153,7 @@ const ProductsAD: React.FC = () => {
             {/* Store header */}
             <button
               onClick={() => toggleGroup(group.storeId)}
-              className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50"
+              className="w-full flex items-center justify-between px-5 py-4 hover:bg-off-white"
             >
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-pry flex items-center justify-center text-white font-bold">
@@ -161,16 +161,16 @@ const ProductsAD: React.FC = () => {
                 </div>
                 <div className="text-left">
                   <p className="font-semibold text-sm">{group.storeName}</p>
-                  <p className="text-xs text-gray-400">{group.products.length} products</p>
+                  <p className="text-xs text-muted">{group.products.length} products</p>
                 </div>
               </div>
-              <span className="text-gray-400 text-lg">{group.expanded ? "▲" : "▼"}</span>
+              <span className="text-muted text-lg">{group.expanded ? "▲" : "▼"}</span>
             </button>
 
             {/* Products table */}
             {group.expanded && (
               <table className="w-full text-sm text-left border-t">
-                <thead className="text-gray-400 bg-gray-50 text-xs">
+                <thead className="text-muted bg-off-white text-xs">
                   <tr>
                     <th className="py-2 px-4">Product</th>
                     <th className="px-4">Category</th>
@@ -187,7 +187,7 @@ const ProductsAD: React.FC = () => {
                     const stockStatus = qty === 0 ? "Out of stock" : qty < 10 ? "Low stock" : "In stock";
                     const stockColor = qty === 0 ? "bg-red-100 text-red-600" : qty < 10 ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700";
                     return (
-                      <tr key={p._id} className="border-t hover:bg-gray-50">
+                      <tr key={p._id} className="border-t hover:bg-off-white">
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
                             {p.images?.[0]
@@ -197,7 +197,7 @@ const ProductsAD: React.FC = () => {
                             <span className="font-medium">{p.name}</span>
                           </div>
                         </td>
-                        <td className="px-4 text-gray-500">{p.category}</td>
+                        <td className="px-4 text-muted">{p.category}</td>
                         <td className="px-4">₦{new Intl.NumberFormat("en-NG").format(price)}</td>
                         <td className="px-4">{qty}</td>
                         <td className="px-4">
@@ -232,7 +232,7 @@ const ProductsAD: React.FC = () => {
           </div>
         ))}
         {filteredGroups.length === 0 && (
-          <p className="text-center text-gray-400 py-8">No products found.</p>
+          <p className="text-center text-muted py-8">No products found.</p>
         )}
       </div>
     </div>

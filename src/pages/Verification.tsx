@@ -12,7 +12,7 @@ interface StatusInfo {
 const STATUS_UI: Record<VerificationStatus, { label: string; color: string; description: string }> = {
   unsubmitted: {
     label: "Not started",
-    color: "bg-gray-100 text-gray-600",
+    color: "bg-gray-100 text-body",
     description: "Fill in the form below and submit your documents to begin the verification process.",
   },
   pending_review: {
@@ -140,7 +140,7 @@ const Verification: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-400">Loading verification status...</div>;
+  if (loading) return <div className="p-8 text-center text-muted">Loading verification status...</div>;
 
   const status = statusInfo?.verificationStatus || "unsubmitted";
   const ui = STATUS_UI[status];
@@ -149,7 +149,7 @@ const Verification: React.FC = () => {
   return (
     <div className="p-6 max-w-2xl font-inter">
       <h1 className="text-xl font-semibold mb-1">Store Verification</h1>
-      <p className="text-sm text-gray-500 mb-6">
+      <p className="text-sm text-muted mb-6">
         Complete this once. After approval, you can add products and import your inventory.
       </p>
 
@@ -176,7 +176,7 @@ const Verification: React.FC = () => {
         <div className="text-center py-12 text-green-600">
           <p className="text-5xl mb-4">✓</p>
           <p className="font-semibold text-lg">Your store is verified</p>
-          <p className="text-sm text-gray-500 mt-2">Head to the Inventory tab to start adding your products.</p>
+          <p className="text-sm text-muted mt-2">Head to the Inventory tab to start adding your products.</p>
         </div>
       )}
 
@@ -184,7 +184,7 @@ const Verification: React.FC = () => {
         <div className="text-center py-12 text-yellow-600">
           <p className="text-5xl mb-4">⏳</p>
           <p className="font-semibold text-lg">Documents under review</p>
-          <p className="text-sm text-gray-500 mt-2">Check back here or wait for an email notification.</p>
+          <p className="text-sm text-muted mt-2">Check back here or wait for an email notification.</p>
         </div>
       )}
 
@@ -195,28 +195,28 @@ const Verification: React.FC = () => {
             <h2 className="font-semibold mb-4">Business details</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-medium text-gray-500 block mb-1">CAC Number *</label>
+                <label className="text-xs font-medium text-muted block mb-1">CAC Number *</label>
                 <input className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry" placeholder="e.g. RC123456"
                   value={form.cacNumber} onChange={e => setForm(p => ({ ...p, cacNumber: e.target.value }))} />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 block mb-1">Business Email *</label>
+                <label className="text-xs font-medium text-muted block mb-1">Business Email *</label>
                 <input type="email" className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry" placeholder="business@email.com"
                   value={form.businessEmail} onChange={e => setForm(p => ({ ...p, businessEmail: e.target.value }))} />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 block mb-1">Business Phone *</label>
+                <label className="text-xs font-medium text-muted block mb-1">Business Phone *</label>
                 <input className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry" placeholder="+2348012345678"
                   value={form.businessPhone} onChange={e => setForm(p => ({ ...p, businessPhone: e.target.value }))} />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 block mb-1">Nearest Landmark</label>
+                <label className="text-xs font-medium text-muted block mb-1">Nearest Landmark</label>
                 <input className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry" placeholder="e.g. Near Chicken Republic, Adeola Odeku"
                   value={form.landmark} onChange={e => setForm(p => ({ ...p, landmark: e.target.value }))} />
               </div>
             </div>
             <div className="mt-4">
-              <label className="text-xs font-medium text-gray-500 block mb-1">Exact Store Address *</label>
+              <label className="text-xs font-medium text-muted block mb-1">Exact Store Address *</label>
               <input className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry" placeholder="Building number, street, area, LGA, state"
                 value={form.exactAddress} onChange={e => setForm(p => ({ ...p, exactAddress: e.target.value }))} />
             </div>
@@ -228,15 +228,15 @@ const Verification: React.FC = () => {
             <div className="space-y-4">
               {/* CAC Certificate */}
               <div>
-                <label className="text-xs font-medium text-gray-500 block mb-1">CAC Certificate *</label>
-                <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:border-pry transition"
+                <label className="text-xs font-medium text-muted block mb-1">CAC Certificate *</label>
+                <div className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-pry transition"
                   onClick={() => cacInputRef.current?.click()}>
                   {uploadingField === "CAC certificate" ? (
-                    <p className="text-xs text-gray-400">Uploading...</p>
+                    <p className="text-xs text-muted">Uploading...</p>
                   ) : form.cacCertificateUrl ? (
                     <p className="text-xs text-green-600">✓ Uploaded</p>
                   ) : (
-                    <p className="text-xs text-gray-400">Click to upload CAC certificate (PDF or image)</p>
+                    <p className="text-xs text-muted">Click to upload CAC certificate (PDF or image)</p>
                   )}
                 </div>
                 <input ref={cacInputRef} type="file" className="hidden" accept="image/*,.pdf"
@@ -245,15 +245,15 @@ const Verification: React.FC = () => {
 
               {/* Owner ID */}
               <div>
-                <label className="text-xs font-medium text-gray-500 block mb-1">Owner ID Document (NIN, Passport, or Driver's Licence)</label>
-                <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:border-pry transition"
+                <label className="text-xs font-medium text-muted block mb-1">Owner ID Document (NIN, Passport, or Driver's Licence)</label>
+                <div className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-pry transition"
                   onClick={() => idInputRef.current?.click()}>
                   {uploadingField === "ID document" ? (
-                    <p className="text-xs text-gray-400">Uploading...</p>
+                    <p className="text-xs text-muted">Uploading...</p>
                   ) : form.ownerIdDocumentUrl ? (
                     <p className="text-xs text-green-600">✓ Uploaded</p>
                   ) : (
-                    <p className="text-xs text-gray-400">Click to upload a valid government ID</p>
+                    <p className="text-xs text-muted">Click to upload a valid government ID</p>
                   )}
                 </div>
                 <input ref={idInputRef} type="file" className="hidden" accept="image/*,.pdf"
@@ -262,15 +262,15 @@ const Verification: React.FC = () => {
 
               {/* Store photos */}
               <div>
-                <label className="text-xs font-medium text-gray-500 block mb-1">Store Photos (up to 3, so admin can see the physical store)</label>
-                <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:border-pry transition"
+                <label className="text-xs font-medium text-muted block mb-1">Store Photos (up to 3, so admin can see the physical store)</label>
+                <div className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-pry transition"
                   onClick={() => photosInputRef.current?.click()}>
                   {uploadingField === "store photo" ? (
-                    <p className="text-xs text-gray-400">Uploading...</p>
+                    <p className="text-xs text-muted">Uploading...</p>
                   ) : form.storePhotoUrls.length > 0 ? (
                     <p className="text-xs text-green-600">✓ {form.storePhotoUrls.length} photo(s) uploaded</p>
                   ) : (
-                    <p className="text-xs text-gray-400">Click to upload photos of your store</p>
+                    <p className="text-xs text-muted">Click to upload photos of your store</p>
                   )}
                 </div>
                 <input ref={photosInputRef} type="file" className="hidden" accept="image/*" multiple
@@ -289,7 +289,7 @@ const Verification: React.FC = () => {
           >
             {submitting ? "Submitting..." : status === "rejected" ? "Resubmit for review" : "Submit for review"}
           </button>
-          <p className="text-xs text-gray-400 text-center">
+          <p className="text-xs text-muted text-center">
             Once submitted, admin will review your documents and notify you. You cannot edit your submission while it's under review.
           </p>
         </div>

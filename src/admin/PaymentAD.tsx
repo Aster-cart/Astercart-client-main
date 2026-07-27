@@ -69,7 +69,7 @@ const PaymentAD: React.FC = () => {
     return true;
   });
 
-  if (loading) return <p className="text-gray-500 p-4">Loading payments…</p>;
+  if (loading) return <p className="text-muted p-4">Loading payments…</p>;
 
   return (
     <div className="font-inter">
@@ -94,7 +94,7 @@ const PaymentAD: React.FC = () => {
           },
         ].map((s, i) => (
           <div key={i} className="bg-white rounded-xl p-4 border">
-            <p className="text-sm text-gray-500 mb-1">{s.label}</p>
+            <p className="text-sm text-muted mb-1">{s.label}</p>
             <p className={`text-xl font-bold ${(s as { color?: string }).color || ""}`}>
               {s.value}
             </p>
@@ -104,21 +104,21 @@ const PaymentAD: React.FC = () => {
 
       {/* Money flow breakdown — exactly where every naira goes, in plain terms */}
       <div className="bg-white rounded-xl border p-5 mb-6">
-        <h3 className="font-semibold text-gray-800 mb-1">Where the money goes</h3>
-        <p className="text-xs text-gray-400 mb-4">
+        <h3 className="font-semibold text-ink mb-1">Where the money goes</h3>
+        <p className="text-xs text-muted mb-4">
           For every order: the customer pays the total below, split across the store and three
           separate platform revenue streams.
         </p>
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-off-white rounded-lg">
             <div>
-              <p className="font-medium text-gray-800">Total customer paid (grand total)</p>
-              <p className="text-xs text-gray-400">Marked-up product total + delivery fee + service fee</p>
+              <p className="font-medium text-ink">Total customer paid (grand total)</p>
+              <p className="text-xs text-muted">Marked-up product total + delivery fee + service fee</p>
             </div>
             <p className="font-bold text-lg">{formatNaira(stats.totalGrandTotal)}</p>
           </div>
 
-          <div className="pl-4 border-l-2 border-gray-200 space-y-3">
+          <div className="pl-4 border-l-2 border-border space-y-3">
             <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
               <div>
                 <p className="font-medium text-green-800">→ Goes to stores</p>
@@ -146,7 +146,7 @@ const PaymentAD: React.FC = () => {
             <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
               <div>
                 <p className="font-medium text-orange-800">→ Platform keeps (Service Fee)</p>
-                <p className="text-xs text-orange-600">% of the customer's order total (after markup), charged on top</p>
+                <p className="text-xs text-pry">% of the customer's order total (after markup), charged on top</p>
               </div>
               <p className="font-bold text-orange-700">{formatNaira(stats.totalServiceFee)}</p>
             </div>
@@ -186,7 +186,7 @@ const PaymentAD: React.FC = () => {
             key={val}
             onClick={() => setFilter(val)}
             className={`text-xs px-4 py-1.5 rounded-full border font-medium ${
-              filter === val ? "bg-pry text-white border-pry" : "text-gray-500 border-gray-200"
+              filter === val ? "bg-pry text-white border-pry" : "text-muted border-border"
             }`}
           >
             {label}
@@ -200,16 +200,16 @@ const PaymentAD: React.FC = () => {
           <h2 className="text-lg font-semibold">Payment records</h2>
           <button
             onClick={() => exportToCSV(filtered)}
-            className="text-sm px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
+            className="text-sm px-4 py-2 bg-gray-100 text-body rounded-lg font-medium hover:bg-gray-200"
           >
             📥 Export CSV
           </button>
         </div>
         {filtered.length === 0 ? (
-          <p className="text-gray-400 text-sm">No payments found.</p>
+          <p className="text-muted text-sm">No payments found.</p>
         ) : (
           <table className="w-full text-sm text-left">
-            <thead className="text-gray-500 border-b">
+            <thead className="text-muted border-b">
               <tr>
                 <th className="py-2">Order ID</th>
                 <th>Customer</th>
@@ -238,7 +238,7 @@ const PaymentAD: React.FC = () => {
                 // order in the table itself.
                 const astercartRevenue = (p.markupRevenue || 0) + (p.serviceFee || 0) + (p.adminFee || 0) + (p.deliveryCommission || 0);
                 return (
-                <tr key={p._id} className="border-b hover:bg-gray-50">
+                <tr key={p._id} className="border-b hover:bg-off-white">
                   <td className="py-3 font-mono text-xs">
                     {/* Consistent with admin/client elsewhere: last 8 chars
                         of the Mongo ID, so the same order shows the same
@@ -251,11 +251,11 @@ const PaymentAD: React.FC = () => {
                   <td className="text-teal-600">{formatNaira(p.markupRevenue || 0)}</td>
                   <td className="text-blue-500">{formatNaira(p.deliveryFee || 0)}</td>
                   <td className="text-pink-500">{formatNaira(p.deliveryCommission || 0)}</td>
-                  <td className="text-orange-500">{formatNaira(p.serviceFee || 0)}</td>
+                  <td className="text-pry">{formatNaira(p.serviceFee || 0)}</td>
                   <td className="font-bold">{formatNaira(p.grandTotal || p.amount)}</td>
                   <td className="text-green-600">{formatNaira(p.storePayout)}</td>
                   <td className="text-purple-600">{formatNaira(p.adminFee)}</td>
-                  <td className="font-bold text-gray-900">{formatNaira(astercartRevenue)}</td>
+                  <td className="font-bold text-ink">{formatNaira(astercartRevenue)}</td>
                   <td>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       p.status === "completed"
@@ -274,7 +274,7 @@ const PaymentAD: React.FC = () => {
                       {p.payoutStatus === "paid_out" ? "Paid out" : "Pending"}
                     </span>
                   </td>
-                  <td className="text-gray-400 text-xs">
+                  <td className="text-muted text-xs">
                     {new Date(p.createdAt).toLocaleDateString("en-GB")}
                   </td>
                 </tr>

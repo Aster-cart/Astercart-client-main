@@ -8,7 +8,7 @@ const STATUS_COLOR: Record<string, string> = {
   out_for_delivery: "bg-purple-100 text-purple-700",
   delivered: "bg-green-100 text-green-700",
   completed: "bg-green-100 text-green-700",
-  canceled: "bg-gray-100 text-gray-500",
+  canceled: "bg-gray-100 text-muted",
   failed: "bg-red-100 text-red-600",
 };
 
@@ -130,7 +130,7 @@ const Dashboard: React.FC = () => {
                     <td className="px-2 py-3 font-medium text-ink">{row.amount}</td>
                     <td className="px-2 py-3 text-body">{row.itemCount} item{row.itemCount !== 1 ? "s" : ""}</td>
                     <td className="px-2 py-3">
-                      <span className={`px-2 py-1 rounded-full font-medium ${STATUS_COLOR[row.status] || "bg-gray-100 text-gray-500"}`}>
+                      <span className={`px-2 py-1 rounded-full font-medium ${STATUS_COLOR[row.status] || "bg-gray-100 text-muted"}`}>
                         {row.status}
                       </span>
                     </td>

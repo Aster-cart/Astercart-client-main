@@ -138,14 +138,14 @@ const FinancialLedgerAD: React.FC = () => {
       {/* Date filter */}
       <div className="flex gap-3 mb-4 items-end">
         <div>
-          <label className="text-xs text-gray-500 font-medium block mb-1">From</label>
+          <label className="text-xs text-muted font-medium block mb-1">From</label>
           <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry" />
+            className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry" />
         </div>
         <div>
-          <label className="text-xs text-gray-500 font-medium block mb-1">To</label>
+          <label className="text-xs text-muted font-medium block mb-1">To</label>
           <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry" />
+            className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pry" />
         </div>
         <button onClick={load} className="px-4 py-2 bg-pry text-white rounded-lg text-sm font-medium">
           Apply filter
@@ -153,7 +153,7 @@ const FinancialLedgerAD: React.FC = () => {
         {(fromDate || toDate) && (
           <button
             onClick={() => { setFromDate(""); setToDate(""); load(); }}
-            className="px-4 py-2 text-gray-500 text-sm"
+            className="px-4 py-2 text-muted text-sm"
           >
             Clear
           </button>
@@ -175,14 +175,14 @@ const FinancialLedgerAD: React.FC = () => {
               view === tab.key ? "border-pry" : "border-transparent"
             }`}
           >
-            <p className={`text-sm font-semibold ${view === tab.key ? "text-pry" : "text-gray-600"}`}>{tab.label}</p>
-            <p className="text-xs text-gray-400">{tab.sub}</p>
+            <p className={`text-sm font-semibold ${view === tab.key ? "text-pry" : "text-body"}`}>{tab.label}</p>
+            <p className="text-xs text-muted">{tab.sub}</p>
           </button>
         ))}
       </div>
 
       {loading ? (
-        <p className="text-center text-gray-400 py-12">Loading financial ledger...</p>
+        <p className="text-center text-muted py-12">Loading financial ledger...</p>
       ) : (
         <>
           {view === "commercial" && (
@@ -210,16 +210,16 @@ const CommercialView: React.FC<{ rows: CommercialRow[]; summary: any }> = ({ row
       <div className="grid grid-cols-4 gap-4 mb-6">
         <SummaryCard label="Gross customer payments" value={formatNaira(summary.grossCustomerPayments)} />
         <SummaryCard label="Total markup revenue" value={formatNaira(summary.totalMarkupRevenue)} color="text-teal-600" />
-        <SummaryCard label="Total service fee revenue" value={formatNaira(summary.totalServiceFeeRevenue)} color="text-orange-600" />
+        <SummaryCard label="Total service fee revenue" value={formatNaira(summary.totalServiceFeeRevenue)} color="text-pry" />
         <SummaryCard label="Total store commission" value={formatNaira(summary.totalStoreCommission)} color="text-purple-600" />
         <SummaryCard label="Total delivery commission" value={formatNaira(summary.totalDeliveryCommission)} color="text-pink-600" />
         <SummaryCard label="Total rider payouts" value={formatNaira(summary.totalRiderPayouts)} color="text-blue-500" />
         <SummaryCard label="Total store payouts" value={formatNaira(summary.totalStorePayouts)} color="text-green-600" />
-        <SummaryCard label="Total Astercart revenue" value={formatNaira(summary.totalAstercartRevenue)} color="text-gray-900" bold />
+        <SummaryCard label="Total Astercart revenue" value={formatNaira(summary.totalAstercartRevenue)} color="text-ink" bold />
       </div>
     )}
 
-    <p className="text-xs text-gray-400 mb-2 px-1">
+    <p className="text-xs text-muted mb-2 px-1">
       Columns follow the money chronologically: what the customer paid → what that splits into → what each
       split breaks down into → what Astercart actually keeps. Every subtraction is its own visible column —
       nothing is hidden inside a final total.
@@ -227,12 +227,12 @@ const CommercialView: React.FC<{ rows: CommercialRow[]; summary: any }> = ({ row
 
     <div className="bg-white rounded-xl border overflow-x-auto">
       <table className="w-full text-sm whitespace-nowrap">
-        <thead className="text-gray-400 border-b text-xs">
+        <thead className="text-muted border-b text-xs">
           <tr>
             <th className="py-3 px-4 text-left" rowSpan={2}>Order</th>
             <th className="px-3 text-left" rowSpan={2}>Store</th>
             <th className="px-3" rowSpan={2}>Gross Paid</th>
-            <th className="px-3 text-center bg-gray-50" colSpan={3}>Splits into</th>
+            <th className="px-3 text-center bg-off-white" colSpan={3}>Splits into</th>
             <th className="px-3 text-center bg-teal-50" colSpan={2}>Product Total breaks into</th>
             <th className="px-3 text-center bg-purple-50" colSpan={2}>Store Subtotal generates</th>
             <th className="px-3 text-center bg-pink-50" colSpan={2}>Delivery Fee generates</th>
@@ -255,24 +255,24 @@ const CommercialView: React.FC<{ rows: CommercialRow[]; summary: any }> = ({ row
         </thead>
         <tbody>
           {rows.length === 0 ? (
-            <tr><td colSpan={14} className="py-8 text-center text-gray-400">No transactions in this period.</td></tr>
+            <tr><td colSpan={14} className="py-8 text-center text-muted">No transactions in this period.</td></tr>
           ) : rows.map((r) => (
-            <tr key={r.orderId} className="border-b hover:bg-gray-50">
+            <tr key={r.orderId} className="border-b hover:bg-off-white">
               <td className="py-3 px-4 font-mono text-xs">{(r.orderId || "").slice(-8).toUpperCase()}</td>
               <td className="px-3">{r.storeName}</td>
               <td className="px-3 font-bold">{formatNaira(r.grossCustomerPayment)}</td>
               <td className="px-3">{formatNaira(r.productTotal)}</td>
               <td className="px-3 text-blue-500">{formatNaira(r.deliveryFee)}</td>
-              <td className="px-3 text-orange-600">{formatNaira(r.customerServiceFee)}</td>
+              <td className="px-3 text-pry">{formatNaira(r.customerServiceFee)}</td>
               <td className="px-3 bg-teal-50/40">{formatNaira(r.storeSubtotal)}</td>
               <td className="px-3 bg-teal-50/40 text-teal-600">{formatNaira(r.productMarkupRevenue)}</td>
               <td className="px-3 bg-purple-50/40 text-purple-600">{formatNaira(r.storeCommission)}</td>
               <td className="px-3 bg-purple-50/40 text-green-600">{formatNaira(r.finalStorePayout)}</td>
               <td className="px-3 bg-pink-50/40 text-pink-600">{formatNaira(r.deliveryCommission)}</td>
               <td className="px-3 bg-pink-50/40 text-blue-500">{formatNaira(r.riderEarnings)}</td>
-              <td className="px-3 bg-orange-50/40 text-gray-500">−{formatNaira(r.serviceFeeGatewayEstimate)}</td>
-              <td className="px-3 bg-orange-50/40 text-orange-600 font-medium">{formatNaira(r.serviceFeeRevenue)}</td>
-              <td className="px-3 font-bold text-gray-900 bg-gray-50">{formatNaira(r.totalAstercartRevenueBeforeExpenses)}</td>
+              <td className="px-3 bg-orange-50/40 text-muted">−{formatNaira(r.serviceFeeGatewayEstimate)}</td>
+              <td className="px-3 bg-orange-50/40 text-pry font-medium">{formatNaira(r.serviceFeeRevenue)}</td>
+              <td className="px-3 font-bold text-ink bg-off-white">{formatNaira(r.totalAstercartRevenueBeforeExpenses)}</td>
             </tr>
           ))}
         </tbody>
@@ -289,7 +289,7 @@ const CashView: React.FC<{ rows: CashRow[]; summary: any }> = ({ rows, summary }
         <SummaryCard label="Gross customer payments" value={formatNaira(summary.grossCustomerPayments)} />
         <SummaryCard label="Total gateway fees paid" value={formatNaira(summary.totalGatewayFeesPaid)} color="text-red-600" />
         <SummaryCard label="Total net settlements received" value={formatNaira(summary.totalNetSettlementsReceived)} color="text-green-600" />
-        <SummaryCard label="Total refunds" value={formatNaira(summary.totalRefunds)} color="text-orange-600" />
+        <SummaryCard label="Total refunds" value={formatNaira(summary.totalRefunds)} color="text-pry" />
         <SummaryCard label="Total manual adjustments" value={formatNaira(summary.totalManualAdjustments)} />
         <SummaryCard label="Total store payouts sent" value={formatNaira(summary.totalStorePayoutsSent)} color="text-blue-600" />
         <SummaryCard label="Settlements: settled" value={summary.settlementsSettled} color="text-green-600" />
@@ -299,7 +299,7 @@ const CashView: React.FC<{ rows: CashRow[]; summary: any }> = ({ rows, summary }
 
     <div className="bg-white rounded-xl border overflow-x-auto">
       <table className="w-full text-sm whitespace-nowrap">
-        <thead className="text-gray-400 border-b text-xs">
+        <thead className="text-muted border-b text-xs">
           <tr>
             <th className="py-3 px-4 text-left">Order</th>
             <th className="px-3 text-left">Store</th>
@@ -316,15 +316,15 @@ const CashView: React.FC<{ rows: CashRow[]; summary: any }> = ({ rows, summary }
         </thead>
         <tbody>
           {rows.length === 0 ? (
-            <tr><td colSpan={11} className="py-8 text-center text-gray-400">No transactions in this period.</td></tr>
+            <tr><td colSpan={11} className="py-8 text-center text-muted">No transactions in this period.</td></tr>
           ) : rows.map((r) => (
-            <tr key={r.orderId} className="border-b hover:bg-gray-50">
+            <tr key={r.orderId} className="border-b hover:bg-off-white">
               <td className="py-3 px-4 font-mono text-xs">{(r.orderId || "").slice(-8).toUpperCase()}</td>
               <td className="px-3">{r.storeName}</td>
               <td className="px-3 font-bold">{formatNaira(r.grossCustomerPayment)}</td>
               <td className="px-3 text-red-500">{formatNaira(r.gatewayFeeCharged)}</td>
               <td className="px-3 text-green-600">{formatNaira(r.netSettlementReceived)}</td>
-              <td className="px-3 text-orange-500">{r.refundAmount ? formatNaira(r.refundAmount) : "—"}</td>
+              <td className="px-3 text-pry">{r.refundAmount ? formatNaira(r.refundAmount) : "—"}</td>
               <td className="px-3">{r.manualAdjustmentAmount ? formatNaira(r.manualAdjustmentAmount) : "—"}</td>
               <td className="px-3 text-blue-600">{formatNaira(r.storePayoutSent)}</td>
               <td className="px-3 font-medium">{formatNaira(r.remainingCashBalance)}</td>
@@ -333,7 +333,7 @@ const CashView: React.FC<{ rows: CashRow[]; summary: any }> = ({ rows, summary }
                   {r.settlementStatus}
                 </span>
               </td>
-              <td className="px-3 text-xs text-gray-500">
+              <td className="px-3 text-xs text-muted">
                 {r.settlementDate ? new Date(r.settlementDate).toLocaleDateString("en-GB") : "—"}
               </td>
             </tr>
@@ -380,27 +380,27 @@ const ProfitView: React.FC<{
       <div className="bg-white rounded-xl border p-5 mb-6">
         <h3 className="font-semibold mb-3">Gateway Cost Rate — Configured vs Actual</h3>
         {gatewayComparison.sampleSize === 0 ? (
-          <p className="text-sm text-gray-400">{gatewayComparison.recommendation}</p>
+          <p className="text-sm text-muted">{gatewayComparison.recommendation}</p>
         ) : (
           <>
             <div className="grid grid-cols-3 gap-4 mb-3">
               <div>
-                <p className="text-xs text-gray-400">Configured</p>
+                <p className="text-xs text-muted">Configured</p>
                 <p className="text-lg font-bold">{gatewayComparison.configuredRatePercent}%</p>
               </div>
               <div>
-                <p className="text-xs text-gray-400">Actual average</p>
+                <p className="text-xs text-muted">Actual average</p>
                 <p className="text-lg font-bold">{gatewayComparison.actualAverageRatePercent}%</p>
               </div>
               <div>
-                <p className="text-xs text-gray-400">Difference</p>
+                <p className="text-xs text-muted">Difference</p>
                 <p className={`text-lg font-bold ${gatewayComparison.differencePercent > 0 ? "text-red-600" : "text-green-600"}`}>
                   {gatewayComparison.differencePercent > 0 ? "+" : ""}{gatewayComparison.differencePercent}%
                 </p>
               </div>
             </div>
-            <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">{gatewayComparison.recommendation}</p>
-            <p className="text-xs text-gray-400 mt-2">Based on {gatewayComparison.sampleSize} settled transaction(s) with a confirmed real gateway fee.</p>
+            <p className="text-sm text-body bg-blue-50 p-3 rounded-lg">{gatewayComparison.recommendation}</p>
+            <p className="text-xs text-muted mt-2">Based on {gatewayComparison.sampleSize} settled transaction(s) with a confirmed real gateway fee.</p>
           </>
         )}
       </div>
@@ -408,7 +408,7 @@ const ProfitView: React.FC<{
 
     <div className="bg-white rounded-xl border overflow-x-auto">
       <table className="w-full text-sm whitespace-nowrap">
-        <thead className="text-gray-400 border-b text-xs">
+        <thead className="text-muted border-b text-xs">
           <tr>
             <th className="py-3 px-4 text-left">Order</th>
             <th className="px-3 text-left">Store</th>
@@ -422,9 +422,9 @@ const ProfitView: React.FC<{
         </thead>
         <tbody>
           {rows.length === 0 ? (
-            <tr><td colSpan={8} className="py-8 text-center text-gray-400">No transactions in this period.</td></tr>
+            <tr><td colSpan={8} className="py-8 text-center text-muted">No transactions in this period.</td></tr>
           ) : rows.map((r) => (
-            <tr key={r.orderId} className="border-b hover:bg-gray-50">
+            <tr key={r.orderId} className="border-b hover:bg-off-white">
               <td className="py-3 px-4 font-mono text-xs">{(r.orderId || "").slice(-8).toUpperCase()}</td>
               <td className="px-3">{r.storeName}</td>
               <td className="px-3 font-bold">{formatNaira(r.grossRevenue)}</td>
@@ -432,7 +432,7 @@ const ProfitView: React.FC<{
                 {formatNaira(r.gatewayFeeExpense)}
                 {r.gatewayFeeIsEstimate && <span className="text-xs text-yellow-500 ml-1">(est.)</span>}
               </td>
-              <td className="px-3 text-orange-500">{r.refundCostExpense ? formatNaira(r.refundCostExpense) : "—"}</td>
+              <td className="px-3 text-pry">{r.refundCostExpense ? formatNaira(r.refundCostExpense) : "—"}</td>
               <td className="px-3">{r.manualAdjustmentExpense ? formatNaira(r.manualAdjustmentExpense) : "—"}</td>
               <td className="px-3">{formatNaira(r.totalExpenses)}</td>
               <td className={`px-3 font-bold ${r.netProfit >= 0 ? "text-green-600" : "text-red-600"}`}>
@@ -474,7 +474,7 @@ const CheckoutsView: React.FC<{ checkouts: any[] }> = ({ checkouts }) => {
 
       <div className="bg-white rounded-xl border overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="text-gray-400 border-b text-xs">
+          <thead className="text-muted border-b text-xs">
             <tr>
               <th className="py-3 px-4 text-left">Customer</th>
               <th className="px-3 text-left">Date</th>
@@ -485,17 +485,17 @@ const CheckoutsView: React.FC<{ checkouts: any[] }> = ({ checkouts }) => {
           </thead>
           <tbody>
             {checkouts.length === 0 ? (
-              <tr><td colSpan={5} className="py-8 text-center text-gray-400">No checkouts in this period.</td></tr>
+              <tr><td colSpan={5} className="py-8 text-center text-muted">No checkouts in this period.</td></tr>
             ) : checkouts.map((c) => (
-              <tr key={c.checkoutReference} className={`border-b hover:bg-gray-50 ${c.storeCount > 1 ? "bg-purple-50/30" : ""}`}>
+              <tr key={c.checkoutReference} className={`border-b hover:bg-off-white ${c.storeCount > 1 ? "bg-purple-50/30" : ""}`}>
                 <td className="py-3 px-4">{c.customerName}</td>
-                <td className="px-3 text-xs text-gray-500">{new Date(c.date).toLocaleDateString("en-GB")}</td>
+                <td className="px-3 text-xs text-muted">{new Date(c.date).toLocaleDateString("en-GB")}</td>
                 <td className="px-3">
                   <div className="flex flex-col gap-1">
                     {c.stores.map((s: any) => (
                       <div key={s.orderId} className="flex items-center gap-2">
                         <span className="font-medium">{s.storeName}</span>
-                        <span className="text-xs text-gray-400">{formatNaira(s.grandTotal)}</span>
+                        <span className="text-xs text-muted">{formatNaira(s.grandTotal)}</span>
                         {c.storeCount > 1 && (
                           <span className="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded">split</span>
                         )}
@@ -506,7 +506,7 @@ const CheckoutsView: React.FC<{ checkouts: any[] }> = ({ checkouts }) => {
                 <td className="px-3 font-bold text-center">{formatNaira(c.combinedGrandTotal)}</td>
                 <td className="px-3 text-center">
                   {c.reconciliationDifference == null ? (
-                    <span className="text-xs text-gray-400">Awaiting settlement</span>
+                    <span className="text-xs text-muted">Awaiting settlement</span>
                   ) : Math.abs(c.reconciliationDifference) < 1 ? (
                     <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">✓ Matches</span>
                   ) : (
@@ -526,7 +526,7 @@ const CheckoutsView: React.FC<{ checkouts: any[] }> = ({ checkouts }) => {
 
 const SummaryCard: React.FC<{ label: string; value: string | number; color?: string; bold?: boolean }> = ({ label, value, color, bold }) => (
   <div className="bg-white rounded-xl p-4 border">
-    <p className="text-sm text-gray-500">{label}</p>
+    <p className="text-sm text-muted">{label}</p>
     <p className={`text-xl font-bold mt-1 ${color || ""} ${bold ? "text-2xl" : ""}`}>{value}</p>
   </div>
 );
