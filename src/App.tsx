@@ -36,6 +36,7 @@ function StoreGuard({ children }: { children: React.ReactNode }) {
 }
 
 import Verification from "./pages/Verification";
+import GoogleAuthCallback from "./pages/GoogleAuthCallback";
 
 function App() {
   return (
@@ -82,6 +83,7 @@ function App() {
           }
         />
 
+        <Route path="/google-callback" element={<GoogleAuthCallback />} />
         <Route path="*" element={<Error404 />} />
       </Routes>
     </BrowserRouter>

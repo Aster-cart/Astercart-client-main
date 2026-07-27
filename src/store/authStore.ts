@@ -116,15 +116,16 @@ login: async (email, password) => {
   }
 
   try {
-    type LoginResponse = { token: string; user?: any; message?: string; };
+    type LoginResponse = { token: string; refreshToken: string; user?: any; message?: string; };
 
     const { data } = await api.post<LoginResponse>("/auth/store/login", {
       email: email.trim().toLowerCase(),
       password,
     });
 
-    // Save token
+    // Save token and refresh token
     localStorage.setItem("token", data.token);
+    if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
 
     // Decode token to get storeId + storeName
     const payload = decodeJwt<{ id?: string; storeName?: string }>(data.token) || {};
@@ -248,8 +249,21 @@ login: async (email, password) => {
   },
 
   // -------- LOGOUT --------
-  logout: () => {
+  logout: async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        await api.post("/auth/logout", {}, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+    } catch {
+      // Server logout is best-effort
+    }
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("storeId");
+    localStorage.removeItem("storeName");
     set({ storeSummary: null, storeProfile: null, error: null });
   },
 

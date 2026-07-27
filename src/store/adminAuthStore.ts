@@ -40,12 +40,12 @@ export const useAdminAuthStore = create<AdminAuthStore>((set) => ({
   login: async (email, password) => {
     set({ loading: true });
     try {
-      const { data } = await api.post<{ token: string; user: AdminUser }>(
+      const { data } = await api.post<{ token: string; refreshToken: string; user: AdminUser }>(
         "/auth/admin/login",
         { email: email.trim().toLowerCase(), password }
       );
       localStorage.setItem("adminToken", data.token);
-      localStorage.setItem("token", data.token);
+      if (data.refreshToken) localStorage.setItem("adminRefreshToken", data.refreshToken);
       // Persist admin object so it survives page refresh
       localStorage.setItem("adminUser", JSON.stringify(data.user));
       set({ admin: data.user, loading: false });
@@ -59,9 +59,19 @@ export const useAdminAuthStore = create<AdminAuthStore>((set) => ({
     }
   },
 
-  logout: () => {
+  logout: async () => {
+    try {
+      const token = localStorage.getItem("adminToken");
+      if (token) {
+        await api.post("/auth/admin/logout", {}, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+    } catch {
+      // Server logout is best-effort
+    }
     localStorage.removeItem("adminToken");
-    localStorage.removeItem("token");
+    localStorage.removeItem("adminRefreshToken");
     localStorage.removeItem("adminUser");
     set({ admin: null });
   },

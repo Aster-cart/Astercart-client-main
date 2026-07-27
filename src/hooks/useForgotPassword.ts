@@ -38,7 +38,6 @@ export const useForgotPassword = () => {
         email,
       });
       sessionStorage.setItem("email", email);
-      sessionStorage.setItem("resetToken", response.data.resetToken);
       sessionStorage.setItem("step", "2");
       setStep("2");
     } catch (error: any) {
@@ -62,7 +61,7 @@ export const useForgotPassword = () => {
     try {
       await api.post("/auth/verify-otp", {
         otp: otpValues.join(""),
-        resetToken: sessionStorage.getItem("resetToken"),
+        email: storeEmail,
       });
       sessionStorage.setItem("step", "3");
       setStep("3");
@@ -79,9 +78,8 @@ export const useForgotPassword = () => {
     try {
       await api.post("/auth/reset-password", {
         newPassword: newPassword,
-        resetToken: sessionStorage.getItem("resetToken"),
+        email: storeEmail,
       });
-      sessionStorage.removeItem("resetToken");
       navigate("/login");
     } catch (error) {
       console.error("Password reset failed:", error);
