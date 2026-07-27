@@ -90,7 +90,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       const refreshed = await attemptRefresh();
       if (refreshed) {
-        const { token, onAdminPage } = getTokens();
+        const { onAdminPage } = getTokens();
         const adminToken = localStorage.getItem("adminToken");
         const storeToken = localStorage.getItem("token");
         const newToken = onAdminPage ? adminToken : storeToken;

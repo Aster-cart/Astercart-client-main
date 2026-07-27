@@ -44,7 +44,10 @@ const Setting: React.FC = () => {
     areAllNotificationsEnabled,
     notificationPreferences,
     handleCheckboxChange,
-    notificationOptions
+    notificationOptions,
+    handleOperatingHoursChange,
+    toggleDay,
+    dayLabels
   } = useSetting();
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");

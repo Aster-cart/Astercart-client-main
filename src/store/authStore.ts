@@ -52,6 +52,13 @@ export interface StoreProfile {
   phoneNumber: string | null;
   supportingEmail: string | null;
   supportingPhone: string | null;
+  description?: string;
+  operatingHours?: {
+    enabled: boolean;
+    daysOpen: number[];
+    openTime: string;
+    closeTime: string;
+  };
 }
 
 export interface SignUpData {

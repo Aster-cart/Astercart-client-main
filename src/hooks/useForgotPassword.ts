@@ -34,7 +34,7 @@ export const useForgotPassword = () => {
   const sendOTP = async (email: string) => {
     setLoading(true);
     try {
-      const response = await api.post("/auth/request-otp", {
+      await api.post("/auth/request-otp", {
         email,
       });
       sessionStorage.setItem("email", email);
