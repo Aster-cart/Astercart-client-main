@@ -33,7 +33,7 @@ const DashboardLayout: React.FC = () => {
   return (
     <div className="flex h-screen overflow-hidden font-inter">
       <Sidebar activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
-      <main className="ml-[70px] md:ml-[250px] w-full h-full bg-gray-100 overflow-y-auto transition-all">
+      <main className="ml-[70px] md:ml-[250px] w-full h-full bg-off-white overflow-y-auto transition-all">
         <PageHeader title={activeMenu} />
         {/* Render outlet immediately — no longer blocked by storeProfile */}
         <div className="p-4">

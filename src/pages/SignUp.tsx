@@ -139,32 +139,24 @@ const SignUp: React.FC = () => {
         className="w-[24.65%] h-full bg-cover bg-no-repeat"
         style={{ backgroundImage: `url(${bg1})` }}
       ></div>
-      <div className="flex-grow gap-2 m w-[75.35%] pl-[10%] flex items-center justify-center">
-        <div className="w-full p-2 bg-white rounded-md">
-          <h1 className="text-3xl font-semibold mb-2">Create Account</h1>
-          <p className="mb-2">
-            Already have an account?
-            <Link
-              to={"/login"}
-              className="text-pry ml-2 font-bold no-underline"
-            >
-              LOGIN
-            </Link>
-          </p>
-          {apiError && <p className="text-sm text-red-500">{apiError}</p>}{" "}
-          {/* Display API error */}
-          <form
-            className="w-[500px] h-[386px] left-[680px]"
-            onSubmit={handleFormSubmit}
-            noValidate
-          >
-            <>
-              <div className="grid grid-cols-2 gap-[7px] mb-2">
+      <div className="flex-grow w-[75.35%] pl-[10%] flex items-center bg-ink overflow-y-auto">
+        <div className="w-full py-8 pr-8">
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h1 className="text-2xl font-space font-bold mb-1 text-ink">Create Account</h1>
+            <p className="mb-4 text-body text-sm">
+              Already have an account?
+              <Link
+                to={"/login"}
+                className="text-pry ml-2 font-bold no-underline hover:underline"
+              >
+                LOGIN
+              </Link>
+            </p>
+            {apiError && <p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded mb-3">{apiError}</p>}
+            <form onSubmit={handleFormSubmit} noValidate>
+              <div className="grid grid-cols-2 gap-3 mb-3">
                 <div>
-                  <label
-                    className="block text-sm font-medium text-input"
-                    htmlFor="email"
-                  >
+                  <label className="block text-sm font-medium text-body mb-1" htmlFor="email">
                     Store Email
                   </label>
                   <input
@@ -172,20 +164,15 @@ const SignUp: React.FC = () => {
                     id="email"
                     placeholder="Enter here"
                     value={email}
-                   onChange={(e) => setEmail(e.target.value.toLowerCase())} 
-                  onBlur={() => setEmail(email.trim().toLowerCase())} 
-                    className={`mt-1 block text-sm h-[40px] w-[240px] px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                      email ? "bg-fade" : "bg-bginput"
-                    }`}
-                     style={{ textTransform: "lowercase" }}   
+                    onChange={(e) => setEmail(e.target.value.toLowerCase())}
+                    onBlur={() => setEmail(email.trim().toLowerCase())}
+                    className="mt-1 block text-sm h-[42px] w-full px-4 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pry focus:border-pry bg-off-white"
+                    style={{ textTransform: "lowercase" }}
                     required
                   />
                 </div>
                 <div>
-                  <label
-                    className="block  text-sm font-medium text-input"
-                    htmlFor="name"
-                  >
+                  <label className="block text-sm font-medium text-body mb-1" htmlFor="name">
                     Store name
                   </label>
                   <input
@@ -195,18 +182,13 @@ const SignUp: React.FC = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     onBlur={() => setName(name.trim())}
-                    className={`mt-1 block text-sm h-[40px] w-[240px]  px-4 py-2 border rounded-md shadow-sm 
-          focus:outline-none focus:ring-2 focus:ring-orange-500 
-          ${name ? "bg-fade" : "bg-bginput"}`}
+                    className="mt-1 block text-sm h-[42px] w-full px-4 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pry focus:border-pry bg-off-white"
                     required
                   />
                 </div>
               </div>
-              <div className=" mb-2">
-                <label
-                  className="block  text-sm font-medium text-input"
-                  htmlFor="store-address"
-                >
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-body mb-1" htmlFor="store-address">
                   Store Address
                 </label>
                 <input
@@ -216,24 +198,19 @@ const SignUp: React.FC = () => {
                   value={storeAddress}
                   onChange={(e) => setStoreAddress(e.target.value)}
                   onBlur={() => setStoreAddress(storeAddress.trim())}
-                  className={`mt-1 block text-sm h-[40px] w-full   px-4 py-2 border rounded-md shadow-sm 
-          focus:outline-none focus:ring-2 focus:ring-orange-500 
-          ${storeAddress ? "bg-fade" : "bg-bginput"}`}
+                  className="mt-1 block text-sm h-[42px] w-full px-4 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pry focus:border-pry bg-off-white"
                   required
                 />
               </div>
 
-              {/* Location capture — required for distance-based delivery
-                  pricing to work for this store. Best captured while the
-                  store owner is physically at the shop during signup. */}
               <div className="mb-4">
                 <button
                   type="button"
                   onClick={handleUseCurrentLocation}
                   disabled={locating}
-                  className="text-sm px-4 py-2 bg-orange-50 text-orange-600 rounded-md font-medium border border-orange-200 disabled:opacity-60"
+                  className="text-sm px-4 py-2 bg-pry-light text-pry rounded-md font-medium border border-pry-mid disabled:opacity-60 hover:bg-pry-mid transition-colors"
                 >
-                  {locating ? "Detecting location..." : latitude ? "📍 Location captured — tap to recapture" : "📍 Use my current location"}
+                  {locating ? "Detecting location..." : latitude ? "Location captured — tap to recapture" : "Use my current location"}
                 </button>
                 {latitude && longitude && (
                   <p className="text-xs text-green-600 mt-1">
@@ -244,18 +221,15 @@ const SignUp: React.FC = () => {
                   <p className="text-xs text-yellow-600 mt-1">{locationError}</p>
                 )}
                 {!latitude && !locationError && (
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-muted mt-1">
                     Stand at your shop and tap above — this lets us calculate accurate delivery fees by distance.
                   </p>
                 )}
               </div>
 
-              <div className="grid grid-cols-3 gap-[7px] mb-2">
+              <div className="grid grid-cols-3 gap-3 mb-3">
                 <div>
-                  <label
-                    className="block text-sm font-medium text-input"
-                    htmlFor="state"
-                  >
+                  <label className="block text-sm font-medium text-body mb-1" htmlFor="state">
                     State
                   </label>
                   <input
@@ -264,17 +238,12 @@ const SignUp: React.FC = () => {
                     placeholder="Enter state"
                     value={state}
                     onChange={(e) => setState(e.target.value)}
-                    className={`mt-1 block text-sm h-[40px] w-full  px-4 py-2 border rounded-md shadow-sm 
-          focus:outline-none focus:ring-2 focus:ring-orange-500 
-          ${state ? "bg-fade" : "bg-bginput"}`}
+                    className="mt-1 block text-sm h-[42px] w-full px-4 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pry focus:border-pry bg-off-white"
                     required
                   />
                 </div>
                 <div>
-                  <label
-                    className="block text-sm font-medium text-input"
-                    htmlFor="lga"
-                  >
+                  <label className="block text-sm font-medium text-body mb-1" htmlFor="lga">
                     LGA
                   </label>
                   <input
@@ -283,17 +252,12 @@ const SignUp: React.FC = () => {
                     placeholder="Enter LGA"
                     value={lga}
                     onChange={(e) => setLGA(e.target.value)}
-                    className={`mt-1 block text-sm h-[40px] w-full px-4 py-2 border rounded-md shadow-sm 
-          focus:outline-none focus:ring-2 focus:ring-orange-500 
-          ${lga ? "bg-fade" : "bg-bginput"}`}
+                    className="mt-1 block text-sm h-[42px] w-full px-4 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pry focus:border-pry bg-off-white"
                     required
                   />
                 </div>
-                <div className="mb-4">
-                  <label
-                    className="block text-sm font-medium text-input"
-                    htmlFor="postal-code"
-                  >
+                <div>
+                  <label className="block text-sm font-medium text-body mb-1" htmlFor="postal-code">
                     Postal Code
                   </label>
                   <input
@@ -302,17 +266,15 @@ const SignUp: React.FC = () => {
                     placeholder="Enter postal code"
                     value={postalCode}
                     onChange={(e) => setPostalCode(e.target.value)}
-                    className={`mt-1 block text-sm h-[40px] w-full px-4 py-2 border rounded-md shadow-sm 
-          focus:outline-none focus:ring-2 focus:ring-orange-500 
-          ${postalCode ? "bg-fade" : "bg-bginput"}`}
+                    className="mt-1 block text-sm h-[42px] w-full px-4 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pry focus:border-pry bg-off-white"
                     required
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-[7px] mb-2">
+              <div className="grid grid-cols-2 gap-3 mb-3">
                 <div>
-                  <label className="block text-sm font-medium text-input" htmlFor="phone">
+                  <label className="block text-sm font-medium text-body mb-1" htmlFor="phone">
                     Business Phone
                   </label>
                   <input
@@ -321,12 +283,12 @@ const SignUp: React.FC = () => {
                     placeholder="e.g. 08012345678"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    className={`mt-1 block text-sm h-[40px] w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${phoneNumber ? "bg-fade" : "bg-bginput"}`}
+                    className="mt-1 block text-sm h-[42px] w-full px-4 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pry focus:border-pry bg-off-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-input" htmlFor="cac">
-                    CAC Number <span className="text-gray-400 font-normal">(optional)</span>
+                  <label className="block text-sm font-medium text-body mb-1" htmlFor="cac">
+                    CAC Number <span className="text-muted font-normal">(optional)</span>
                   </label>
                   <input
                     type="text"
@@ -334,88 +296,80 @@ const SignUp: React.FC = () => {
                     placeholder="e.g. RC-123456"
                     value={cacNumber}
                     onChange={(e) => setCacNumber(e.target.value)}
-                    className={`mt-1 block text-sm h-[40px] w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${cacNumber ? "bg-fade" : "bg-bginput"}`}
+                    className="mt-1 block text-sm h-[42px] w-full px-4 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pry focus:border-pry bg-off-white"
                   />
                 </div>
               </div>
 
-              <div className="mb-2">
-                <label
-                  className="block  text-sm font-medium text-input"
-                  htmlFor="Password"
-                >
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={visibility.password ? "text" : "password"}
-                    id="password"
-                    placeholder="Enter here"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onBlur={() => setPassword(password.trim())} // Optional: Trim whitespace on blur
-                    className={`mt-1 block text-sm h-[40px] w-full px-4 py-2 border rounded-md shadow-sm 
-          focus:outline-none focus:ring-2 focus:ring-orange-500 
-          ${password ? "bg-fade" : "bg-bginput"}`}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => toggleVisibility("password")}
-                    className="absolute inset-y-0 right-0 flex bg-white border px-2 items-center pr-3 text-gray-600"
-                  >
-                    {visibility.password ? "Hide" : "Show Password"}
-                  </button>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label className="block text-sm font-medium text-body mb-1" htmlFor="Password">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={visibility.password ? "text" : "password"}
+                      id="password"
+                      placeholder="Enter here"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onBlur={() => setPassword(password.trim())}
+                      className="mt-1 block text-sm h-[42px] w-full px-4 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pry focus:border-pry bg-off-white"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => toggleVisibility("password")}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted text-sm"
+                    >
+                      {visibility.password ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                  {passwordError && (
+                    <p className="text-sm text-red-500 mt-1">{passwordError}</p>
+                  )}
                 </div>
-                {passwordError && (
-                  <p className="text-sm text-red-500">{passwordError}</p>
-                )}
-              </div>
-              <div className="mb-2">
-                <label
-                  className="block  text-sm font-medium text-input"
-                  htmlFor="ConfirmPassword"
-                >
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={visibility.confirmPassword ? "text" : "password"}
-                    id="confirmPassword"
-                    placeholder="Enter here"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    onBlur={() => setConfirmPassword(confirmPassword.trim())} // Optional: Trim whitespace on blur
-                    className={`mt-1 block text-sm h-[40px] w-full px-4 py-2 border rounded-md shadow-sm 
-          focus:outline-none focus:ring-2 focus:ring-orange-500 
-          ${confirmPassword ? "bg-fade" : "bg-bginput"}`}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => toggleVisibility("confirmPassword")}
-                    className="absolute inset-y-0 right-0 flex bg-white border px-2 items-center pr-3 text-gray-600"
-                  >
-                    {visibility.confirmPassword ? "Hide" : "Show Password"}
-                  </button>
+                <div>
+                  <label className="block text-sm font-medium text-body mb-1" htmlFor="ConfirmPassword">
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={visibility.confirmPassword ? "text" : "password"}
+                      id="confirmPassword"
+                      placeholder="Enter here"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onBlur={() => setConfirmPassword(confirmPassword.trim())}
+                      className="mt-1 block text-sm h-[42px] w-full px-4 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pry focus:border-pry bg-off-white"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => toggleVisibility("confirmPassword")}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted text-sm"
+                    >
+                      {visibility.confirmPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                  {confirmPasswordError && (
+                    <p className="text-sm text-red-500 mt-1">{confirmPasswordError}</p>
+                  )}
+                  {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
                 </div>
-                {confirmPasswordError && (
-                  <p className="text-sm text-red-500">{confirmPasswordError}</p>
-                )}
-                {error && <p className="text-sm text-red-500">{error}</p>}
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full py-2 ${
-                  loading ? "bg-gray-300" : "bg-orange-300 hover:bg-orange-400"
-                } text-white font-semibold rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500`}
+                className={`w-full py-3 font-semibold rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pry ${
+                  loading ? "bg-muted text-white cursor-not-allowed" : "bg-pry hover:bg-orange-600 text-white transition-colors"
+                }`}
               >
                 {loading ? "Creating Account..." : "Create Account"}
               </button>
-            </>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
     </div>

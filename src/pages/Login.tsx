@@ -54,104 +54,91 @@ const Login: React.FC = () => {
   return (
     <div className="flex h-screen font-inter justify-between">
       <div
-        className="w-[24.65%]  h-full bg-cover bg-no-repeat"
+        className="w-[24.65%] h-full bg-cover bg-no-repeat"
         style={{ backgroundImage: `url(${bg1})` }}
       ></div>
-      <div className="flex-grow  gap-3 m w-[75.35%] pl-[10%] flex items-center">
-        <div className="w-[532px] p-4 bg-white rounded-md">
-          <h1 className="text-3xl font-semibold mb-2">Login</h1>
-          <p className="mb-4">
+      <div className="flex-grow w-[75.35%] pl-[10%] flex items-center bg-ink">
+        <div className="w-[532px] p-8 bg-white rounded-lg shadow-lg">
+          <h1 className="text-3xl font-space font-bold mb-2 text-ink">Login</h1>
+          <p className="mb-6 text-body">
             Dont have an account?
             <Link
               to={"/signup"}
-              className="text-pry ml-2 font-bold no-underline"
+              className="text-pry ml-2 font-bold no-underline hover:underline"
             >
               SIGN UP
             </Link>
           </p>
-          <p className="text-red-500 mb-4 h-[1lh] w-[500px]"> {error && error}</p>
+          {error && <p className="text-red-500 mb-4 text-sm bg-red-50 px-3 py-2 rounded">{error}</p>}
 
-          <form
-            className="w-[500px] left-[680px]"
-            onSubmit={handleFormSubmit}
-            noValidate
-          >
-            <>
-              <div className=" mb-4">
-                <div>
-                  <label
-                    className="block text-sm font-medium text-input"
-                    htmlFor="store-email"
-                  >
-                    Store Email
-                  </label>
-                  <input
-                    type="email"
-                    id="store-email"
-                    placeholder="Enter here"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value.toLocaleLowerCase())}
-                    className={`mt-1 block text-sm h-[40px] w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                      email ? "bg-fade" : "bg-bginput"
-                    }`}
-                  />
-                </div>
-              </div>
-              <div className="mb-2">
-                <label
-                  className="block  text-sm font-medium text-input"
-                  htmlFor="password"
-                >
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={passwordVisible ? "text" : "password"}
-                    id="password"
-                    placeholder="Enter here"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={`mt-1 block text-sm h-[40px] w-full px-4 py-2 border rounded-md shadow-sm 
-          focus:outline-none focus:ring-2 focus:ring-orange-500 
-          ${password ? "bg-fade" : "bg-bginput"}`}
-                  />
-                  
-                  <button
-                    type="button"
-                    onClick={togglePasswordVisibility}
-                    className="absolute inset-y-0 right-0 flex bg-white border justify-center items-center text-gray-600 w-16"
-                  >
-                    {passwordVisible ? "Hide" : "Show"}
-                  </button>
-                </div>
-              </div>
-              <div className="flex justify-end mb-4">
-                <Link to={"/forgotpassword"} className="text-pry">
-                  Forgot Password
-                </Link>
-              </div>
-              <button
-                disabled={loading}
-                type="submit"
-                className={`w-full py-2 ${
-                  loading ? "bg-gray-300" : "bg-orange-300 hover:bg-orange-400"
-                } text-white font-semibold rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500`}
+          <form onSubmit={handleFormSubmit} noValidate>
+            <div className="mb-4">
+              <label
+                className="block text-sm font-medium text-body mb-1"
+                htmlFor="store-email"
               >
-                {loading ? "Loading..." : "Login"}
-              </button>
-            </>
+                Store Email
+              </label>
+              <input
+                type="email"
+                id="store-email"
+                placeholder="Enter here"
+                value={email}
+                onChange={(e) => setEmail(e.target.value.toLocaleLowerCase())}
+                className="mt-1 block text-sm h-[44px] w-full px-4 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pry focus:border-pry bg-off-white"
+              />
+            </div>
+            <div className="mb-2">
+              <label
+                className="block text-sm font-medium text-body mb-1"
+                htmlFor="password"
+              >
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={passwordVisible ? "text" : "password"}
+                  id="password"
+                  placeholder="Enter here"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="mt-1 block text-sm h-[44px] w-full px-4 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pry focus:border-pry bg-off-white"
+                />
+                <button
+                  type="button"
+                  onClick={togglePasswordVisibility}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted text-sm"
+                >
+                  {passwordVisible ? "Hide" : "Show"}
+                </button>
+              </div>
+            </div>
+            <div className="flex justify-end mb-6">
+              <Link to={"/forgotpassword"} className="text-sm text-pry font-medium hover:underline">
+                Forgot Password?
+              </Link>
+            </div>
+            <button
+              disabled={loading}
+              type="submit"
+              className={`w-full py-3 font-semibold rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pry ${
+                loading ? "bg-muted text-white cursor-not-allowed" : "bg-pry hover:bg-orange-600 text-white transition-colors"
+              }`}
+            >
+              {loading ? "Loading..." : "Login"}
+            </button>
           </form>
 
-          <div className="flex items-center justify-center my-4">
-            <div className="flex-1 border-t border-gray-300"></div>
-            <span className="mx-4 text-gray-500 text-sm">or continue with</span>
-            <div className="flex-1 border-t border-gray-300"></div>
+          <div className="flex items-center justify-center my-6">
+            <div className="flex-1 border-t border-border"></div>
+            <span className="mx-4 text-muted text-sm">or continue with</span>
+            <div className="flex-1 border-t border-border"></div>
           </div>
 
           <button
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="w-full py-2 flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-full py-3 flex items-center justify-center border border-border rounded-md hover:bg-pry-light transition-colors focus:outline-none focus:ring-2 focus:ring-pry text-body font-medium"
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>

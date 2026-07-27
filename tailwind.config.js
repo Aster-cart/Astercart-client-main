@@ -15,15 +15,20 @@ export default {
         mulish: ['Mulish', 'sans-serif'],
       },
       colors: {
-        pry: '#FF6B00', 
+        pry: '#FE5B18',
+        'pry-light': '#FFF3EE',
+        'pry-mid': '#FFD6C2',
+        ink: '#1A1A2E',
+        body: '#4A4A5A',
+        muted: '#8A8A9A',
+        'off-white': '#F9F9FB',
+        border: '#EBEBF0',
         grey: '#C4C4C4',
         input: '#E0E0E0',
         fade: '#FFE1CC',
         bginput: '#F9FAFB',
         binput: '#F2F2F2',
         blue: '#004EF1',
-     
-        
       },
     },
   },
