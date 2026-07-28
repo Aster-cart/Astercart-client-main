@@ -184,6 +184,7 @@ const Order: React.FC = () => {
             <thead className="text-muted border-b text-xs">
               <tr>
                 <th className="py-3 px-2">Customer</th>
+                <th className="px-2">Phone</th>
                 <th className="px-2">Order No</th>
                 <th className="px-2">Amount</th>
                 <th className="px-2">Status</th>
@@ -206,6 +207,13 @@ const Order: React.FC = () => {
                       onClick={() => toggleRow(index)}
                     >
                       <td className="py-3 px-2 font-medium">{order.name || "—"}</td>
+                      <td className="px-2 text-xs text-body">
+                        {order.customerPhone ? (
+                          <a href={`tel:${order.customerPhone}`} className="text-pry hover:underline">
+                            {order.customerPhone}
+                          </a>
+                        ) : "—"}
+                      </td>
                       <td className="px-2 font-mono text-xs">
                         {(order.orderNo || "").slice(0, 10).toUpperCase()}
                       </td>
@@ -256,7 +264,7 @@ const Order: React.FC = () => {
                     {/* Progress tracker — expands on row click */}
                     {isExpanded && (
                       <tr>
-                        <td colSpan={7} className="bg-orange-50 px-4 py-4 border-b">
+                        <td colSpan={8} className="bg-orange-50 px-4 py-4 border-b">
                           {/* Progress steps */}
                           <div className="flex items-center gap-1 mb-3 overflow-x-auto pb-1">
                             {STATUS_STEPS.map((step, si) => {
@@ -297,6 +305,16 @@ const Order: React.FC = () => {
                           )}
                           {status === "completed" && (
                             <span className="text-xs text-green-600 font-medium">✓ Order completed</span>
+                          )}
+
+                          {/* Customer phone */}
+                          {order.customerPhone && (
+                            <p className="mt-2 text-xs">
+                              <span className="font-medium text-muted">Contact: </span>
+                              <a href={`tel:${order.customerPhone}`} className="text-pry font-medium hover:underline">
+                                {order.customerPhone}
+                              </a>
+                            </p>
                           )}
 
                           {/* Delivery address */}
