@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { down } from "../assets/res";
 import { IoNotificationsOutline } from "react-icons/io5";
 import { useAuthStore } from "../store/authStore";
@@ -9,6 +10,7 @@ interface PageHeaderProps {
 }
 
 const PageHeader: React.FC<PageHeaderProps> = ({ title }) => {
+  const navigate = useNavigate();
   const { storeProfile } = useAuthStore();
   const {
     notifications,
@@ -113,7 +115,10 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title }) => {
                       )}
                       <span className="text-sm leading-5 text-body">{notif.message}</span>
                       {!notif.read && (
-                        <button className="text-xs rounded-lg text-white bg-pry hover:bg-orange-600 transition-colors px-2 py-1 w-fit">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); markAsRead(notif.id); navigate("/orders"); }}
+                          className="text-xs rounded-lg text-white bg-pry hover:bg-orange-600 transition-colors px-2 py-1 w-fit"
+                        >
                           View
                         </button>
                       )}

@@ -24,6 +24,10 @@ const SignUp: React.FC = () => {
   const [postalCode, setPostalCode] = useState<string>("");
   const [cacNumber, setCacNumber] = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
+  const [bankName, setBankName] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [apiError, setApiError] = useState<string>("");
@@ -101,6 +105,16 @@ const SignUp: React.FC = () => {
       return;
     }
 
+    if (!cacNumber.trim()) {
+      setApiError("CAC Number is required.");
+      return;
+    }
+
+    if (!agreedToTerms) {
+      setApiError("You must agree to the Store Partner Agreement.");
+      return;
+    }
+
   const signUpData: SignUpData = {
   name: name.trim(),
   email: email.trim().toLowerCase(),
@@ -115,6 +129,11 @@ const SignUp: React.FC = () => {
   },
   cacNumber: cacNumber.trim(),
   phoneNumber: phoneNumber.trim(),
+  bankAccount: bankName || accountName || accountNumber ? {
+    bankName: bankName.trim(),
+    accountName: accountName.trim(),
+    accountNumber: accountNumber.trim(),
+  } : undefined,
   userType: "Store",
 };
 
@@ -288,7 +307,7 @@ const SignUp: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-body mb-1" htmlFor="cac">
-                    CAC Number <span className="text-muted font-normal">(optional)</span>
+                    CAC Number <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -297,7 +316,25 @@ const SignUp: React.FC = () => {
                     value={cacNumber}
                     onChange={(e) => setCacNumber(e.target.value)}
                     className="mt-1 block text-sm h-[42px] w-full px-4 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pry focus:border-pry bg-off-white"
+                    required
                   />
+                </div>
+              </div>
+
+              {/* Bank account details */}
+              <h3 className="text-sm font-semibold text-ink mb-2 mt-4">Bank Account (for settlements)</h3>
+              <div className="grid grid-cols-3 gap-3 mb-3">
+                <div>
+                  <label className="block text-sm font-medium text-body mb-1" htmlFor="bankName">Bank Name</label>
+                  <input type="text" id="bankName" placeholder="e.g. GTBank" value={bankName} onChange={(e) => setBankName(e.target.value)} className="mt-1 block text-sm h-[42px] w-full px-4 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pry focus:border-pry bg-off-white" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-body mb-1" htmlFor="accountName">Account Name</label>
+                  <input type="text" id="accountName" placeholder="Full name on account" value={accountName} onChange={(e) => setAccountName(e.target.value)} className="mt-1 block text-sm h-[42px] w-full px-4 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pry focus:border-pry bg-off-white" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-body mb-1" htmlFor="accountNumber">Account Number</label>
+                  <input type="text" id="accountNumber" placeholder="e.g. 0123456789" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="mt-1 block text-sm h-[42px] w-full px-4 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pry focus:border-pry bg-off-white" />
                 </div>
               </div>
 
@@ -357,6 +394,27 @@ const SignUp: React.FC = () => {
                   )}
                   {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
                 </div>
+              </div>
+
+              {/* Terms agreement */}
+              <div className="flex items-start gap-2 mb-4">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-1 h-4 w-4 text-pry border-border rounded focus:ring-pry"
+                />
+                <label htmlFor="terms" className="text-sm text-body">
+                  I have read and agree to the{" "}
+                  <a href="/terms" target="_blank" className="text-pry font-medium hover:underline">
+                    Store Partner Agreement
+                  </a>{" "}
+                  and{" "}
+                  <a href="/privacy" target="_blank" className="text-pry font-medium hover:underline">
+                    Privacy Policy
+                  </a>
+                </label>
               </div>
 
               <button

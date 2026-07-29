@@ -275,12 +275,27 @@ const Setting: React.FC = () => {
                         }`}
                       />
                     </div>
+                    {/* Bank Account */}
+                    <div className="border-t border-border mt-4 pt-4 mb-4">
+                      <h3 className="font-bold text-base text-ink mb-1">Bank Account (for settlements)</h3>
+                      <p className="text-xs text-muted mb-3">Changes require admin approval.</p>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <label htmlFor="bankName" className="block text-sm font-medium text-input">Bank Name</label>
+                          <input type="text" id="bankName" value={formData.bankName} onChange={handleChange} readOnly={!isEditable} className={`mt-1 block text-sm h-[40px] w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${isEditable ? "bg-fade" : "bg-bginput"}`} />
+                        </div>
+                        <div>
+                          <label htmlFor="accountName" className="block text-sm font-medium text-input">Account Name</label>
+                          <input type="text" id="accountName" value={formData.accountName} onChange={handleChange} readOnly={!isEditable} className={`mt-1 block text-sm h-[40px] w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${isEditable ? "bg-fade" : "bg-bginput"}`} />
+                        </div>
+                        <div>
+                          <label htmlFor="accountNumber" className="block text-sm font-medium text-input">Account Number</label>
+                          <input type="text" id="accountNumber" value={formData.accountNumber} onChange={handleChange} readOnly={!isEditable} className={`mt-1 block text-sm h-[40px] w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${isEditable ? "bg-fade" : "bg-bginput"}`} />
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Business Description */}
-<div className="flex flex-col mb-4 md:flex-row gap-6">
- 
-</div>
-
-
                   </div>
                   <div className="flex-1">
     <label

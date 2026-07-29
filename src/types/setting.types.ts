@@ -11,6 +11,9 @@ export interface BusinessFormProps {
     newPassword?: string;
     profilePhoto?: string;
     description?: string;
+    bankName: string;
+    accountName: string;
+    accountNumber: string;
     operatingHours: {
       enabled: boolean;
       daysOpen: number[];

@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Aster, dashboard, logout as logoutIcon, setting, dash, log, set,
   down, storem, userm, orderm, wallet, stom, usem, ordm, walet,
 } from "../assets/res";
 import { IoNotificationsOutline } from "react-icons/io5";
+import { toast } from "react-toastify";
 import DashboardAD from "./DashboardAD";
 import StoresAD from "./StoresAD";
 import UsersAD from "./UsersAD";
@@ -23,52 +24,76 @@ import ProductsAD from "./ProductsAD";
 import PricingAD from "./PricingAD";
 import FinancialLedgerAD from "./FinancialLedgerAD";
 import api from "../utils/api";
+import { playNotificationSound } from "../utils/playNotificationSound";
 
 interface Notification {
-  id: string;
+  _id: string;
+  title: string;
   message: string;
-  read: boolean;
-  timestamp: string;
+  createdAt: string;
+  seen: boolean;
 }
 
 // ── Admin header with real notifications ─────────────────────────
 const AdminHeader: React.FC<{ title: string }> = ({ title }) => {
   const admin = useAdminAuthStore((s) => s.admin);
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const prevIds = useRef<Set<string>>(new Set());
+
+  const fetchNotifications = async () => {
+    try {
+      const { data } = await api.get<{ notifications?: Notification[] }>("/admin/notifications");
+      const list = data.notifications || [];
+      setNotifications(list.slice(0, 20));
+      // Play sound + show toast popup for new unseen notifications
+      const newOnes = list.filter((n) => !n.seen && !prevIds.current.has(n._id));
+      for (const n of newOnes) {
+        playNotificationSound();
+        toast.info(
+          <div style={{ cursor: "pointer" }} onClick={() => { window.location.href = "/admin"; }}>
+            <strong>{n.title}</strong>
+            <p style={{ fontSize: 13, margin: "4px 0 0" }}>{n.message}</p>
+          </div>,
+          { autoClose: 8000, onClick: () => { window.location.href = "/admin"; } }
+        );
+      }
+      prevIds.current = new Set(list.map((n) => n._id));
+    } catch { /* silent */ }
+  };
 
   useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await api.get<{ orders?: { _id: string; customerName?: string; createdAt: string }[] }>(
-          "/adminOrder"
-        );
-        const orders = Array.isArray(data) ? data : data.orders || [];
-        setNotifications(
-          orders.slice(0, 10).map((o) => ({
-            id: o._id,
-            message: `New order from ${o.customerName || "a customer"}`,
-            read: false,
-            timestamp: o.createdAt,
-          }))
-        );
-      } catch { setNotifications([]); }
-    })();
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 15000);
+    return () => clearInterval(interval);
   }, []);
 
-  const markAsRead = (id: string) =>
-    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
-  const markAllAsRead = () =>
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  const unreadCount = notifications.filter((n) => !n.read).length;
-  const allRead = notifications.every((n) => n.read);
+  const markAsRead = async (id: string) => {
+    setNotifications((prev) => prev.map((n) => n._id === id ? { ...n, seen: true } : n));
+    try { await api.patch(`/admin/read/${id}`); } catch { /* silent */ }
+  };
+
+  const markAllAsRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, seen: true })));
+    try { await api.patch("/admin/mark-all-read"); } catch { /* silent */ }
+  };
+
+  const unreadCount = notifications.filter((n) => !n.seen).length;
+  const allRead = notifications.every((n) => n.seen);
 
   const formatTime = (ts: string) => {
     const d = new Date(ts);
     const h = d.getHours() % 12 || 12;
     const m = d.getMinutes().toString().padStart(2, "0");
     const ap = d.getHours() >= 12 ? "pm" : "am";
-    return `${h}:${m} ${ap}`;
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const isYesterday = d.toDateString() === yesterday.toDateString();
+    const prefix = isToday ? "Today" : isYesterday ? "Yesterday" : d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    return `${prefix} at ${h}:${m} ${ap}`;
   };
 
   return (
@@ -101,10 +126,18 @@ const AdminHeader: React.FC<{ title: string }> = ({ title }) => {
             ) : (
               <ul className="flex flex-col gap-2 max-h-64 overflow-y-auto">
                 {notifications.map((n) => (
-                  <li key={n.id} onClick={() => markAsRead(n.id)} className={`border-b border-border pb-2 cursor-pointer ${n.read ? "opacity-60" : ""}`}>
+                  <li key={n._id} onClick={() => markAsRead(n._id)} className={`border-b border-border pb-2 cursor-pointer ${n.seen ? "opacity-60" : ""}`}>
+                    <p className="text-sm font-medium text-ink">{n.title}</p>
                     <p className="text-sm text-body">{n.message}</p>
-                    {!n.read && <button className="text-xs text-white bg-pry hover:bg-orange-600 transition-colors px-2 py-1 rounded mt-1">View</button>}
-                    <p className="text-xs text-muted mt-1">{formatTime(n.timestamp)}</p>
+                    {!n.seen && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); markAsRead(n._id); navigate("/admin"); }}
+                        className="text-xs text-white bg-pry hover:bg-orange-600 transition-colors px-2 py-1 rounded mt-1"
+                      >
+                        View
+                      </button>
+                    )}
+                    <p className="text-xs text-muted mt-1">{formatTime(n.createdAt)}</p>
                   </li>
                 ))}
               </ul>

@@ -169,6 +169,14 @@ const Order: React.FC = () => {
         </select>
       </div>
 
+      {/* Customer info usage notice */}
+      <div className="mx-2 mb-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+        <p className="text-xs text-blue-700">
+          Customer contact information is provided for order fulfilment only. 
+          Do not use for marketing, direct sales, or to move customers off the Astercart platform.
+        </p>
+      </div>
+
       {/* Order table */}
       <div className="mt-1 mx-2 p-3 font-inter bg-white rounded-2xl">
         <div className="flex justify-between mb-3 items-center">

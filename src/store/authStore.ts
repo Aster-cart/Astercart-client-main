@@ -53,6 +53,12 @@ export interface StoreProfile {
   supportingEmail: string | null;
   supportingPhone: string | null;
   description?: string;
+  cacNumber?: string;
+  bankAccount?: {
+    bankName: string;
+    accountName: string;
+    accountNumber: string;
+  };
   operatingHours?: {
     enabled: boolean;
     daysOpen: number[];

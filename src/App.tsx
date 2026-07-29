@@ -1,4 +1,6 @@
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 import SignUp from "./pages/SignUp";
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -35,12 +37,15 @@ function StoreGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 import Verification from "./pages/Verification";
 import GoogleAuthCallback from "./pages/GoogleAuthCallback";
 
 function App() {
   return (
     <BrowserRouter>
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick pauseOnHover />
       <Routes>
         {/* Store auth — no guard, just layout wrapper */}
         <Route element={<AuthLayout />}>
@@ -83,6 +88,8 @@ function App() {
           }
         />
 
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
         <Route path="/google-callback" element={<GoogleAuthCallback />} />
         <Route path="*" element={<Error404 />} />
       </Routes>

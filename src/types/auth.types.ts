@@ -28,8 +28,13 @@ export interface SignUpData {
   name: string;
   email: string;
   password: string;
-  cacNumber?: string;
+  cacNumber: string;
   phoneNumber?: string;
+  bankAccount?: {
+    bankName: string;
+    accountName: string;
+    accountNumber: string;
+  };
   storeDetails: {
     address: string;
     state: string;

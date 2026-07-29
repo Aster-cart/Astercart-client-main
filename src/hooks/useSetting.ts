@@ -33,6 +33,9 @@ export const useSetting = () => {
     lga: storeProfile?.storeDetails?.lga || "",
     profilePhoto: storeProfile?.picture || "https://via.placeholder.com/150",
     description: storeProfile?.description || "",
+    bankName: (storeProfile as any)?.bankAccount?.bankName || "",
+    accountName: (storeProfile as any)?.bankAccount?.accountName || "",
+    accountNumber: (storeProfile as any)?.bankAccount?.accountNumber || "",
     operatingHours: {
       enabled: (storeProfile as any)?.operatingHours?.enabled ?? false,
       daysOpen: (storeProfile as any)?.operatingHours?.daysOpen ?? [1,2,3,4,5,6],

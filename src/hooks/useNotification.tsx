@@ -1,5 +1,8 @@
 import { useEffect, useState, useRef } from "react";
+import { toast } from "react-toastify";
 import api from "../utils/api";
+import { useAuthStore } from "../store/authStore";
+import { playNotificationSound } from "../utils/playNotificationSound";
 
 export interface Notification {
   id: string;
@@ -39,7 +42,6 @@ export const useNotification = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const previousPickupOrderIds = useRef<Set<string>>(new Set());
-
   const requestNotificationPermission = async () => {
     if (!("Notification" in window)) return false;
     if (Notification.permission === "granted") return true;
@@ -62,6 +64,9 @@ export const useNotification = () => {
 
   const load = async (isFirstLoad: boolean) => {
     try {
+      const storeProfile = useAuthStore.getState().storeProfile;
+      const prefs = storeProfile?.notificationPreferences;
+
       const ordersRes = await api.get<{
         orders: {
           orderNo: string; _id?: string; name: string; transactionStatus: string;
@@ -71,13 +76,14 @@ export const useNotification = () => {
 
       const orders = ordersRes.data?.orders || [];
 
-      const orderNotifs: Notification[] = orders.slice(0, 10).map((o, i) => ({
+      const showOrderNotifs = prefs?.newOrder !== false;
+      const orderNotifs: Notification[] = showOrderNotifs ? orders.slice(0, 10).map((o, i) => ({
         id: o.orderNo || String(i),
         message: `Order received: ${o.name || "A customer"} placed order #${(o.orderNo || "").slice(0, 8).toUpperCase()}`,
         read: false,
         timestamp: o.createdAt || new Date().toISOString(),
         type: "order" as const,
-      }));
+      })) : [];
 
       // Pickup OTP notifications — one per order currently waiting on a
       // pickup confirmation. These are tracked separately from generic
@@ -123,6 +129,20 @@ export const useNotification = () => {
           ...n,
           read: prevReadMap.get(n.id) ?? n.read,
         }));
+        // Play audio + show toast popup for new unread notifications
+        if (!isFirstLoad) {
+          const newUnread = merged.filter(n => !n.read && !prevReadMap.has(n.id));
+          for (const n of newUnread) {
+            playNotificationSound();
+            toast.info(
+              <div style={{ cursor: "pointer" }} onClick={() => { window.location.href = "/orders"; }}>
+                <strong>{n.type === "pickup_otp" ? "Rider at pickup!" : "New Order"}</strong>
+                <p style={{ fontSize: 13, margin: "4px 0 0" }}>{n.message}</p>
+              </div>,
+              { autoClose: 8000, onClick: () => { window.location.href = "/orders"; } }
+            );
+          }
+        }
         return merged;
       });
     } catch {
@@ -159,7 +179,13 @@ export const useNotification = () => {
     const hours = date.getHours() % 12 || 12;
     const minutes = date.getMinutes().toString().padStart(2, "0");
     const ampm = date.getHours() >= 12 ? "pm" : "am";
-    return `Today at ${hours}:${minutes} ${ampm}`;
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const isYesterday = date.toDateString() === yesterday.toDateString();
+    const prefix = isToday ? "Today" : isYesterday ? "Yesterday" : date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    return `${prefix} at ${hours}:${minutes} ${ampm}`;
   };
 
   const unreadCount = notifications.filter((n) => !n.read).length;

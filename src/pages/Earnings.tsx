@@ -49,6 +49,16 @@ const Earnings: React.FC = () => {
         </div>
       )}
 
+      {/* Settlement schedule */}
+      <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+        <h3 className="font-semibold text-green-800 mb-2">Settlement schedule</h3>
+        <p className="text-sm text-green-700">
+          Payouts are processed <strong>weekly (Monday – Sunday)</strong> for all completed orders.
+          Settlements are calculated based on your product subtotal minus Astercart's commission.
+          Contact support if you have a payment dispute.
+        </p>
+      </div>
+
       {/* How payouts work */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
         <h3 className="font-semibold text-blue-800 mb-2">How payouts work</h3>
@@ -56,7 +66,7 @@ const Earnings: React.FC = () => {
           <li>• You are paid based on your product subtotal — never the delivery fee or service fee</li>
           <li>• Astercart retains a commission percentage from your product subtotal — see your actual rate above</li>
           <li>• The customer separately pays a delivery fee and a service fee — neither of these come out of your payout</li>
-          <li>• Payouts are processed by the admin team and marked as paid once transferred</li>
+          <li>• Payouts are processed <strong>weekly (Monday – Sunday)</strong></li>
           <li>• Contact support if you have a payment dispute</li>
         </ul>
       </div>
