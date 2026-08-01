@@ -44,6 +44,12 @@ const Sidebar: React.FC<{
       path: "/earnings",
     },
     {
+      label: "Withdrawals",
+      icon: setting,
+      activeIcon: setting,
+      path: "/withdrawals",
+    },
+    {
       label: "Disputes",
       icon: setting,
       activeIcon: setting,

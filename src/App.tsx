@@ -17,6 +17,7 @@ import Earnings from "./pages/Earnings";
 import Analytics from "./pages/Analytics";
 import Disputes from "./pages/Disputes";
 import Support from "./pages/Support";
+import Withdrawals from "./pages/Withdrawals";
 import LoginAD from "./admin/LoginAD";
 import SignupAD from "./admin/SignupAD";
 import ForgotPasswordAD from "./admin/ForgotPasswordAD";
@@ -68,6 +69,7 @@ function App() {
           <Route path="verification" element={<Verification />} />
           <Route path="settings" element={<Setting />} />
           <Route path="earnings" element={<Earnings />} />
+          <Route path="withdrawals" element={<Withdrawals />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="disputes" element={<Disputes />} />
           <Route path="support" element={<Support />} />

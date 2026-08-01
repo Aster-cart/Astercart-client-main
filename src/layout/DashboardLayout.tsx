@@ -22,6 +22,7 @@ const DashboardLayout: React.FC = () => {
       "/inventory": "Inventory",
       "/analytics": "Analytics",
       "/earnings": "Earnings",
+      "/withdrawals": "Withdrawals",
       "/disputes": "Disputes",
       "/support": "Support",
       "/settings": "Settings",

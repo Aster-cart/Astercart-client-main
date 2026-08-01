@@ -14,6 +14,7 @@ import PaymentAD from "./PaymentAD";
 import SettingsAD from "./SettingsAD";
 import SupportAD from "./SupportAD";
 import AnalyticsAD from "./AnalyticsAD";
+import RevenueAD from "./RevenueAD";
 import DisputesAD from "./DisputesAD";
 import TeamAD from "./TeamAD";
 import PayoutsAD from "./PayoutsAD";
@@ -23,6 +24,8 @@ import { useAdminAuthStore } from "../store/adminAuthStore";
 import ProductsAD from "./ProductsAD";
 import PricingAD from "./PricingAD";
 import FinancialLedgerAD from "./FinancialLedgerAD";
+import WithdrawalsAD from "./WithdrawalsAD";
+import AuditLogsAD from "./AuditLogsAD";
 import api from "../utils/api";
 import { playNotificationSound } from "../utils/playNotificationSound";
 
@@ -180,12 +183,14 @@ const AdminAD: React.FC = () => {
     { label: "UserManagement", icon: userm, activeIcon: usem },
     { label: "Orders", icon: orderm, activeIcon: ordm },
     { label: "Payment", icon: wallet, activeIcon: walet },
+    { label: "Withdrawals", icon: wallet, activeIcon: walet },
     { label: "Payouts", icon: wallet, activeIcon: walet },
     // New tab: the three-ledger financial dashboard (Commercial / Cash /
     // Profit views) — sits alongside Payment and Payouts rather than
     // replacing either of them, since this is a different lens on the
     // same underlying data, not a replacement page.
     { label: "FinancialLedger", icon: wallet, activeIcon: walet },
+    { label: "Revenue", icon: wallet, activeIcon: walet },
     { label: "Products", icon: storem, activeIcon: stom },
     { label: "Pricing", icon: storem, activeIcon: stom },
     { label: "Settings", icon: setting, activeIcon: set },
@@ -193,6 +198,7 @@ const AdminAD: React.FC = () => {
     { label: "Disputes", icon: set, activeIcon: set },
     { label: "Riders", icon: set, activeIcon: set },
     { label: "Team", icon: set, activeIcon: set },
+    { label: "AuditLogs", icon: set, activeIcon: set },
     { label: "Support", icon: set, activeIcon: set },
     { label: "Logout", icon: logoutIcon, activeIcon: log },
   ];
@@ -211,8 +217,10 @@ const AdminAD: React.FC = () => {
     UserManagement: { title: "Customers", content: <UsersAD /> },
     Orders: { title: "Orders", content: <OrdersAD /> },
     Payment: { title: "Payments", content: <PaymentAD /> },
+    Withdrawals: { title: "Withdrawal Requests", content: <WithdrawalsAD /> },
     Payouts: { title: "Payouts & Settlement", content: <PayoutsAD /> },
     FinancialLedger: { title: "Financial Ledger", content: <FinancialLedgerAD /> },
+    Revenue: { title: "Revenue", content: <RevenueAD /> },
     Products: { title: "Product Management", content: <ProductsAD /> },
     Pricing: { title: "Pricing & Markup", content: <PricingAD /> },
     Settings: { title: "Settings", content: <SettingsAD /> },
@@ -220,6 +228,7 @@ const AdminAD: React.FC = () => {
     Disputes: { title: "Disputes", content: <DisputesAD /> },
     Riders: { title: "Riders", content: <RidersAD /> },
     Team: { title: "Admin Team", content: <TeamAD /> },
+    AuditLogs: { title: "Audit Logs", content: <AuditLogsAD /> },
     Support: { title: "Support", content: <SupportAD /> },
   };
 
@@ -243,7 +252,11 @@ const AdminAD: React.FC = () => {
                 >
                   <img src={activeMenu === item.label ? item.activeIcon : item.icon} alt={item.label} className="w-4 h-4 mr-2 brightness-0 invert opacity-60" />
                   <span className="hidden md:inline text-sm font-medium">
-                    {item.label === "FinancialLedger" ? "Financial Ledger" : item.label.replace("Management", " Mgmt")}
+                    {item.label === "FinancialLedger"
+                      ? "Financial Ledger"
+                      : item.label === "AuditLogs"
+                        ? "Audit Logs"
+                        : item.label.replace("Management", " Mgmt")}
                   </span>
                 </button>
               </li>

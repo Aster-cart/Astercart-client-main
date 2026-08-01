@@ -4,6 +4,8 @@ import useOrder from "../hooks/useOrder";
 import api from "../utils/api";
 import { toast } from "react-toastify";
 
+const CANNOT_FULFILL_REASONS = ["Out of stock", "Store closed unexpectedly", "Temporary operational issue"];
+
 const STATUS_FLOW: Record<string, string | null> = {
   pending: "processing",
   processing: "out_for_delivery",
@@ -12,6 +14,7 @@ const STATUS_FLOW: Record<string, string | null> = {
   completed: null,
   canceled: null,
   failed: null,
+  CANNOT_FULFILL: null,
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -22,6 +25,7 @@ const STATUS_LABEL: Record<string, string> = {
   completed: "Completed",
   canceled: "Canceled",
   failed: "Failed",
+  CANNOT_FULFILL: "Cannot Fulfill",
 };
 
 const STATUS_NEXT_LABEL: Record<string, string> = {
@@ -39,6 +43,7 @@ const STATUS_COLOR: Record<string, string> = {
   completed: "bg-green-100 text-green-700",
   canceled: "bg-gray-100 text-muted",
   failed: "bg-red-100 text-red-600",
+  CANNOT_FULFILL: "bg-red-100 text-red-600",
 };
 
 const STATUS_STEPS = ["pending", "processing", "out_for_delivery", "delivered", "completed"];
@@ -55,16 +60,32 @@ const Order: React.FC = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
+  const [cannotFulfillModal, setCannotFulfillModal] = useState<{ open: boolean; orderId: string }>({ open: false, orderId: "" });
 
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     setUpdatingId(orderId);
     try {
       await api.put(`/store/orders/${orderId}/status`, { status: newStatus });
       toast.success(`Order marked as ${STATUS_LABEL[newStatus]}`);
-      // Reload to refresh data
       setTimeout(() => window.location.reload(), 800);
     } catch {
       toast.error("Failed to update order status.");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleCannotFulfill = async (reason: string) => {
+    const orderId = cannotFulfillModal.orderId;
+    if (!orderId) return;
+    setUpdatingId(orderId);
+    setCannotFulfillModal({ open: false, orderId: "" });
+    try {
+      await api.post(`/store/orders/${orderId}/cannot-fulfill`, { reason });
+      toast.success("Order marked as Cannot Fulfill.");
+      setTimeout(() => window.location.reload(), 800);
+    } catch {
+      toast.error("Failed to mark order as cannot fulfill.");
     } finally {
       setUpdatingId(null);
     }
@@ -259,6 +280,15 @@ const Order: React.FC = () => {
                               {updatingId === orderId ? "..." : STATUS_NEXT_LABEL[status]}
                             </button>
                           )}
+                          {["pending", "processing"].includes(status) && (
+                            <button
+                              onClick={() => setCannotFulfillModal({ open: true, orderId })}
+                              disabled={updatingId === orderId}
+                              className="text-xs px-2 py-1 bg-red-500 text-white rounded font-medium whitespace-nowrap"
+                            >
+                              Cannot Fulfill
+                            </button>
+                          )}
                           <button
                             onClick={() => handleViewReceipt(order)}
                             className="text-xs px-2 py-1 bg-gray-100 text-body rounded"
@@ -273,42 +303,65 @@ const Order: React.FC = () => {
                     {isExpanded && (
                       <tr>
                         <td colSpan={8} className="bg-orange-50 px-4 py-4 border-b">
-                          {/* Progress steps */}
-                          <div className="flex items-center gap-1 mb-3 overflow-x-auto pb-1">
-                            {STATUS_STEPS.map((step, si) => {
-                              const currentIdx = STATUS_STEPS.indexOf(status);
-                              const done = si <= currentIdx;
-                              const isCurrent = si === currentIdx;
-                              return (
-                                <React.Fragment key={step}>
-                                  <div className="flex flex-col items-center min-w-[70px]">
-                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 ${
-                                      isCurrent ? "bg-pry text-white border-pry" :
-                                      done ? "bg-pry text-white border-pry" :
-                                      "bg-white border-border text-gray-300"
-                                    }`}>
-                                      {done ? "✓" : si + 1}
+                          {status === "CANNOT_FULFILL" ? (
+                            <div className="flex items-center gap-2 mb-3">
+                              <span className="text-red-600 font-semibold text-sm">✗ Cannot Fulfill</span>
+                              {order.cannotFulfillReason && (
+                                <span className="text-xs text-muted">— {order.cannotFulfillReason}</span>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 mb-3 overflow-x-auto pb-1">
+                              {STATUS_STEPS.map((step, si) => {
+                                const currentIdx = STATUS_STEPS.indexOf(status);
+                                const done = si <= currentIdx;
+                                const isCurrent = si === currentIdx;
+                                return (
+                                  <React.Fragment key={step}>
+                                    <div className="flex flex-col items-center min-w-[70px]">
+                                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 ${
+                                        isCurrent ? "bg-pry text-white border-pry" :
+                                        done ? "bg-pry text-white border-pry" :
+                                        "bg-white border-border text-gray-300"
+                                      }`}>
+                                        {done ? "✓" : si + 1}
+                                      </div>
+                                      <span className={`mt-1 text-center text-xs whitespace-nowrap ${done ? "text-pry font-medium" : "text-muted"}`}>
+                                        {STATUS_LABEL[step]}
+                                      </span>
                                     </div>
-                                    <span className={`mt-1 text-center text-xs whitespace-nowrap ${done ? "text-pry font-medium" : "text-muted"}`}>
-                                      {STATUS_LABEL[step]}
-                                    </span>
-                                  </div>
-                                  {si < STATUS_STEPS.length - 1 && (
-                                    <div className={`flex-1 h-0.5 mb-4 min-w-[16px] ${si < currentIdx ? "bg-pry" : "bg-gray-200"}`} />
-                                  )}
-                                </React.Fragment>
-                              );
-                            })}
-                          </div>
+                                    {si < STATUS_STEPS.length - 1 && (
+                                      <div className={`flex-1 h-0.5 mb-4 min-w-[16px] ${si < currentIdx ? "bg-pry" : "bg-gray-200"}`} />
+                                    )}
+                                  </React.Fragment>
+                                );
+                              })}
+                            </div>
+                          )}
 
+                          {status === "CANNOT_FULFILL" && (
+                            <span className="text-xs text-red-600 font-medium">
+                              ✗ Cannot Fulfill — {order.cannotFulfillReason || ""}
+                              {order.paymentStatus === "refunded" && " (Refunded)"}
+                            </span>
+                          )}
                           {/* Next action button inside expanded row */}
-                          {nextStatus && (
+                          {nextStatus && status !== "CANNOT_FULFILL" && (
                             <button
                               onClick={() => handleStatusUpdate(orderId, nextStatus)}
                               disabled={updatingId === orderId}
                               className="text-xs px-4 py-2 bg-pry text-white rounded-lg font-medium mt-1"
                             >
                               {updatingId === orderId ? "Updating..." : `→ ${STATUS_NEXT_LABEL[status]}`}
+                            </button>
+                          )}
+                          {["pending", "processing"].includes(status) && (
+                            <button
+                              onClick={() => setCannotFulfillModal({ open: true, orderId })}
+                              disabled={updatingId === orderId}
+                              className="text-xs px-4 py-2 bg-red-500 text-white rounded-lg font-medium mt-1 ml-2"
+                            >
+                              Cannot Fulfill
                             </button>
                           )}
                           {status === "completed" && (
@@ -357,6 +410,32 @@ const Order: React.FC = () => {
           )}
         </div>
       </div>
+
+      {cannotFulfillModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setCannotFulfillModal({ open: false, orderId: "" })}>
+          <div className="bg-white rounded-xl p-6 w-80 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-semibold text-base mb-4">Why can't you fulfill this order?</h3>
+            <div className="space-y-2">
+              {CANNOT_FULFILL_REASONS.map((r) => (
+                <button
+                  key={r}
+                  onClick={() => handleCannotFulfill(r)}
+                  disabled={updatingId === cannotFulfillModal.orderId}
+                  className="w-full text-left px-4 py-3 rounded-lg border border-gray-200 hover:bg-red-50 hover:border-red-300 text-sm font-medium transition"
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setCannotFulfillModal({ open: false, orderId: "" })}
+              className="mt-4 w-full text-center text-sm text-muted py-2 hover:underline"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {modalOpen && transactionDetails && (
         <TransactionModal

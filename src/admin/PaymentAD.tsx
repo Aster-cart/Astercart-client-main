@@ -19,10 +19,42 @@ interface PaymentRow {
   payoutStatus?: string;
   createdAt: string;
   store?: { name?: string };
+  refundStatus?: "pending" | "processing" | "completed" | "failed" | null;
+  refundAmount?: number;
+  refundGatewayId?: string;
+  refundReason?: string;
+  refundRequestedAt?: string;
+  refundCompletedAt?: string;
 }
 
 const formatNaira = (n: number) =>
   new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(n || 0);
+
+const formatDate = (d?: string) =>
+  d ? new Date(d).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
+
+type RefundFilter = "all" | "pending_payout" | "paid_out" | "refunded" | "processing" | "failed";
+
+const REFUND_STYLES: Record<string, { label: string; className: string }> = {
+  pending: { label: "Refund Pending", className: "bg-yellow-100 text-yellow-700" },
+  processing: { label: "Refund Processing", className: "bg-orange-100 text-orange-700" },
+  completed: { label: "Refunded", className: "bg-green-100 text-green-700" },
+  failed: { label: "Refund Failed", className: "bg-red-100 text-red-700" },
+};
+
+const startOfToday = () => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const startOfWeek = () => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  const day = (d.getDay() + 6) % 7; // Monday = 0
+  d.setDate(d.getDate() - day);
+  return d;
+};
 
 const PaymentAD: React.FC = () => {
   const [payments, setPayments] = useState<PaymentRow[]>([]);
@@ -30,8 +62,9 @@ const PaymentAD: React.FC = () => {
   const [stats, setStats] = useState({
     total: 0, totalRevenue: 0, totalStorePayout: 0, totalAdminFee: 0,
     totalServiceFee: 0, totalDeliveryFee: 0, totalDeliveryCommission: 0, totalMarkupRevenue: 0, totalGrandTotal: 0, pendingPayouts: 0,
+    refundsToday: 0, refundsThisWeek: 0, totalRefunded: 0, processingRefunds: 0, failedRefunds: 0,
   });
-  const [filter, setFilter] = useState<"all" | "pending_payout" | "paid_out">("all");
+  const [filter, setFilter] = useState<RefundFilter>("all");
 
   const load = async () => {
     setLoading(true);
@@ -39,6 +72,8 @@ const PaymentAD: React.FC = () => {
       const { data } = await api.get<PaymentRow[]>("/payment/all");
       const list = Array.isArray(data) ? data : [];
       setPayments(list);
+      const today = startOfToday();
+      const week = startOfWeek();
       setStats({
         total: list.length,
         totalRevenue: list.reduce((s, p) => s + (p.amount || 0), 0),
@@ -52,6 +87,11 @@ const PaymentAD: React.FC = () => {
         pendingPayouts: list.filter(
           (p) => p.status === "completed" && p.payoutStatus !== "paid_out"
         ).length,
+        refundsToday: list.filter((p) => p.refundRequestedAt && new Date(p.refundRequestedAt) >= today).length,
+        refundsThisWeek: list.filter((p) => p.refundRequestedAt && new Date(p.refundRequestedAt) >= week).length,
+        totalRefunded: list.reduce((s, p) => s + (p.refundStatus === "completed" ? p.refundAmount || 0 : 0), 0),
+        processingRefunds: list.filter((p) => p.refundStatus === "pending" || p.refundStatus === "processing").length,
+        failedRefunds: list.filter((p) => p.refundStatus === "failed").length,
       });
     } catch {
       setPayments([]);
@@ -66,10 +106,23 @@ const PaymentAD: React.FC = () => {
     if (filter === "pending_payout")
       return p.status === "completed" && p.payoutStatus !== "paid_out";
     if (filter === "paid_out") return p.payoutStatus === "paid_out";
+    if (filter === "refunded") return p.refundStatus === "completed";
+    if (filter === "processing") return p.refundStatus === "pending" || p.refundStatus === "processing";
+    if (filter === "failed") return p.refundStatus === "failed";
     return true;
   });
 
   if (loading) return <p className="text-muted p-4">Loading payments…</p>;
+
+  const markRefundComplete = async (p: PaymentRow) => {
+    if (!window.confirm("Mark this refund as completed? This notifies the customer that their bank has been refunded.")) return;
+    try {
+      await api.put(`/payment/refund/${p.orderId || p._id}/complete`);
+      await load();
+    } catch (err: any) {
+      window.alert(err?.response?.data?.message || "Failed to mark refund complete.");
+    }
+  };
 
   return (
     <div className="font-inter">
@@ -94,6 +147,32 @@ const PaymentAD: React.FC = () => {
           },
         ].map((s, i) => (
           <div key={i} className="bg-white rounded-xl p-4 border">
+            <p className="text-sm text-muted mb-1">{s.label}</p>
+            <p className={`text-xl font-bold ${(s as { color?: string }).color || ""}`}>
+              {s.value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Refund stats row */}
+      <div className="grid grid-cols-5 gap-4 mb-6">
+        {[
+          { label: "Refunds Today", value: stats.refundsToday.toString() },
+          { label: "Refunds This Week", value: stats.refundsThisWeek.toString() },
+          { label: "Total Refunded", value: formatNaira(stats.totalRefunded) },
+          {
+            label: "Processing",
+            value: stats.processingRefunds.toString(),
+            color: stats.processingRefunds > 0 ? "text-yellow-600" : "text-green-600",
+          },
+          {
+            label: "Failed",
+            value: stats.failedRefunds.toString(),
+            color: stats.failedRefunds > 0 ? "text-red-600" : "text-green-600",
+          },
+        ].map((s, i) => (
+          <div key={i} className="bg-red-50/50 rounded-xl p-4 border border-red-100">
             <p className="text-sm text-muted mb-1">{s.label}</p>
             <p className={`text-xl font-bold ${(s as { color?: string }).color || ""}`}>
               {s.value}
@@ -176,11 +255,14 @@ const PaymentAD: React.FC = () => {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4">
         {([
           ["all", "All payments"],
           ["pending_payout", "Pending payout"],
           ["paid_out", "Paid out"],
+          ["refunded", "Refunded"],
+          ["processing", "Processing refund"],
+          ["failed", "Refund failed"],
         ] as const).map(([val, label]) => (
           <button
             key={val}
@@ -223,6 +305,12 @@ const PaymentAD: React.FC = () => {
                 <th>Store Gets</th>
                 <th>Commission</th>
                 <th>Astercart Revenue</th>
+                <th>Refund Status</th>
+                <th>Refund Amount</th>
+                <th>Refund Requested</th>
+                <th>Refund Completed</th>
+                <th>Refund Gateway ID</th>
+                <th>Refund Reason</th>
                 <th>Status</th>
                 <th>Payout</th>
                 <th>Date</th>
@@ -237,12 +325,12 @@ const PaymentAD: React.FC = () => {
                 // page, with no way to see it broken out per individual
                 // order in the table itself.
                 const astercartRevenue = (p.markupRevenue || 0) + (p.serviceFee || 0) + (p.adminFee || 0) + (p.deliveryCommission || 0);
+                const refundStyle = p.refundStatus ? REFUND_STYLES[p.refundStatus] : null;
+                const canComplete = p.refundStatus === "pending" || p.refundStatus === "processing";
+                const completing = false;
                 return (
                 <tr key={p._id} className="border-b hover:bg-off-white">
                   <td className="py-3 font-mono text-xs">
-                    {/* Consistent with admin/client elsewhere: last 8 chars
-                        of the Mongo ID, so the same order shows the same
-                        reference number everywhere across the platform. */}
                     {(p.orderId || p._id).slice(-8).toUpperCase()}
                   </td>
                   <td>{p.name || "—"}</td>
@@ -256,6 +344,20 @@ const PaymentAD: React.FC = () => {
                   <td className="text-green-600">{formatNaira(p.storePayout)}</td>
                   <td className="text-purple-600">{formatNaira(p.adminFee)}</td>
                   <td className="font-bold text-ink">{formatNaira(astercartRevenue)}</td>
+                  <td>
+                    {refundStyle ? (
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${refundStyle.className}`}>
+                        {refundStyle.label}
+                      </span>
+                    ) : (
+                      <span className="text-muted text-xs">—</span>
+                    )}
+                  </td>
+                  <td>{p.refundStatus ? formatNaira(p.refundAmount || 0) : "—"}</td>
+                  <td className="text-muted text-xs whitespace-nowrap">{formatDate(p.refundRequestedAt)}</td>
+                  <td className="text-muted text-xs whitespace-nowrap">{formatDate(p.refundCompletedAt)}</td>
+                  <td className="font-mono text-xs">{p.refundGatewayId || "—"}</td>
+                  <td className="text-xs max-w-[180px] truncate" title={p.refundReason}>{p.refundReason || "—"}</td>
                   <td>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       p.status === "completed"
@@ -277,6 +379,17 @@ const PaymentAD: React.FC = () => {
                   <td className="text-muted text-xs">
                     {new Date(p.createdAt).toLocaleDateString("en-GB")}
                   </td>
+                  <td>
+                    {canComplete && (
+                      <button
+                        onClick={() => markRefundComplete(p)}
+                        disabled={completing}
+                        className="text-xs px-3 py-1.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 whitespace-nowrap"
+                      >
+                        Mark Refund Complete
+                      </button>
+                    )}
+                  </td>
                 </tr>
                 );
               })}
@@ -296,6 +409,7 @@ const exportToCSV = (payments: any[]) => {
     "Date", "Order ID", "Customer", "Store",
     "Store Price Subtotal", "Markup Revenue", "Delivery Fee", "Delivery Commission", "Service Fee", "Customer Paid (Total)",
     "Store Payout", "Platform Commission",
+    "Refund Status", "Refund Amount", "Refund Gateway ID", "Refund Requested At", "Refund Completed At", "Refund Reason",
     "Status", "Payout Status",
   ];
   const rows = payments.map(p => [
@@ -311,6 +425,12 @@ const exportToCSV = (payments: any[]) => {
     p.grandTotal || p.amount || 0,
     p.storePayout || 0,
     p.adminFee || 0,
+    p.refundStatus || "",
+    p.refundAmount || 0,
+    p.refundGatewayId || "",
+    p.refundRequestedAt ? new Date(p.refundRequestedAt).toISOString() : "",
+    p.refundCompletedAt ? new Date(p.refundCompletedAt).toISOString() : "",
+    p.refundReason || "",
     p.status || "",
     p.payoutStatus || "pending",
   ]);
