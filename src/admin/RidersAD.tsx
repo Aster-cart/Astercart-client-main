@@ -15,6 +15,24 @@ interface Rider {
   createdAt: string;
 }
 
+interface PendingRiderVerification {
+  _id: string;
+  name: string;
+  email: string;
+  phoneNumber?: string;
+  riderVerificationStatus: string;
+  riderVerificationNotes?: string | null;
+  createdAt: string;
+  riderVerification?: {
+    governmentId?: string;
+    selfie?: string;
+    vehicleType?: string;
+    vehicleModel?: string;
+    numberPlate?: string;
+    submittedAt?: string;
+  };
+}
+
 const STATUS_COLOR = {
   available: "bg-green-100 text-green-700",
   busy: "bg-yellow-100 text-yellow-700",
@@ -26,12 +44,20 @@ const RidersAD: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "available" | "busy" | "offline">("all");
+  const [pendingVerifications, setPendingVerifications] = useState<PendingRiderVerification[]>([]);
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
+  const [showVerificationTab, setShowVerificationTab] = useState(false);
 
   const load = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get<{ riders: Rider[] }>("/admin/riders");
-      setRiders(data.riders || []);
+      const [ridersRes, verifRes] = await Promise.allSettled([
+        api.get<{ riders: Rider[] }>("/admin/riders"),
+        api.get<{ riders: PendingRiderVerification[] }>("/rider/admin/verifications?status=pending"),
+      ]);
+      if (ridersRes.status === "fulfilled") setRiders(ridersRes.value.data.riders || []);
+      if (verifRes.status === "fulfilled") setPendingVerifications(verifRes.value.data.riders || []);
     } catch { setRiders([]); }
     finally { setLoading(false); }
   };
@@ -48,6 +74,25 @@ const RidersAD: React.FC = () => {
     finally { setActionId(null); }
   };
 
+  const reviewVerification = async (riderId: string, decision: "verified" | "rejected") => {
+    const note = reviewNotes[riderId] || "";
+    if (decision === "rejected" && !note.trim()) {
+      toast.error("Please add a note explaining what needs correcting before rejecting.");
+      return;
+    }
+    setReviewingId(riderId);
+    try {
+      await api.put(`/rider/admin/verifications/${riderId}`, { decision, note });
+      toast.success(`Rider ${decision === "verified" ? "verified" : "rejected"} successfully.`);
+      setReviewNotes(prev => { const n = { ...prev }; delete n[riderId]; return n; });
+      load();
+    } catch {
+      toast.error("Review action failed.");
+    } finally {
+      setReviewingId(null);
+    }
+  };
+
   const filtered = riders.filter(r => filter === "all" || r.riderStatus === filter);
 
   const counts = {
@@ -60,6 +105,97 @@ const RidersAD: React.FC = () => {
 
   return (
     <div className="font-inter">
+      {/* Tab switcher — Riders list vs Verification queue */}
+      <div className="flex gap-2 mb-6 border-b">
+        <button
+          onClick={() => setShowVerificationTab(false)}
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition ${!showVerificationTab ? "border-pry text-pry" : "border-transparent text-muted"}`}
+        >
+          All Riders
+        </button>
+        <button
+          onClick={() => setShowVerificationTab(true)}
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition flex items-center gap-2 ${showVerificationTab ? "border-pry text-pry" : "border-transparent text-muted"}`}
+        >
+          Verification Queue
+          {pendingVerifications.length > 0 && (
+            <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5">{pendingVerifications.length}</span>
+          )}
+        </button>
+      </div>
+
+      {showVerificationTab ? (
+        <div>
+          <p className="text-sm text-muted mb-4">
+            These riders have submitted their documents and are waiting for your review before they can go online.
+          </p>
+          {pendingVerifications.length === 0 ? (
+            <p className="text-center text-muted py-12">No pending verifications right now.</p>
+          ) : pendingVerifications.map((r) => (
+            <div key={r._id} className="bg-white rounded-xl border p-5 mb-4">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <p className="font-semibold">{r.name}</p>
+                  <p className="text-xs text-muted">{r.email}</p>
+                  {r.phoneNumber && <p className="text-xs text-muted">{r.phoneNumber}</p>}
+                  {r.riderVerification?.submittedAt && (
+                    <p className="text-xs text-muted">Submitted: {new Date(r.riderVerification.submittedAt).toLocaleDateString("en-GB")}</p>
+                  )}
+                </div>
+              </div>
+
+              {r.riderVerification && (
+                <div className="grid grid-cols-2 gap-3 text-xs mb-4 bg-off-white rounded-lg p-3">
+                  <div><span className="text-muted">Vehicle: </span>{r.riderVerification.vehicleType || "—"}</div>
+                  <div><span className="text-muted">Model: </span>{r.riderVerification.vehicleModel || "—"}</div>
+                  <div><span className="text-muted">Number Plate: </span>{r.riderVerification.numberPlate || "—"}</div>
+                  <div className="col-span-2 flex gap-4">
+                    {r.riderVerification.governmentId && (
+                      <div>
+                        <span className="text-muted">Government ID: </span>
+                        <a href={r.riderVerification.governmentId} target="_blank" rel="noopener noreferrer"
+                          className="text-pry underline">View</a>
+                      </div>
+                    )}
+                    {r.riderVerification.selfie && (
+                      <div>
+                        <span className="text-muted">Selfie: </span>
+                        <a href={r.riderVerification.selfie} target="_blank" rel="noopener noreferrer"
+                          className="text-pry underline">View</a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <input
+                placeholder="Rejection note (required if rejecting — explain what needs correcting)"
+                value={reviewNotes[r._id] || ""}
+                onChange={e => setReviewNotes(prev => ({ ...prev, [r._id]: e.target.value }))}
+                className="w-full border rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:border-pry"
+              />
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => reviewVerification(r._id, "verified")}
+                  disabled={reviewingId === r._id}
+                  className="px-5 py-2 bg-green-600 text-white rounded-lg text-sm font-medium disabled:opacity-60"
+                >
+                  {reviewingId === r._id ? "Processing..." : "Approve"}
+                </button>
+                <button
+                  onClick={() => reviewVerification(r._id, "rejected")}
+                  disabled={reviewingId === r._id}
+                  className="px-5 py-2 bg-red-500 text-white rounded-lg text-sm font-medium disabled:opacity-60"
+                >
+                  {reviewingId === r._id ? "Processing..." : "Reject"}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+      <>
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-xl p-4 border">
@@ -148,6 +284,8 @@ const RidersAD: React.FC = () => {
           </tbody>
         </table>
       </div>
+      </>
+      )}
     </div>
   );
 };
