@@ -20,6 +20,7 @@ import TeamAD from "./TeamAD";
 import PayoutsAD from "./PayoutsAD";
 import MonitorAD from "./MonitorAD";
 import RidersAD from "./RidersAD";
+import UnassignedOrdersAD from "./UnassignedOrdersAD";
 import { useAdminAuthStore } from "../store/adminAuthStore";
 import ProductsAD from "./ProductsAD";
 import PricingAD from "./PricingAD";
@@ -182,6 +183,7 @@ const AdminAD: React.FC = () => {
     { label: "StoreManagement", icon: storem, activeIcon: stom },
     { label: "UserManagement", icon: userm, activeIcon: usem },
     { label: "Orders", icon: orderm, activeIcon: ordm },
+    { label: "UnassignedOrders", icon: orderm, activeIcon: ordm },
     { label: "Payment", icon: wallet, activeIcon: walet },
     { label: "Withdrawals", icon: wallet, activeIcon: walet },
     { label: "Payouts", icon: wallet, activeIcon: walet },
@@ -216,6 +218,7 @@ const AdminAD: React.FC = () => {
     StoreManagement: { title: "Store Management", content: <StoresAD /> },
     UserManagement: { title: "Customers", content: <UsersAD /> },
     Orders: { title: "Orders", content: <OrdersAD /> },
+    UnassignedOrders: { title: "Unassigned Orders", content: <UnassignedOrdersAD /> },
     Payment: { title: "Payments", content: <PaymentAD /> },
     Withdrawals: { title: "Withdrawal Requests", content: <WithdrawalsAD /> },
     Payouts: { title: "Payouts & Settlement", content: <PayoutsAD /> },
@@ -256,7 +259,9 @@ const AdminAD: React.FC = () => {
                       ? "Financial Ledger"
                       : item.label === "AuditLogs"
                         ? "Audit Logs"
-                        : item.label.replace("Management", " Mgmt")}
+                        : item.label === "UnassignedOrders"
+                          ? "Unassigned Orders"
+                          : item.label.replace("Management", " Mgmt")}
                   </span>
                 </button>
               </li>
