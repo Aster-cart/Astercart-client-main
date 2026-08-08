@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import TransactionModal from "../component/TransactionModal";
 import useOrder from "../hooks/useOrder";
+import usePickupCodes, { isAwaitingPickup } from "../hooks/usePickupCodes";
 import api from "../utils/api";
 import { toast } from "react-toastify";
 
@@ -55,6 +56,10 @@ const Order: React.FC = () => {
     handleViewReceipt, handleCloseModal, formatDate,
     mockOrderData, mockAllOrderData, mockDataOrder, loading, error,
   } = useOrder();
+
+  // Pickup codes are fetched on demand from the dedicated endpoint (never
+  // shipped in the /store/orders payload) and cached per order.
+  const pickupCodes = usePickupCodes(mockDataOrder);
 
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -120,10 +125,10 @@ const Order: React.FC = () => {
           unmissable at the very top of the page, and refreshes live via
           the polling now built into useOrder (every 20 seconds) rather
           than only appearing after a manual page reload. */}
-      {mockDataOrder.filter(o => o.pickupOTP && o.riderId && o.status === "processing").length > 0 && (
+      {mockDataOrder.filter(isAwaitingPickup).length > 0 && (
         <div className="mb-4 space-y-2">
           {mockDataOrder
-            .filter(o => o.pickupOTP && o.riderId && o.status === "processing")
+            .filter(isAwaitingPickup)
             .map((o) => (
               <div key={o._id || o.orderNo} className="bg-gray-900 rounded-xl p-4 flex items-center justify-between gap-4">
                 <div>
@@ -134,7 +139,7 @@ const Order: React.FC = () => {
                     Confirm this code matches what's on the rider's screen before handing over the order.
                   </p>
                 </div>
-                <p className="text-4xl font-bold text-pry tracking-widest flex-shrink-0">{o.pickupOTP}</p>
+                <p className="text-4xl font-bold text-pry tracking-widest flex-shrink-0">{pickupCodes[o._id || ""]}</p>
               </div>
             ))}
         </div>

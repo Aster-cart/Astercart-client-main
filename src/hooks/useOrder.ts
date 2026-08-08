@@ -17,7 +17,6 @@ export interface OrderData {
   transactionStatus: string;
   image: string;
   status?: string;
-  pickupOTP?: string | null;
   riderId?: string | null;
 }
 

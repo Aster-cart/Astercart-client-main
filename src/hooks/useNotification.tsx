@@ -3,6 +3,16 @@ import { toast } from "react-toastify";
 import api from "../utils/api";
 import { useAuthStore } from "../store/authStore";
 import { playNotificationSound } from "../utils/playNotificationSound";
+import usePickupCodes, { isAwaitingPickup } from "./usePickupCodes";
+
+interface OrderBrief {
+  _id?: string;
+  orderNo: string;
+  name: string;
+  createdAt: string;
+  status?: string;
+  riderId?: string | null;
+}
 
 export interface Notification {
   id: string;
@@ -42,6 +52,11 @@ export const useNotification = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const previousPickupOrderIds = useRef<Set<string>>(new Set());
+  // Hoisted order list so the pickup-code hook can run at the top level of
+  // the component. Pickup codes are fetched via the dedicated endpoint and
+  // cached per order (see usePickupCodes) — never shipped in /store/orders.
+  const [orders, setOrders] = useState<OrderBrief[]>([]);
+  const pickupCodes = usePickupCodes(orders);
   const requestNotificationPermission = async () => {
     if (!("Notification" in window)) return false;
     if (Notification.permission === "granted") return true;
@@ -67,14 +82,10 @@ export const useNotification = () => {
       const storeProfile = useAuthStore.getState().storeProfile;
       const prefs = storeProfile?.notificationPreferences;
 
-      const ordersRes = await api.get<{
-        orders: {
-          orderNo: string; _id?: string; name: string; transactionStatus: string;
-          createdAt: string; status?: string; pickupOTP?: string | null; riderId?: string | null;
-        }[];
-      }>("/store/orders");
+      const ordersRes = await api.get<{ orders: OrderBrief[] }>("/store/orders");
 
       const orders = ordersRes.data?.orders || [];
+      setOrders(orders);
 
       const showOrderNotifs = prefs?.newOrder !== false;
       const orderNotifs: Notification[] = showOrderNotifs ? orders.slice(0, 10).map((o, i) => ({
@@ -91,10 +102,10 @@ export const useNotification = () => {
       // instant the order moves past "processing" (i.e. once the rider
       // and store have both confirmed and the order is out for
       // delivery) — see the filter below the merge.
-      const pickupOrders = orders.filter(o => o.pickupOTP && o.riderId && o.status === "processing");
+      const pickupOrders = orders.filter(isAwaitingPickup);
       const pickupNotifs: Notification[] = pickupOrders.map(o => ({
         id: `pickup-${o._id || o.orderNo}`,
-        message: `Rider waiting at pickup for order #${(o.orderNo || "").slice(0, 8).toUpperCase()} — code ${o.pickupOTP}`,
+        message: `Rider waiting at pickup for order #${(o.orderNo || "").slice(0, 8).toUpperCase()} — code ${pickupCodes[o._id || ""] || "…"}`,
         read: false,
         timestamp: new Date().toISOString(),
         type: "pickup_otp" as const,
@@ -112,7 +123,7 @@ export const useNotification = () => {
           if (!previousPickupOrderIds.current.has(orderKey)) {
             fireBrowserNotification(
               "Rider waiting for pickup",
-              `Order #${(o.orderNo || "").slice(0, 8).toUpperCase()} — pickup code ${o.pickupOTP}`
+              `Order #${(o.orderNo || "").slice(0, 8).toUpperCase()} — pickup code ${pickupCodes[o._id || ""] || "…"}`
             );
           }
         }

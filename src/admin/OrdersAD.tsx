@@ -355,10 +355,14 @@ const OrdersAD: React.FC = () => {
             </div>
 
             {/* Pickup / delivery / distance / duration */}
-            <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-5 gap-4 mb-6">
               <div>
                 <p className="text-xs text-muted mb-1">Pickup verified</p>
                 <p className="text-sm font-medium">{fmtDateTime(detail.delivery.pickupVerifiedAt)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted mb-1">Delivery code verified</p>
+                <p className="text-sm font-medium">{fmtDateTime(detail.delivery.deliveryVerifiedAt)}</p>
               </div>
               <div>
                 <p className="text-xs text-muted mb-1">Delivered</p>

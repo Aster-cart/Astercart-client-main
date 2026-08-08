@@ -82,8 +82,8 @@ const Verification: React.FC = () => {
     setError(null); // clear any previous error when a new upload starts
     try {
       const formData = new FormData();
-      formData.append("image", file);
-      const { data } = await api.post<{ url: string }>("/upload/product-image", formData, {
+      formData.append("file", file);
+      const { data } = await api.post<{ url: string }>("/upload/verification-doc", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       return data.url;
