@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import api from "../utils/api";
 import { toast } from "react-toastify";
+import { setSentryUser } from "../lib/sentry";
 
 interface AdminUser {
   id: string;
@@ -49,6 +50,12 @@ export const useAdminAuthStore = create<AdminAuthStore>((set) => ({
       // Persist admin object so it survives page refresh
       localStorage.setItem("adminUser", JSON.stringify(data.user));
       set({ admin: data.user, loading: false });
+      setSentryUser({
+        id: data.user.id,
+        email: data.user.email,
+        userType: data.user.userType,
+        role: data.user.role,
+      });
       toast.success("Welcome back!");
       return true;
     } catch (e: unknown) {
@@ -74,6 +81,7 @@ export const useAdminAuthStore = create<AdminAuthStore>((set) => ({
     localStorage.removeItem("adminRefreshToken");
     localStorage.removeItem("adminUser");
     set({ admin: null });
+    setSentryUser(null);
   },
 
   checkAuth: () => {
@@ -89,6 +97,12 @@ export const useAdminAuthStore = create<AdminAuthStore>((set) => ({
       try {
         const user = JSON.parse(userStr) as AdminUser;
         set({ admin: user });
+        setSentryUser({
+          id: user.id,
+          email: user.email,
+          userType: user.userType,
+          role: user.role,
+        });
       } catch {
         // Corrupted data - clear it
         localStorage.removeItem("adminUser");

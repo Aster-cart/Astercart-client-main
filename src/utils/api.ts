@@ -1,5 +1,6 @@
 import axios from "axios";
 import { api_url } from "./const";
+import { Sentry } from "../lib/sentry";
 
 const api = axios.create({
   baseURL: api_url,
@@ -74,6 +75,14 @@ api.interceptors.request.use((config) => {
     (config.headers as any)["x-auth-token"] = token;
     (config.headers as any)["token"] = token;
   }
+
+  Sentry.addBreadcrumb({
+    category: "network",
+    message: `${config.method?.toUpperCase() ?? "GET"} ${config.url}`,
+    level: "info",
+    data: { method: config.method?.toUpperCase() ?? "GET", status: 0 },
+  });
+
   return config;
 });
 
@@ -101,6 +110,14 @@ api.interceptors.response.use(
       }
       clearAuth();
       window.location.href = window.location.pathname.startsWith("/admin") ? "/loginad" : "/login";
+    }
+    if (error.response) {
+      Sentry.addBreadcrumb({
+        category: "network",
+        message: `${error.config?.method?.toUpperCase() ?? "GET"} ${error.config?.url}`,
+        level: "error",
+        data: { status: error.response.status },
+      });
     }
     return Promise.reject(error);
   }
