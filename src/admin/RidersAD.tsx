@@ -13,6 +13,27 @@ interface Rider {
   rating: number;
   isBlocked: boolean;
   createdAt: string;
+  bankAccount?: { bankName: string; accountName: string; accountNumber: string };
+  pendingBankUpdate?: {
+    bankName: string | null;
+    accountName: string | null;
+    accountNumber: string | null;
+    requestedAt: string | null;
+  };
+}
+
+interface PendingBankApproval {
+  _id: string;
+  name: string;
+  email: string;
+  phoneNumber?: string;
+  bankAccount?: { bankName: string; accountName: string; accountNumber: string };
+  pendingBankUpdate?: {
+    bankName: string | null;
+    accountName: string | null;
+    accountNumber: string | null;
+    requestedAt: string | null;
+  };
 }
 
 interface PendingRiderVerification {
@@ -45,19 +66,24 @@ const RidersAD: React.FC = () => {
   const [actionId, setActionId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "available" | "busy" | "offline">("all");
   const [pendingVerifications, setPendingVerifications] = useState<PendingRiderVerification[]>([]);
+  const [pendingBankApprovals, setPendingBankApprovals] = useState<PendingBankApproval[]>([]);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
   const [showVerificationTab, setShowVerificationTab] = useState(false);
+  const [showBankTab, setShowBankTab] = useState(false);
+  const [bankActionId, setBankActionId] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
     try {
-      const [ridersRes, verifRes] = await Promise.allSettled([
+      const [ridersRes, verifRes, bankRes] = await Promise.allSettled([
         api.get<{ riders: Rider[] }>("/admin/riders"),
         api.get<{ riders: PendingRiderVerification[] }>("/rider/admin/verifications?status=pending"),
+        api.get<{ riders: PendingBankApproval[] }>("/admin/riders/bank-approvals"),
       ]);
       if (ridersRes.status === "fulfilled") setRiders(ridersRes.value.data.riders || []);
       if (verifRes.status === "fulfilled") setPendingVerifications(verifRes.value.data.riders || []);
+      if (bankRes.status === "fulfilled") setPendingBankApprovals(bankRes.value.data.riders || []);
     } catch { setRiders([]); }
     finally { setLoading(false); }
   };
@@ -93,6 +119,19 @@ const RidersAD: React.FC = () => {
     }
   };
 
+  const handleBankAction = async (riderId: string, action: "approve" | "reject") => {
+    setBankActionId(riderId);
+    try {
+      await api.put(`/admin/riders/${riderId}/${action === "approve" ? "approve-bank" : "reject-bank"}`);
+      toast.success(action === "approve" ? "Bank details approved. Payouts will now use this account." : "Pending bank update cleared.");
+      load();
+    } catch {
+      toast.error("Bank action failed.");
+    } finally {
+      setBankActionId(null);
+    }
+  };
+
   const filtered = riders.filter(r => filter === "all" || r.riderStatus === filter);
 
   const counts = {
@@ -108,13 +147,13 @@ const RidersAD: React.FC = () => {
       {/* Tab switcher — Riders list vs Verification queue */}
       <div className="flex gap-2 mb-6 border-b">
         <button
-          onClick={() => setShowVerificationTab(false)}
-          className={`px-4 py-3 text-sm font-medium border-b-2 transition ${!showVerificationTab ? "border-pry text-pry" : "border-transparent text-muted"}`}
+          onClick={() => { setShowVerificationTab(false); setShowBankTab(false); }}
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition ${!showVerificationTab && !showBankTab ? "border-pry text-pry" : "border-transparent text-muted"}`}
         >
           All Riders
         </button>
         <button
-          onClick={() => setShowVerificationTab(true)}
+          onClick={() => { setShowVerificationTab(true); setShowBankTab(false); }}
           className={`px-4 py-3 text-sm font-medium border-b-2 transition flex items-center gap-2 ${showVerificationTab ? "border-pry text-pry" : "border-transparent text-muted"}`}
         >
           Verification Queue
@@ -122,9 +161,63 @@ const RidersAD: React.FC = () => {
             <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5">{pendingVerifications.length}</span>
           )}
         </button>
+        <button
+          onClick={() => { setShowBankTab(true); setShowVerificationTab(false); }}
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition flex items-center gap-2 ${showBankTab ? "border-pry text-pry" : "border-transparent text-muted"}`}
+        >
+          Bank Approvals
+          {pendingBankApprovals.length > 0 && <span className="bg-pry text-white text-xs rounded-full px-2 py-0.5">{pendingBankApprovals.length}</span>}
+        </button>
       </div>
 
-      {showVerificationTab ? (
+      {showBankTab ? (
+        <div>
+          <p className="text-sm text-muted mb-4">
+            Riders who have submitted bank details. Approving makes this the account used for payouts;
+            rejecting clears the request so the rider can resubmit.
+          </p>
+          {pendingBankApprovals.length === 0 ? (
+            <p className="text-center text-muted py-12">No pending bank approvals right now.</p>
+          ) : pendingBankApprovals.map((r) => (
+            <div key={r._id} className="bg-white rounded-xl border p-5 mb-4">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <p className="font-semibold">{r.name}</p>
+                  <p className="text-xs text-muted">{r.email}</p>
+                  {r.pendingBankUpdate?.requestedAt && (
+                    <p className="text-xs text-muted">
+                      Submitted: {new Date(r.pendingBankUpdate.requestedAt).toLocaleString("en-GB")}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs mb-4 bg-off-white rounded-lg p-3">
+                <div><span className="text-muted">Bank: </span>{r.pendingBankUpdate?.bankName || "—"}</div>
+                <div><span className="text-muted">Account No: </span>{r.pendingBankUpdate?.accountNumber || "—"}</div>
+                <div className="col-span-2"><span className="text-muted">Account Name: </span>{r.pendingBankUpdate?.accountName || "—"}</div>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleBankAction(r._id, "approve")}
+                  disabled={bankActionId === r._id}
+                  className="px-5 py-2 bg-green-600 text-white rounded-lg text-sm font-medium disabled:opacity-60"
+                >
+                  {bankActionId === r._id ? "Processing..." : "Approve"}
+                </button>
+                <button
+                  onClick={() => handleBankAction(r._id, "reject")}
+                  disabled={bankActionId === r._id}
+                  className="px-5 py-2 bg-red-500 text-white rounded-lg text-sm font-medium disabled:opacity-60"
+                >
+                  {bankActionId === r._id ? "Processing..." : "Reject"}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : showVerificationTab ? (
         <div>
           <p className="text-sm text-muted mb-4">
             These riders have submitted their documents and are waiting for your review before they can go online.
