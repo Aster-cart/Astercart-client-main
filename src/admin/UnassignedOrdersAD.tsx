@@ -20,7 +20,14 @@ interface UnassignedOrder {
   lastBroadcastAt: string | null;
 }
 
-interface NearbyRider { _id: string; name: string; phoneNumber: string; distanceKm: number }
+interface NearbyRider {
+  _id: string;
+  name: string;
+  phoneNumber: string;
+  distanceKm: number | null;
+  radiusKm: number | null;
+  inRadius: boolean | null;
+}
 
 const fmtNaira = (n: number) => "₦" + (n || 0).toLocaleString();
 
@@ -155,7 +162,7 @@ export default function UnassignedOrdersAD() {
                     <tr className="border-t border-border bg-slate-50">
                       <td colSpan={10} className="px-4 py-4">
                         {expanded[o._id]!.length === 0 ? (
-                          <p className="text-sm text-muted">No available verified riders within the current search radius.</p>
+                          <p className="text-sm text-muted">No available verified riders right now.</p>
                         ) : (
                           <div>
                             <p className="text-sm font-medium text-ink mb-2">Pick a rider to assign:</p>
@@ -166,10 +173,18 @@ export default function UnassignedOrdersAD() {
                                   onClick={() => assignRider(o._id, r._id)}
                                   className="text-xs bg-ink text-white px-3 py-2 rounded-lg hover:bg-pry transition-colors"
                                 >
-                                  {r.name} · {r.distanceKm} km · {r.phoneNumber || "no phone"}
+                                  {r.name}
+                                  {r.distanceKm != null ? ` · ${r.distanceKm} km` : " · distance unknown"}
+                                  {r.inRadius ? " · in range" : r.inRadius === false ? " · out of range" : ""}
+                                  {" · "}{r.phoneNumber || "no phone"}
                                 </button>
                               ))}
                             </div>
+                            {expanded[o._id]!.some(r => r.inRadius === false) && (
+                              <p className="text-xs text-muted mt-2">
+                                Out-of-range riders are listed for manual override — assigning one works normally.
+                              </p>
+                            )}
                           </div>
                         )}
                       </td>

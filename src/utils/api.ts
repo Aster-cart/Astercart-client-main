@@ -118,6 +118,23 @@ api.interceptors.response.use(
         level: "error",
         data: { status: error.response.status },
       });
+
+      if (error.response.status >= 500) {
+        const safeMessage = "An unexpected error occurred. Please try again later.";
+        if (typeof error.response.data === "object" && error.response.data !== null) {
+          error.response.data.message = safeMessage;
+        } else {
+          error.response.data = { message: safeMessage };
+        }
+        error.message = safeMessage;
+      }
+    } else {
+      const safeMessage = "Unable to connect to the server. Please check your connection and try again.";
+      error.message = safeMessage;
+      (error as any).response = {
+        status: 0,
+        data: { message: safeMessage },
+      };
     }
     return Promise.reject(error);
   }
