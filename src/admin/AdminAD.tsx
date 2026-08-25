@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  Aster, dashboard, logout as logoutIcon, setting, dash, log, set,
+  Aster, dashboard, logout as logoutIcon, setting, dash, set,
   down, storem, userm, orderm, wallet, stom, usem, ordm, walet,
 } from "../assets/res";
 import { IoNotificationsOutline } from "react-icons/io5";
@@ -180,35 +180,51 @@ const AdminAD: React.FC = () => {
     restoreSession();
   }, []);
 
-  const allMenuItems = [
-    { label: "Dashboard", icon: dashboard, activeIcon: dash },
-    { label: "Monitor", icon: dashboard, activeIcon: dash },
-    { label: "StoreManagement", icon: storem, activeIcon: stom },
-    { label: "UserManagement", icon: userm, activeIcon: usem },
-    { label: "Orders", icon: orderm, activeIcon: ordm },
-    { label: "UnassignedOrders", icon: orderm, activeIcon: ordm },
-    { label: "Payment", icon: wallet, activeIcon: walet },
-    { label: "Withdrawals", icon: wallet, activeIcon: walet },
-    { label: "Payouts", icon: wallet, activeIcon: walet },
-    // New tab: the three-ledger financial dashboard (Commercial / Cash /
-    // Profit views) — sits alongside Payment and Payouts rather than
-    // replacing either of them, since this is a different lens on the
-    // same underlying data, not a replacement page.
-    { label: "FinancialLedger", icon: wallet, activeIcon: walet },
-    { label: "Revenue", icon: wallet, activeIcon: walet },
-    { label: "Products", icon: storem, activeIcon: stom },
-    { label: "Pricing", icon: storem, activeIcon: stom },
-    { label: "Settings", icon: setting, activeIcon: set },
-    { label: "Analytics", icon: set, activeIcon: set },
-    { label: "Disputes", icon: set, activeIcon: set },
-    { label: "Riders", icon: set, activeIcon: set },
-    { label: "Team", icon: set, activeIcon: set },
-    { label: "AuditLogs", icon: set, activeIcon: set },
-    { label: "Support", icon: set, activeIcon: set },
-    { label: "Logout", icon: logoutIcon, activeIcon: log },
+  // ── Navigation: logical groups. Every label maps 1:1 to a contentMap
+  // entry — nothing is renamed, removed, or re-functionalized. Only the
+  // information architecture (grouping + headings + ordering) changes.
+  const menuIcon: Record<string, { icon: string; activeIcon: string }> = {
+    Dashboard: { icon: dashboard, activeIcon: dash },
+    Monitor: { icon: dashboard, activeIcon: dash },
+    StoreManagement: { icon: storem, activeIcon: stom },
+    UserManagement: { icon: userm, activeIcon: usem },
+    Orders: { icon: orderm, activeIcon: ordm },
+    UnassignedOrders: { icon: orderm, activeIcon: ordm },
+    Payment: { icon: wallet, activeIcon: walet },
+    Withdrawals: { icon: wallet, activeIcon: walet },
+    Payouts: { icon: wallet, activeIcon: walet },
+    FinancialLedger: { icon: wallet, activeIcon: walet },
+    Revenue: { icon: wallet, activeIcon: walet },
+    Products: { icon: storem, activeIcon: stom },
+    Pricing: { icon: storem, activeIcon: stom },
+    Settings: { icon: setting, activeIcon: set },
+    Analytics: { icon: set, activeIcon: set },
+    Disputes: { icon: set, activeIcon: set },
+    Riders: { icon: set, activeIcon: set },
+    Team: { icon: set, activeIcon: set },
+    AuditLogs: { icon: set, activeIcon: set },
+    Support: { icon: set, activeIcon: set },
+  };
+
+  const NAV_GROUPS: { title: string; items: string[] }[] = [
+    { title: "Overview", items: ["Dashboard", "Analytics", "Monitor"] },
+    { title: "Operations", items: ["Orders", "UnassignedOrders", "Riders", "Disputes", "Support"] },
+    { title: "Stores & Users", items: ["StoreManagement", "UserManagement", "Products"] },
+    // Financial Ledger: the three-ledger dashboard (Commercial / Cash /
+    // Profit) — a different lens on the same underlying data, grouped with
+    // the rest of the finance pages rather than replacing any of them.
+    { title: "Finance", items: ["Payment", "Withdrawals", "Payouts", "FinancialLedger", "Revenue", "Pricing"] },
+    { title: "Administration", items: ["Team", "AuditLogs", "Settings"] },
   ];
 
-  const menuItems = allMenuItems;
+  const menuLabel = (label: string) =>
+    label === "FinancialLedger"
+      ? "Financial Ledger"
+      : label === "AuditLogs"
+        ? "Audit Logs"
+        : label === "UnassignedOrders"
+          ? "Unassigned Orders"
+          : label.replace("Management", " Mgmt");
 
   const handleMenuClick = (label: string) => {
     if (label === "Logout") { adminLogout(); navigate("/admin/login"); return; }
@@ -260,28 +276,42 @@ const AdminAD: React.FC = () => {
           <h1 className="hidden md:block text-lg font-bold text-white">Aster<span className="text-pry">Cart</span></h1>
         </div>
         <nav>
-          <h2 className="text-xs font-medium mb-4 hidden md:block text-white/40 uppercase tracking-wider">Main Menu</h2>
-          <ul className="space-y-1">
-            {menuItems.map((item) => (
-              <li key={item.label}>
+          {NAV_GROUPS.map((group) => (
+            <div key={group.title} className="mb-5">
+              <h2 className="text-[10px] font-medium mb-2 hidden md:block text-white/40 uppercase tracking-widest">
+                {group.title}
+              </h2>
+              <ul className="space-y-1">
+                {group.items.map((label) => {
+                  const item = menuIcon[label];
+                  return (
+                    <li key={label}>
+                      <button
+                        onClick={() => handleMenuClick(label)}
+                        className={`flex items-center w-full px-2 py-2.5 md:px-4 rounded-lg transition-all ${activeMenu === label ? "bg-pry text-white" : "text-white/60 hover:text-white hover:bg-white/10"}`}
+                      >
+                        <img src={activeMenu === label ? item.activeIcon : item.icon} alt={label} className="w-4 h-4 mr-2 brightness-0 invert opacity-60" />
+                        <span className="hidden md:inline text-sm font-medium">{menuLabel(label)}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+          <div className="mb-4">
+            <ul className="space-y-1">
+              <li>
                 <button
-                  onClick={() => handleMenuClick(item.label)}
-                  className={`flex items-center w-full px-2 py-2.5 md:px-4 rounded-lg transition-all ${activeMenu === item.label ? "bg-pry text-white" : "text-white/60 hover:text-white hover:bg-white/10"}`}
+                  onClick={() => handleMenuClick("Logout")}
+                  className="flex items-center w-full px-2 py-2.5 md:px-4 rounded-lg transition-all text-white/60 hover:text-white hover:bg-white/10"
                 >
-                  <img src={activeMenu === item.label ? item.activeIcon : item.icon} alt={item.label} className="w-4 h-4 mr-2 brightness-0 invert opacity-60" />
-                  <span className="hidden md:inline text-sm font-medium">
-                    {item.label === "FinancialLedger"
-                      ? "Financial Ledger"
-                      : item.label === "AuditLogs"
-                        ? "Audit Logs"
-                        : item.label === "UnassignedOrders"
-                          ? "Unassigned Orders"
-                          : item.label.replace("Management", " Mgmt")}
-                  </span>
+                  <img src={logoutIcon} alt="Logout" className="w-4 h-4 mr-2 brightness-0 invert opacity-60" />
+                  <span className="hidden md:inline text-sm font-medium">Logout</span>
                 </button>
               </li>
-            ))}
-          </ul>
+            </ul>
+          </div>
         </nav>
       </aside>
 
