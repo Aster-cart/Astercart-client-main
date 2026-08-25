@@ -109,7 +109,7 @@ api.interceptors.response.use(
         }
       }
       clearAuth();
-      window.location.href = window.location.pathname.startsWith("/admin") ? "/loginad" : "/login";
+      window.location.href = window.location.pathname.startsWith("/admin") ? "/admin/login" : "/login";
     }
     if (error.response) {
       Sentry.addBreadcrumb({

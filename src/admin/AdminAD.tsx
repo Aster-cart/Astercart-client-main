@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Aster, dashboard, logout as logoutIcon, setting, dash, log, set,
   down, storem, userm, orderm, wallet, stom, usem, ordm, walet,
@@ -29,14 +29,9 @@ import WithdrawalsAD from "./WithdrawalsAD";
 import AuditLogsAD from "./AuditLogsAD";
 import api from "../utils/api";
 import { playNotificationSound } from "../utils/playNotificationSound";
+import { resolveAdminNotificationDestination, type AdminNotification } from "../utils/notificationDestination";
 
-interface Notification {
-  _id: string;
-  title: string;
-  message: string;
-  createdAt: string;
-  seen: boolean;
-}
+type Notification = AdminNotification;
 
 // ── Admin header with real notifications ─────────────────────────
 const AdminHeader: React.FC<{ title: string }> = ({ title }) => {
@@ -56,11 +51,11 @@ const AdminHeader: React.FC<{ title: string }> = ({ title }) => {
       for (const n of newOnes) {
         playNotificationSound();
         toast.info(
-          <div style={{ cursor: "pointer" }} onClick={() => { window.location.href = "/admin"; }}>
+          <div style={{ cursor: "pointer" }} onClick={() => handleOpenNotification(n)}>
             <strong>{n.title}</strong>
             <p style={{ fontSize: 13, margin: "4px 0 0" }}>{n.message}</p>
           </div>,
-          { autoClose: 8000, onClick: () => { window.location.href = "/admin"; } }
+          { autoClose: 8000, onClick: () => handleOpenNotification(n) }
         );
       }
       prevIds.current = new Set(list.map((n) => n._id));
@@ -76,6 +71,13 @@ const AdminHeader: React.FC<{ title: string }> = ({ title }) => {
   const markAsRead = async (id: string) => {
     setNotifications((prev) => prev.map((n) => n._id === id ? { ...n, seen: true } : n));
     try { await api.patch(`/admin/read/${id}`); } catch { /* silent */ }
+  };
+
+  // Open the notification's destination, marking it read first.
+  const handleOpenNotification = async (n: Notification) => {
+    if (!n.seen) await markAsRead(n._id);
+    setShowModal(false);
+    navigate(resolveAdminNotificationDestination(n));
   };
 
   const markAllAsRead = async () => {
@@ -130,12 +132,12 @@ const AdminHeader: React.FC<{ title: string }> = ({ title }) => {
             ) : (
               <ul className="flex flex-col gap-2 max-h-64 overflow-y-auto">
                 {notifications.map((n) => (
-                  <li key={n._id} onClick={() => markAsRead(n._id)} className={`border-b border-border pb-2 cursor-pointer ${n.seen ? "opacity-60" : ""}`}>
+                  <li key={n._id} onClick={() => handleOpenNotification(n)} className={`border-b border-border pb-2 cursor-pointer ${n.seen ? "opacity-60" : ""}`}>
                     <p className="text-sm font-medium text-ink">{n.title}</p>
                     <p className="text-sm text-body">{n.message}</p>
                     {!n.seen && (
                       <button
-                        onClick={(e) => { e.stopPropagation(); markAsRead(n._id); navigate("/admin"); }}
+                        onClick={(e) => { e.stopPropagation(); handleOpenNotification(n); }}
                         className="text-xs text-white bg-pry hover:bg-orange-600 transition-colors px-2 py-1 rounded mt-1"
                       >
                         View
@@ -169,7 +171,8 @@ const AdminHeader: React.FC<{ title: string }> = ({ title }) => {
 const AdminAD: React.FC = () => {
   const adminLogout = useAdminAuthStore((s) => s.logout);
   const navigate = useNavigate();
-  const [activeMenu, setActiveMenu] = useState("Dashboard");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeMenu, setActiveMenu] = useState<string>(() => searchParams.get("tab") || "Dashboard");
 
   const { restoreSession } = useAdminAuthStore();
 
@@ -210,6 +213,9 @@ const AdminAD: React.FC = () => {
   const handleMenuClick = (label: string) => {
     if (label === "Logout") { adminLogout(); navigate("/admin/login"); return; }
     setActiveMenu(label);
+    // Keep the URL in sync so deep links (/admin?tab=Withdrawals) and
+    // page refresh keep the user on the same tab.
+    setSearchParams({ tab: label }, { replace: true });
   };
 
   const contentMap: Record<string, { title: string; content: React.ReactNode }> = {
@@ -236,6 +242,15 @@ const AdminAD: React.FC = () => {
   };
 
   const current = contentMap[activeMenu] || contentMap["Dashboard"];
+
+  // Deep-link support: /admin?tab=<contentMap key> switches the active
+  // tab, so notification clicks, page refresh and direct URL access all
+  // land on the intended admin page.
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && contentMap[tab]) setActiveMenu(tab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   return (
     <div className="flex h-screen font-inter">

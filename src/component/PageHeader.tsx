@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { down } from "../assets/res";
 import { IoNotificationsOutline } from "react-icons/io5";
 import { useAuthStore } from "../store/authStore";
-import { useNotification } from "../hooks/useNotification";
+import { useNotification, type Notification as StoreNotif } from "../hooks/useNotification";
+import { resolveStoreNotificationDestination } from "../utils/notificationDestination";
 
 interface PageHeaderProps {
   title: string;
@@ -33,6 +34,13 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title }) => {
     setNotifPermission(granted ? "granted" : "denied");
   };
 
+  // Open the notification's destination, marking it read first.
+  const handleOpenNotification = (notif: StoreNotif) => {
+    if (!notif.read) markAsRead(notif.id);
+    toggleNotificationModal(false);
+    navigate(resolveStoreNotificationDestination(notif));
+  };
+
   return (
     <div className="flex justify-between font-inter items-center py-2 w-full h-[56px] px-4 md:px-6 bg-white border-b border-border">
       <div className="flex items-center gap-3">
@@ -42,7 +50,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title }) => {
       <div className="flex space-x-2 md:space-x-4 items-center">
         {/* Notification bell */}
         <button
-          onClick={toggleNotificationModal}
+          onClick={() => toggleNotificationModal()}
           className="relative bg-pry rounded-full p-1.5 md:p-2 hover:bg-orange-600 transition-colors"
         >
           <IoNotificationsOutline className="text-lg md:text-xl text-white" />
@@ -105,7 +113,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title }) => {
                         ? "bg-pry-light rounded-lg px-3 -mx-2"
                         : "border-b border-border"
                     } ${notif.read ? "opacity-60" : ""}`}
-                    onClick={() => markAsRead(notif.id)}
+                    onClick={() => handleOpenNotification(notif)}
                   >
                     <div className="flex flex-col gap-1 py-1">
                       {notif.type === "pickup_otp" && (
@@ -113,10 +121,13 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title }) => {
                           Rider at pickup
                         </span>
                       )}
+                      {notif.title && notif.type !== "pickup_otp" && (
+                        <span className="text-sm font-medium text-ink">{notif.title}</span>
+                      )}
                       <span className="text-sm leading-5 text-body">{notif.message}</span>
                       {!notif.read && (
                         <button
-                          onClick={(e) => { e.stopPropagation(); markAsRead(notif.id); navigate("/orders"); }}
+                          onClick={(e) => { e.stopPropagation(); handleOpenNotification(notif); }}
                           className="text-xs rounded-lg text-white bg-pry hover:bg-orange-600 transition-colors px-2 py-1 w-fit"
                         >
                           View
@@ -132,7 +143,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title }) => {
             )}
 
             <button
-              onClick={toggleNotificationModal}
+              onClick={() => toggleNotificationModal(false)}
               className="text-xs mt-3 text-pry font-medium hover:underline"
             >
               Close

@@ -21,6 +21,7 @@ import Withdrawals from "./pages/Withdrawals";
 import LoginAD from "./admin/LoginAD";
 import SignupAD from "./admin/SignupAD";
 import ForgotPasswordAD from "./admin/ForgotPasswordAD";
+import ResetPassword from "./admin/ResetPassword";
 import AdminAD from "./admin/AdminAD";
 import { useAdminAuthStore } from "./store/adminAuthStore";
 
@@ -79,6 +80,15 @@ function App() {
         <Route path="/admin/login" element={<LoginAD />} />
         <Route path="/admin/signup" element={<SignupAD />} />
         <Route path="/admin/forgotpassword" element={<ForgotPasswordAD />} />
+
+        {/* Compatibility redirects — /admin/login is the single canonical admin
+            login route. Old links/code that referenced the legacy spellings
+            (loginad / forgotpasswordad / Signupad) must never land on a dead
+            404 page. */}
+        <Route path="/loginad" element={<Navigate to="/admin/login" replace />} />
+        <Route path="/forgotpasswordad" element={<Navigate to="/admin/forgotpassword" replace />} />
+        <Route path="/Signupad" element={<Navigate to="/admin/signup" replace />} />
+        <Route path="/resetpassword" element={<ResetPassword />} />
 
         {/* Platform admin dashboard — protected by AdminGuard */}
         <Route

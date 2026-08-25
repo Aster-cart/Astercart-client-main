@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../utils/api";
 import { toast } from "react-toastify";
 
@@ -41,6 +42,10 @@ const WithdrawalsAD: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  // Deep link from a "New withdrawal request" notification:
+  // /admin?tab=Withdrawals&withdrawal=<id> highlights the relevant row.
+  const [searchParams] = useSearchParams();
+  const highlightedId = searchParams.get("withdrawal");
 
   const fetchData = useCallback(async () => {
     try {
@@ -151,7 +156,7 @@ const WithdrawalsAD: React.FC = () => {
               </tr>
             ) : (
               requests.map((r) => (
-                <tr key={r._id} className="border-b hover:bg-off-white">
+                <tr key={r._id} className={`border-b hover:bg-off-white ${highlightedId === r._id ? "bg-blue-50 ring-2 ring-inset ring-blue-300" : ""}`}>
                   <td className="py-3 px-2 text-xs">{getUserLabel(r)}</td>
                   <td className="py-3 px-2 text-xs whitespace-nowrap">{weeksLabel(r.coveredWeeks)}</td>
                   <td className="px-2 font-medium">{formatNaira(r.amount)}</td>

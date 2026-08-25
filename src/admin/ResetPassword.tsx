@@ -241,7 +241,7 @@ const ResetPassword = () => {
                     <button
       type="button"
       className="w-full py-2 bg-[#F5F5F5] text-[#B8B8B8] font-semibold rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-      onClick={() => navigate("/loginad")} 
+      onClick={() => navigate("/admin/login")} 
     >
       Continue
     </button>

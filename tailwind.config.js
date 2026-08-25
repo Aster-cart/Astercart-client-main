@@ -28,7 +28,27 @@ export default {
         fade: '#FFE1CC',
         bginput: '#F9FAFB',
         binput: '#F2F2F2',
-        blue: '#004EF1',
+        // NOTE: defining `blue` as a single flat string replaced the whole
+        // default Tailwind `blue` scale (50–950), which silently killed every
+        // `bg-blue-500`, `text-blue-700`, `border-blue-200`, … utility — e.g.
+        // the admin Withdrawals "Approve" button (bg-blue-500 text-white) was
+        // rendered white-on-white = invisible while "Reject" (bg-red-500) was
+        // unaffected. Restore the full scale and keep the brand blue as the
+        // DEFAULT for the bare `blue` color.
+        blue: {
+          DEFAULT: '#004EF1',
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#3b82f6',
+          600: '#2563eb',
+          700: '#1d4ed8',
+          800: '#1e40af',
+          900: '#1e3a8a',
+          950: '#172554',
+        },
       },
     },
   },

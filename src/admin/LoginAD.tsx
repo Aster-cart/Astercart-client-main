@@ -133,7 +133,7 @@ const LoginAD = () => {
             </div>
 
             <div className="flex justify-end mb-6">
-              <Link to={"/forgotpasswordad"} className="text-sm text-pry font-medium hover:underline">
+              <Link to={"/admin/forgotpassword"} className="text-sm text-pry font-medium hover:underline">
                 Forgot Password?
               </Link>
             </div>
@@ -150,7 +150,7 @@ const LoginAD = () => {
               <div className="flex-1 border-t border-border"></div>
             </div>
             <div className="w-full flex justify-center">
-              <Link to="/Signupad" className="font-semibold text-sm text-center text-body hover:text-pry transition-colors">
+              <Link to="/admin/signup" className="font-semibold text-sm text-center text-body hover:text-pry transition-colors">
                 Don&rsquo;t have an account? <span className="text-pry">Sign Up</span>
               </Link>
             </div>

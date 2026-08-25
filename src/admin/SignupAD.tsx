@@ -43,7 +43,7 @@ const SignupAD = () => {
   // Check if OTP is complete and matches the expected value
   if (updatedOtp.join("") === expectedOtp) {
     // If OTP matches, navigate to login page
-    navigate("/loginad");
+    navigate("/admin/login");
   }
 };
 
@@ -309,7 +309,7 @@ const SignupAD = () => {
                     </div>
 
                     <div className="flex font-bold justify-end mb-4">
-                      <Link to={"/forgotpasswordad"} className="">
+                      <Link to={"/admin/forgotpassword"} className="">
                         Forgot Password?
                       </Link>
                     </div>
@@ -327,7 +327,7 @@ const SignupAD = () => {
                     </div>
                     <div className="w-full flex justify-center">
                       <Link
-                        to="/loginad"
+                        to="/admin/login"
                         className="font-semibold text-sm text-center"
                       >
                         Already have an account?
